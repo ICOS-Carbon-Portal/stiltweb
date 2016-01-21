@@ -1,17 +1,29 @@
+/application.conf
 *.class
 *.log
 
+# Node.js specific
+node_modules/
+src/main/resources/bundle.js
+
 # sbt specific
-.cache
-.history
-.lib/
-dist/*
-target/
-lib_managed/
-src_managed/
-project/boot/
-project/plugins/project/
+.cache/
+.history/
+/target/
+/project/target/
+/project/project/
 
 # Scala-IDE specific
 .scala_dependencies
+.cache-main
 .worksheet
+.project
+.settings/
+.classpath
+.cache
+
+nohup.out
+*.*~
+\#*\#
+
+.idea
