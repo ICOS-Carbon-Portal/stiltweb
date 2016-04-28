@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link href="https://static.icos-cp.eu/constant/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" />
+	<meta charset="UTF-8">
+	<title>Select input to STILT</title>
+
+	<style type="text/css">
+		.navbar-default {
+			background-color: #414042;
+			border-color: #414042;
+		}
+		.navbar-default span, .navbar-default p, .navbar-default h1 {
+			color: #ffffff;
+		}
+
+	</style>
+
+</head>
+<body>
+<nav class="navbar navbar-default navbar-static-top">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<a href="https://www.icos-ri.eu">
+				<img alt="Carbon Portal" src="https://static.icos-cp.eu/images/Icos_Logo_RGB_White_Carbon_Portal_80px.png">
+			</a>
+		</div>
+		<h1>STILT Footprints</h1>
+	</div>
+</nav>
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-8"> <!-- i 12:te-delar -->
+
+			<form action="stilt" method="post">
+				Select dataset to use as input to STILT<br>
+				<select name="dataset">
+					<option value="CB4">CB4</option>
+					<option value="HEI">HEI</option>
+					<option value="MHD">MHD</option>
+				</select>
+
+				<div>
+
+					<input type="submit" text="start" name="start"/>
+				</div>
+
+			</form>
+		</div>
+	</div>
+
+</div>
+</body>
+</html>

@@ -1,3 +1,4 @@
+/stiltresult1.csv
 /application.conf
 *.class
 *.log
@@ -23,6 +24,7 @@ src/main/resources/bundle.js
 .cache
 
 nohup.out
+/outText.txt
 *.*~
 \#*\#
 

@@ -1,3 +1,4 @@
+
 package se.lu.nateko.cp.stiltweb
 
 import se.lu.nateko.cp.cpauth.core.PublicAuthConfig
