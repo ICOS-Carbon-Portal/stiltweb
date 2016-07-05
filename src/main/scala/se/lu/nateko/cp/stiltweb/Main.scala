@@ -35,8 +35,8 @@ object Main extends App {
 		.onSuccess{
 			case binding =>
 				sys.addShutdownHook{
-					val doneFuture = binding.unbind().andThen{
-						case _ => system.shutdown()
+					val doneFuture = binding.unbind().flatMap{
+						_ => system.terminate()
 					}
 					Await.result(doneFuture, 3 seconds)
 				}

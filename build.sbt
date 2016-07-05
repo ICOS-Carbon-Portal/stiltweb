@@ -9,7 +9,7 @@ libraryDependencies ++= Seq(
 	"com.typesafe.akka"  %% "akka-slf4j"                         % "2.4.4",
 	"ch.qos.logback"      % "logback-classic"                    % "1.1.2",
 	"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.2",
-
+	//"io.spray"           %% "spray-json"                         % "1.3.2",
 	"org.scalatest"      %% "scalatest"        % "2.2.1" % "test"
 )
 
