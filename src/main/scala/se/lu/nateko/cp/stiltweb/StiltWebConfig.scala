@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.ConfigFactory
 
-case class StiltWebConfig(auth: PublicAuthConfig, dummyProperty: String)
+case class StiltWebConfig(auth: PublicAuthConfig, pathToMockData: String)
 
 object ConfigReader extends DefaultJsonProtocol{
 

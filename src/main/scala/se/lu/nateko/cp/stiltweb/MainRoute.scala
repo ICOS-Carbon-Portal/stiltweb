@@ -29,11 +29,14 @@ class MainRoute(config: StiltWebConfig) {
 
 	def route: Route =
 		pathSingleSlash {
-			getFromResource("www/stiltinput.html")
+			getFromResource("www/stilt.html")
+		} ~
+		path("stilt.js"){
+			getFromResource("www/stilt.js")
 		} ~
 		pathPrefix("stilt") {
 			pathEndOrSingleSlash {
-				getFromResource("www/stiltinput.html")
+				getFromResource("www/stilt.html")
 			} ~
 			post {
 
@@ -57,7 +60,7 @@ class MainRoute(config: StiltWebConfig) {
 					import StiltwebJsonSupport.dataLoadFormat
 
 					entity(as[Columns]) { columns =>
-						val lines = Source.fromFile("/opt/STILT_modelling/Output/Results/XXX/stiltresults.csv").getLines().toStream
+						val lines = Source.fromFile(config.pathToMockData).getLines().toStream
 						val headerCells = lines.head.split(' ')
 						val colIndicies: Array[Int] = columns.data.map(headerCells.indexOf)
 

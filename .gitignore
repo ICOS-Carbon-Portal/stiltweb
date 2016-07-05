@@ -23,9 +23,13 @@ src/main/resources/bundle.js
 .classpath
 .cache
 
+#Front end specific
+/src/main/resources/www/stilt.js
+
 nohup.out
 /outText.txt
 *.*~
 \#*\#
 
 .idea
+/bin/
