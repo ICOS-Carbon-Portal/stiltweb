@@ -27,19 +27,16 @@ class MainRoute(config: StiltWebConfig) {
 
 	def runStilt(ds: String): Int = Process(s"/opt/STILT_modelling/start.stilt.sh $ds").!
 
+	private val mainPage = getFromResource("www/stiltReact.html")
+
 	def route: Route =
-		pathSingleSlash {
-			getFromResource("www/stilt.html")
-		} ~
+		pathSingleSlash { mainPage } ~
 		path("stilt.js"){
 			getFromResource("www/stilt.js")
 		} ~
 		pathPrefix("stilt") {
-			pathEndOrSingleSlash {
-				getFromResource("www/stilt.html")
-			} ~
+			pathEndOrSingleSlash { mainPage } ~
 			post {
-
 				formFields('dataset) { dataset => val retCode: Int = runStilt(dataset)
 					if (retCode == 0){
 						redirect("/showdata", StatusCodes.Found)
@@ -49,47 +46,42 @@ class MainRoute(config: StiltWebConfig) {
 				}
 			}
 		} ~
-		pathPrefix("showdata"){
-			get {
-				getFromResource("www/stilt.html")
+		pathPrefix("showdata"){ mainPage } ~
+		pathPrefix("getData"){
+			post {
+				import StiltwebJsonSupport.columnsFormat
+				import StiltwebJsonSupport.dataLoadFormat
+
+				entity(as[Columns]) { columns =>
+					val lines = Source.fromFile(config.pathToMockData).getLines().toStream
+					val headerCells = lines.head.split(' ')
+					val colIndicies: Array[Int] = columns.data.map(headerCells.indexOf)
+
+					val dates: Stream[Array[String]] = lines.tail.map { line =>
+						val cells: Array[String] = line.split(' ')
+						Array(0).map(idx => cells(idx))
+					}
+
+					val values: Stream[Array[Double]] = lines.tail.map { line =>
+						val cells: Array[String] = line.split(' ')
+						colIndicies.map(idx => cells(idx).toDouble)
+					}
+
+					complete(new DataLoad(columns.data, dates.toArray, values.toArray).toJson(dataLoadFormat))
+
+				} ~ {
+					complete((StatusCodes.BadRequest, "Expected a JSON object with 'data' string array"))
+				}
 			}
 		} ~
-		pathPrefix("getData"){
-				post {
-					import StiltwebJsonSupport.columnsFormat
-					import StiltwebJsonSupport.dataLoadFormat
-
-					entity(as[Columns]) { columns =>
-						val lines = Source.fromFile(config.pathToMockData).getLines().toStream
-						val headerCells = lines.head.split(' ')
-						val colIndicies: Array[Int] = columns.data.map(headerCells.indexOf)
-
-						val dates: Stream[Array[String]] = lines.tail.map { line =>
-							val cells: Array[String] = line.split(' ')
-							Array(0).map(idx => cells(idx))
-						}
-
-						val values: Stream[Array[Double]] = lines.tail.map { line =>
-							val cells: Array[String] = line.split(' ')
-							colIndicies.map(idx => cells(idx).toDouble)
-						}
-
-						complete(new DataLoad(columns.data, dates.toArray, values.toArray).toJson(dataLoadFormat))
-
-					} ~ {
-						complete((StatusCodes.BadRequest, "Expected a JSON object with 'data' string array"))
-					}
+		pathPrefix("startStilt"){
+			post {
+				import StiltwebJsonSupport.siteFormat
+				entity(as[Site]) { site =>
+						//Working with a pre-computed file. STILT should be started here just as in the stilt route.
+					complete("Working so far")
 				}
-			}~
-				pathPrefix("startStilt"){
-					post {
-						import StiltwebJsonSupport.siteFormat
-						entity(as[Site]) { site =>
-								//Working with a pre-computed file. STILT should be started here just as in the stilt route.
-							complete("Working so far")
-						}
-					}
-				}
+			}
+		}
 
 	}
-

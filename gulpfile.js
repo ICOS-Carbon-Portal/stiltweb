@@ -4,10 +4,10 @@ var gulp = require('gulp');
 var browserify = require('browserify');
 var del = require('del');
 var source = require('vinyl-source-stream');
-var babel = require('babelify');
+var babelify = require('babelify');
 
 var paths = {
-	main: 'src/main/js/main.js',
+	main: 'src/main/js/main.jsx',
 	jsx: ['src/main/js/**/*.jsx'],
 	js: ['src/main/js/**/*.js'],
 	target: 'src/main/resources/www/',
@@ -22,9 +22,9 @@ gulp.task('js', ['clean'], function() {
 
 	return browserify({
 			entries: [paths.main],
-			debug: false,
-			transform: [babel]
+			debug: false
 		})
+		.transform(babelify, {presets: ["es2015", "react"]})
 		.bundle()
 		.on('error', function(err){
 			console.log(err);
