@@ -3,7 +3,8 @@ import thunkMiddleware from 'redux-thunk'
 import reducer from './reducer'
 
 const initState = {
-	dummyProperty: "Hejsan-hopsan!"
+	computationStatus: "Computation not started yet",
+	sites: ['CB4', 'HEI', 'MHD']
 };
 
 const logger = store => next => action => {

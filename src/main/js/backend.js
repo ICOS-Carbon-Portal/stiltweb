@@ -18,3 +18,15 @@ export function fetchStiltResult(columns){
 		.then(response => response.json());
 }
 
+export function startStiltComputation(site){
+	return fetch('startStilt', {
+		method: 'post',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({site})
+	})
+	.then(checkStatus)
+	.then(response => response.text());
+}
+

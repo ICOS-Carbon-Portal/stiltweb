@@ -79,7 +79,7 @@ class MainRoute(config: StiltWebConfig) {
 				import StiltwebJsonSupport.siteFormat
 				entity(as[Site]) { site =>
 						//Working with a pre-computed file. STILT should be started here just as in the stilt route.
-					complete("Working so far")
+					complete("Working on " + site.site)
 				}
 			}
 		}

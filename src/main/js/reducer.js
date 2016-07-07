@@ -1,16 +1,26 @@
-import { FETCHED_RESULT, ERROR} from './actions';
+import { FETCHED_RESULT, FINISHED_COMPUTATION, ERROR} from './actions';
 
 export default function(state, action){
+
+	function updatedState(update){
+		return Object.assign({}, state, update);
+	}
 
 	switch(action.type){
 
 		case ERROR:
-			return Object.assign({}, state, {status: ERROR, error: action.error});
+			return updatedState({status: ERROR, error: action.error});
 
 		case FETCHED_RESULT:
-			return Object.assign({}, state, {
+			return updatedState({
 				status: FETCHED_RESULT,
 				result: action.result
+			});
+
+		case FINISHED_COMPUTATION:
+			return updatedState({
+				status: FINISHED_COMPUTATION,
+				computationStatus: action.computationStatus
 			});
 
 		default:
