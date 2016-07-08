@@ -3,8 +3,9 @@ import thunkMiddleware from 'redux-thunk'
 import reducer from './reducer'
 
 const initState = {
-	computationStatus: "Computation not started yet",
-	sites: ['CB4', 'HEI', 'MHD']
+	site: null,
+	variables: {},
+	computationStatus: "Computation not started yet"
 };
 
 const logger = store => next => action => {

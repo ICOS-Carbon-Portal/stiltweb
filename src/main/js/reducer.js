@@ -1,4 +1,4 @@
-import { FETCHED_RESULT, FINISHED_COMPUTATION, ERROR} from './actions';
+import { FETCHED_RESULT, SITE_CHOSEN, ERROR} from './actions';
 
 export default function(state, action){
 
@@ -17,10 +17,9 @@ export default function(state, action){
 				result: action.result
 			});
 
-		case FINISHED_COMPUTATION:
+		case SITE_CHOSEN:
 			return updatedState({
-				status: FINISHED_COMPUTATION,
-				computationStatus: action.computationStatus
+				site: action.site
 			});
 
 		default:

@@ -1,7 +1,7 @@
 import * as backend from './backend';
 
 export const FETCHED_RESULT = 'FETCHED_RESULT';
-export const FINISHED_COMPUTATION = 'FINISHED_COMPUTATION';
+export const SITE_CHOSEN = 'SITE_CHOSEN';
 export const ERROR = 'ERROR';
 
 
@@ -23,12 +23,9 @@ export const fetchData = columns => dispatch => {
 	);
 }
 
-export const startStilt = site => dispatch => {
-	backend.startStiltComputation(site).then(
-		result => dispatch({
-			type: FINISHED_COMPUTATION,
-			computationStatus: result
-		}),
-		err => dispatch(failWithError(err))
-	);
+export const chooseSite = site => {
+	return {
+		type: SITE_CHOSEN,
+		site
+	};
 }
