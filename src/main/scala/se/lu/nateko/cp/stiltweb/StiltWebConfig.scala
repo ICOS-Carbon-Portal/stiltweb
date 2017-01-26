@@ -7,12 +7,25 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.ConfigFactory
 
-case class StiltWebConfig(auth: PublicAuthConfig, pathToMockData: String)
+case class NetCdfConfig(
+	dateVars: Seq[String],
+	latitudeVars: Seq[String],
+	longitudeVars: Seq[String],
+	elevationVars: Seq[String]
+)
+
+case class StiltWebConfig(
+	auth: PublicAuthConfig,
+	pathToMockData: String,
+	mainFolder: String,
+	netcdf: NetCdfConfig
+)
 
 object ConfigReader extends DefaultJsonProtocol{
 
 	implicit val pubAuthConfigFormat = jsonFormat2(PublicAuthConfig)
-	implicit val cpdataConfigFormat = jsonFormat2(StiltWebConfig)
+	implicit val netcdfConfigFormat = jsonFormat4(NetCdfConfig)
+	implicit val cpdataConfigFormat = jsonFormat4(StiltWebConfig)
 
 	def getDefault: StiltWebConfig = fromAppConfig(getAppConfig)
 

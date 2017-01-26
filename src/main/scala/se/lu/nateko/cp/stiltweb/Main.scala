@@ -31,7 +31,7 @@ object Main extends App {
 	val route = new MainRoute(config).route
 
 	Http()
-		.bindAndHandle(route, "::0", 9011)
+		.bindAndHandle(route, "127.0.0.1", 9011)
 		.onSuccess{
 			case binding =>
 				sys.addShutdownHook{
