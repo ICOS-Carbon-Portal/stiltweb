@@ -38,18 +38,42 @@ class MainRoute(config: StiltWebConfig) extends DefaultJsonProtocol {
   private implicit val templateMarshaller = TemplatePageMarshalling.marshaller
 
   private val mainPage = complete(views.html.StiltPage())
+  private val workerPage = complete(views.html.WorkerPage())
+  private val viewerPage = complete(views.html.ViewerPage())
 
   def route: Route =
 	pathSingleSlash {
 	  mainPage
 	} ~
-	path("stilt.js") {
-	  getFromResource("www/stilt.js")
-	} ~
-	get {
-	  path("stationyears") {
-		complete(service.getStationsAndYears)
+	pathPrefix("worker"){
+	  pathSingleSlash {
+		workerPage
 	  } ~
+	  path("worker.js"){
+		getFromResource("www/worker.js")
+	  } ~
+	  get {
+		path("stationyears") {
+		  complete(service.getStationsAndYears)
+		} ~
+		path("listfootprints") {
+		  parameters("stationId", "year".as[Int]) { (stationId, year) =>
+			complete(service.getFootprintFiles(stationId, year))
+		  }
+		}
+	  }
+	} ~
+	pathPrefix("viewer") {
+	  pathSingleSlash {
+		viewerPage
+	  } ~
+	  path("viewer.js") {
+		getFromResource("www/viewer.js")
+	  } ~
+	  get {
+		path("stationyears") {
+		  complete(service.getStationsAndYears)
+		} ~
 		path("listfootprints") {
 		  parameters("stationId", "year".as[Int]) { (stationId, year) =>
 			complete(service.getFootprintFiles(stationId, year))
@@ -60,21 +84,22 @@ class MainRoute(config: StiltWebConfig) extends DefaultJsonProtocol {
 			complete(service.getFootprintRaster(stationId, filename))
 		  }
 		}
-	} ~
-	post {
-	  path("stiltresult") {
-		entity(as[StiltResultsRequest]) { req =>
-		  val src = service.getStiltResultJson(req.stationId, req.year, req.columns)
-		  val respEntity = HttpEntity(ContentTypes.`application/json`, src)
-		  complete(HttpResponse(entity = respEntity))
-		}
 	  } ~
-	  formFields('dataset) { dataset =>
-		val retCode: Int = runStilt(dataset)
-		if (retCode == 0) {
-		  redirect("/showdata", StatusCodes.Found)
-		} else {
-		  getFromResource("www/stiltfailure.html")
+	  post {
+		path("stiltresult") {
+		  entity(as[StiltResultsRequest]) { req =>
+			val src = service.getStiltResultJson(req.stationId, req.year, req.columns)
+			val respEntity = HttpEntity(ContentTypes.`application/json`, src)
+			complete(HttpResponse(entity = respEntity))
+		  }
+		} ~
+		formFields('dataset) { dataset =>
+		  val retCode: Int = runStilt(dataset)
+		  if (retCode == 0) {
+			redirect("/showdata", StatusCodes.Found)
+		  } else {
+			getFromResource("www/stiltfailure.html")
+		  }
 		}
 	  }
 	} ~

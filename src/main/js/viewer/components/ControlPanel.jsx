@@ -1,11 +1,10 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 
 import config from '../config';
 
 import {formatDate} from '../models/formatting';
-import Select from './Select.jsx';
-import StationsMap from './LMap.jsx';
+import Select from '../../common/components/Select.jsx';
+import StationsMap from '../../common/components/LMap.jsx';
 
 
 export default props => <div className="panel panel-default">

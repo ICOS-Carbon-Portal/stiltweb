@@ -12,7 +12,9 @@ export default class LMap extends Component{
 					return 0.1;
 				},
 				spiderfyDistanceMultiplier: 1.8
-			})
+			}),
+			circles: L.layerGroup(),
+			clickMarker: L.circleMarker()
 		}
 	}
 
@@ -30,7 +32,16 @@ export default class LMap extends Component{
 
 		L.control.layers(baseMaps).addTo(map);
 		map.addControl(new LCommon.CoordViewer({decimals: 4}));
+		map.addLayer(this.app.circles);
 		map.addLayer(this.app.markers);
+
+		if(this.props.workerMode) {
+			const self = this;
+
+			map.on('click', function (e) {
+				mapClick(map, e, self);
+			});
+		}
 	}
 
 	componentWillReceiveProps(nextProps){
@@ -40,6 +51,8 @@ export default class LMap extends Component{
 
 		if (buildMarkers) {
 			const map = this.app.map;
+
+			if (nextProps.workerMode) this.buildCircles(nextProps.stations);
 			this.buildMarkers(nextProps.stations, nextProps.action, nextProps.selectedStation);
 
 			if (nextProps.selectedStation == undefined) {
@@ -67,6 +80,15 @@ export default class LMap extends Component{
 		}
 	}
 
+	buildCircles(geoms){
+		const circles = this.app.circles;
+		circles.clearLayers();
+
+		geoms.forEach(geom => {
+			circles.addLayer(L.circle([geom.lat, geom.lon], 50000, {color: 'red'}));
+		});
+	}
+
 	buildMarkers(geoms, action, selectedStation){
 		const markers = this.app.markers;
 		markers.clearLayers();
@@ -76,7 +98,7 @@ export default class LMap extends Component{
 			const marker = L.circleMarker([geom.lat, geom.lon], LCommon.pointIcon(6, 1, 'rgb(255,100,100)', 'black'));
 
 			addPopup(marker, geom.name + " (" + geom.id + ")", {offset:[0,0], closeButton: false});
-			addEvents(marker, action, geom);
+			addEvents(this.app, marker, action, geom);
 
 			markers.addLayer(marker);
 		});
@@ -87,7 +109,7 @@ export default class LMap extends Component{
 			const marker = L.circleMarker([selected.lat, selected.lon], LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
 
 			addPopup(marker, selected.name + " (" + selected.id + ")", {offset:[0,0], closeButton: false});
-			addEvents(marker, action, selected);
+			addEvents(this.app, marker, action, selected);
 
 			markers.addLayer(marker);
 		}
@@ -109,11 +131,23 @@ export default class LMap extends Component{
 	}
 }
 
+function mapClick(map, e, self){
+	map.removeLayer(self.app.clickMarker);
+
+	const lat = e.latlng.lat.toFixed(5);
+	const lon = e.latlng.lng.toFixed(5);
+
+	self.app.clickMarker = L.circleMarker([lat, lon], LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
+	map.addLayer(self.app.clickMarker);
+
+	self.props.action({lat, lon});
+}
+
 function addPopup(marker, text, options){
 	marker.bindPopup(LCommon.popupHeader(text), options);
 }
 
-function addEvents(marker, action, geom){
+function addEvents(app, marker, action, geom){
 	marker.on('mouseover', function (e) {
 		this.openPopup();
 	});
@@ -122,6 +156,8 @@ function addEvents(marker, action, geom){
 	});
 
 	marker.on('click', function(){
+		app.map.removeLayer(app.clickMarker);
+
 		action(geom);
 	});
 }

@@ -6,11 +6,11 @@ scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq(
 	"com.typesafe.akka"  %% "akka-slf4j"                         % "2.4.16",
-	"ch.qos.logback"      % "logback-classic"                    % "1.1.2",
+	"ch.qos.logback"      % "logback-classic"                    % "1.1.3",
 	"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.5-SNAPSHOT",
 	"se.lu.nateko.cp"    %% "views-core"                         % "0.2-SNAPSHOT",
-	"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.0-SNAPSHOT",
-	"org.scalatest"      %% "scalatest"                          % "3.0.0"            % "test"
+	"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.0-SNAPSHOT" exclude("commons-logging", "commons-logging"),
+	"org.scalatest"      %% "scalatest"                          % "3.0.1"            % "test"
 )
 
 scalacOptions ++= Seq(
