@@ -12,8 +12,11 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.server.RouteResult.route2HandlerFlow
 import akka.stream.ActorMaterializer
+import se.lu.nateko.cp.stiltcluster.SeedRunner
 
 object Main extends App {
+
+	val cluster = new SeedRunner
 
 	implicit val system = ActorSystem("stiltweb")
 	implicit val materializer = ActorMaterializer(namePrefix = Some("stiltweb_mat"))
@@ -36,7 +39,7 @@ object Main extends App {
 			case binding =>
 				sys.addShutdownHook{
 					val doneFuture = binding.unbind().flatMap{
-						_ => system.terminate()
+						_ => system.terminate().zip(cluster.system.terminate())
 					}
 					Await.result(doneFuture, 3 seconds)
 				}

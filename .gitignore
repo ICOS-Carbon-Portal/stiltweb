@@ -1,4 +1,3 @@
-/stiltresult1.csv
 /application.conf
 *.class
 *.log
@@ -11,6 +10,7 @@ src/main/resources/bundle.js
 .cache/
 .history/
 /target/
+/stiltcluster/target/
 /project/target/
 /project/project/
 
@@ -25,6 +25,8 @@ src/main/resources/bundle.js
 
 #Front end specific
 /src/main/resources/www/stilt.js
+/src/main/resources/www/worker.js
+/src/main/resources/www/viewer.js
 
 nohup.out
 /outText.txt
