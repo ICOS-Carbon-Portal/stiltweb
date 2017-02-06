@@ -14,8 +14,9 @@ class WorkMaster extends Actor{
 
 	override def preStart(): Unit = cluster.subscribe(self, classOf[MemberUp])
 	override def postStop(): Unit = {
-		cluster.leave(cluster.selfAddress)
 		cluster.unsubscribe(self)
+		cluster.leave(cluster.selfAddress)
+		context.system.terminate()
 	}
 
 	def receive = {
@@ -24,6 +25,9 @@ class WorkMaster extends Actor{
 			state.members.filter(_.status == MemberStatus.Up) foreach register
 
 		case MemberUp(m) => register(m)
+
+		case StopWorkMaster =>
+			context stop self
 	}
 
 	def register(member: Member): Unit = if (member.hasRole("frontend")) {

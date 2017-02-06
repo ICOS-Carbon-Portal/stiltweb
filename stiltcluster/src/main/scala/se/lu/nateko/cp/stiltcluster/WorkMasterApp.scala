@@ -1,20 +1,25 @@
 package se.lu.nateko.cp.stiltcluster
 
-import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
 import akka.actor.Props
-import java.io.File
+import akka.pattern.gracefulStop
+
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.Await
 
 object WorkMasterApp extends App {
 
-	println("Current dir: " + new File(".").getAbsolutePath)
-
-	val conf = ConfigFactory.parseFile(new File("application.conf"))
-		.withFallback(ConfigFactory.parseResources("stiltcluster.conf"))
-		.resolve()
-		.withFallback(ConfigFactory.load())
+	val conf = ConfigLoader.load()
 
 	val system = ActorSystem("StiltCluster", conf)
 	val worker = system.actorOf(Props[WorkMaster], name = "backend")
 
+	sys.addShutdownHook{
+		if(!system.whenTerminated.isCompleted){
+			import scala.concurrent.ExecutionContext.Implicits.global
+			val done = gracefulStop(worker, 5 seconds, StopWorkMaster)
+				.flatMap(_ => system.whenTerminated)
+			Await.result(done, 6 seconds)
+		}
+	}
 }

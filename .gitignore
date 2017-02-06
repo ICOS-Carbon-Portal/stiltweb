@@ -35,3 +35,4 @@ nohup.out
 
 .idea
 /bin/
+/stiltcluster/bin/
