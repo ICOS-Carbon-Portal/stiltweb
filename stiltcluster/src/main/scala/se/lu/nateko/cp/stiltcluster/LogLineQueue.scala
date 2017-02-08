@@ -10,7 +10,7 @@ class LogLineQueue(sizeBound: Int){
 
 	def append(bytes: Array[Byte]): Unit = {
 		remainder ++= bytes
-		enqueue()
+		enqueueCompleteLines()
 	}
 
 	def flush(): Unit = {
@@ -20,12 +20,12 @@ class LogLineQueue(sizeBound: Int){
 
 	def lines: Seq[String] = queue
 
-	@tailrec private def enqueue(): Unit = {
+	@tailrec private def enqueueCompleteLines(): Unit = {
 		val nlPos = remainder.indexOf(10)
 		if(nlPos >= 0){
 			enqueue(remainder.take(nlPos + 1))
 			remainder = remainder.drop(nlPos + 1)
-			enqueue()
+			enqueueCompleteLines()
 		}
 	}
 

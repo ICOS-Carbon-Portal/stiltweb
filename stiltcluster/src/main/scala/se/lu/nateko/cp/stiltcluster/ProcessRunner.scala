@@ -18,7 +18,7 @@ class ProcessRunner(command: String, logSizeBound: Int) {
 		Some(process.exitValue)
 	}
 
-	def kill(): Unit = if(process.isAlive){
+	def destroyForcibly(): Unit = if(process.isAlive){
 		process.destroyForcibly()
 		process.waitFor()
 		closeStreams()

@@ -2,24 +2,33 @@ package se.lu.nateko.cp.stiltcluster
 
 import java.time.LocalDate
 
-sealed trait StiltMessage extends java.io.Serializable
+case object WorkMasterRegistration
 
-case object WorkMasterRegistration extends StiltMessage
+case object StopWorkMaster
 
-case object StopWorkMaster extends StiltMessage
+case class CancelJob(id: String)
 
-case class CancelJob(id: String) extends StiltMessage
+case object GetStatus
 
-case class JobStatus(id: String, output: IndexedSeq[String], logs: IndexedSeq[String], errors: IndexedSeq[String])
+case class JobStatus(
+	id: String,
+	exitValue: Option[Int],
+	output: Seq[String],
+	logs: Seq[String],
+	errors: Seq[String]
+)
 
-case class StiltJob(
+case class JobCanceled(status: JobStatus)
+
+case class Job(
 	siteId: String,
 	lat: Double,
 	lon: Double,
-	alt: Double,
+	alt: Int,
 	start: LocalDate,
-	stop: LocalDate,
-	parallelism: Int
-){
-	def jobId = "job_" + this.hashCode()
+	stop: LocalDate
+)
+
+case class JobRun(job: Job, parallelism: Int){
+	def runId = "job_" + this.hashCode()
 }

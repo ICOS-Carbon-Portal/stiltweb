@@ -12,31 +12,42 @@ class Worker(conf: StiltEnv) extends Actor{
 
 	private var stiltProc: ProcessRunner = null
 	private var logsProc: ProcessRunner = null
-	private var running: StiltJob = null
+	private var stiltRun: JobRun = null
 
 	def receive = {
-		case job: StiltJob =>
-			stiltProc = new ProcessRunner(stiltCommand(job, conf), conf.logSizeLimit)
-			logsProc = new ProcessRunner(logWatchCommand(job, conf), conf.logSizeLimit)
-			running = job
+		case run: JobRun =>
+			stiltProc = new ProcessRunner(stiltCommand(run, conf), conf.logSizeLimit)
+			logsProc = new ProcessRunner(logWatchCommand(run, conf), conf.logSizeLimit)
+			stiltRun = run
 			sender() ! getStatus
 			context become calculating
 	}
 
 	def calculating: Receive = {
-		case CancelJob(id) if(id == running.jobId) =>
-			stiltProc.kill()
-			logsProc.kill()
+		case GetStatus =>
+			val status = getStatus
+			sender() ! status
+			if(status.exitValue.isDefined) resetWorker()
+
+		case CancelJob(id) if(id == stiltRun.runId) =>
+			stiltProc.destroyForcibly()
+			logsProc.destroyForcibly()
+			sender() ! JobCanceled(getStatus)
+			resetWorker()
 	}
 
 	private def getStatus = JobStatus(
-		id = running.jobId,
-		output = stiltProc.outputLines().toIndexedSeq,
-		logs = logsProc.outputLines().toIndexedSeq,
-		errors = (stiltProc.errorLines() ++ logsProc.errorLines()).toIndexedSeq
+		id = stiltRun.runId,
+		exitValue = stiltProc.exitValue(),
+		output = stiltProc.outputLines(),
+		logs = logsProc.outputLines(),
+		errors = stiltProc.errorLines() ++ logsProc.errorLines()
 	)
-	//docker exec stilt_stilt_1 /bin/bash -c "/opt/STILT_modelling/start.stilt.sh HTM 20120615 20120616 testrun01 6
-	// /opt/STILT_modelling/testrun01/stilt_01.HTM2012testrun01.log
+
+	private def resetWorker(): Unit = {
+		stiltProc = null; logsProc = null; stiltRun = null
+		context.unbecome()
+	}
 }
 
 
@@ -44,26 +55,32 @@ object Worker{
 
 	def props(env: StiltEnv) = Props(classOf[Worker], env)
 
-	def stiltCommand(job: StiltJob, env: StiltEnv): String = {
-
+	def stiltCommand(run: JobRun, env: StiltEnv): String = {
+		//docker exec stilt_stilt_1 /bin/bash -c \
+		// '/opt/STILT_modelling/start.stilt.sh HTM 56.10 13.42 150 20120615 20120616 testrun01 6'
+		val job = run.job
 		val script = new File(env.mainFolder, env.launchScript).getAbsolutePath
-
+		val lat = job.lat.formatted("%.2d")
 		s"docker exec ${env.containerName} /bin/bash -c '$script ${job.siteId} " +
-			s"${job.start.format(df)} ${job.start.format(df)} ${job.parallelism}'"
+			s"${geoStr(job.lat)} ${geoStr(job.lon)} ${job.alt} " +
+			s"${dateStr(job.start)} ${dateStr(job.stop)} ${run.parallelism}'"
 	}
 
-	def logWatchCommand(job: StiltJob, env: StiltEnv): String = {
-		val jobFolder = new File(env.mainFolder, job.jobId).getAbsolutePath
+	def logWatchCommand(run: JobRun, env: StiltEnv): String = {
+		// cd /opt/STILT_modelling/testrun01 && tail -F stilt_01.HTM2012job_1.log -F stilt_02.HTM2012job_1.log ...
+		val job = run.job
+		val jobFolder = new File(env.mainFolder, run.runId).getAbsolutePath
 
-		val logFiles = (1 to job.parallelism).map{ n =>
-			val par = job.parallelism.formatted("%02d")
-			s"stilt_${par}.${job.siteId}${job.start.getYear}${job.jobId}.log"
+		val logFiles = (1 to run.parallelism).map{ n =>
+			val par = n.formatted("%02d")
+			s"stilt_${par}.${job.siteId}${job.start.getYear}${run.runId}.log"
 		}
 		val logList = logFiles.mkString("-F ", " -F ", "")
 
-		s"docker exec ${env.containerName} /bin/bash -c 'tail $logList'"
+		s"docker exec ${env.containerName} /bin/bash -c 'cd $jobFolder && tail $logList'"
 	}
 
 	private val df = DateTimeFormatter.ofPattern("yyyyMMdd")
 	private def dateStr(date: LocalDate) = date.format(df)
+	private def geoStr(latOrLon: Double) = latOrLon.formatted("%.2f")
 }

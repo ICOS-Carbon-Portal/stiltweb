@@ -28,9 +28,10 @@ class WorkMaster extends Actor{
 
 		case StopWorkMaster =>
 			context stop self
+
 	}
 
-	def register(member: Member): Unit = if (member.hasRole("frontend")) {
+	private def register(member: Member): Unit = if (member.hasRole("frontend")) {
 		context.actorSelection(
 			RootActorPath(member.address) / "user" / "frontend"
 		) ! WorkMasterRegistration
