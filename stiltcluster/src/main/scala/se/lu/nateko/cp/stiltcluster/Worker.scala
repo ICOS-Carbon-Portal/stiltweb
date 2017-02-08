@@ -55,18 +55,20 @@ object Worker{
 
 	def props(env: StiltEnv) = Props(classOf[Worker], env)
 
-	def stiltCommand(run: JobRun, env: StiltEnv): String = {
+	def stiltCommand(run: JobRun, env: StiltEnv): Seq[String] = {
 		//docker exec stilt_stilt_1 /bin/bash -c \
 		// '/opt/STILT_modelling/start.stilt.sh HTM 56.10 13.42 150 20120615 20120616 testrun01 6'
 		val job = run.job
 		val script = new File(env.mainFolder, env.launchScript).getAbsolutePath
-		val lat = job.lat.formatted("%.2d")
-		s"docker exec ${env.containerName} /bin/bash -c '$script ${job.siteId} " +
-			s"${geoStr(job.lat)} ${geoStr(job.lon)} ${job.alt} " +
-			s"${dateStr(job.start)} ${dateStr(job.stop)} ${run.parallelism}'"
+
+		Seq(
+			"docker", "exec", env.containerName, "/bin/bash", "-c",
+			s"$script ${job.siteId} ${geoStr(job.lat)} ${geoStr(job.lon)} ${job.alt} " +
+			s"${dateStr(job.start)} ${dateStr(job.stop)} ${run.runId} ${run.parallelism}"
+		)
 	}
 
-	def logWatchCommand(run: JobRun, env: StiltEnv): String = {
+	def logWatchCommand(run: JobRun, env: StiltEnv): Seq[String] = {
 		// cd /opt/STILT_modelling/testrun01 && tail -F stilt_01.HTM2012job_1.log -F stilt_02.HTM2012job_1.log ...
 		val job = run.job
 		val jobFolder = new File(env.mainFolder, run.runId).getAbsolutePath
@@ -77,7 +79,10 @@ object Worker{
 		}
 		val logList = logFiles.mkString("-F ", " -F ", "")
 
-		s"docker exec ${env.containerName} /bin/bash -c 'cd $jobFolder && tail $logList'"
+		Seq(
+			"docker", "exec", env.containerName, "/bin/bash", "-c",
+			s"cd $jobFolder && tail $logList"
+		)
 	}
 
 	private val df = DateTimeFormatter.ofPattern("yyyyMMdd")

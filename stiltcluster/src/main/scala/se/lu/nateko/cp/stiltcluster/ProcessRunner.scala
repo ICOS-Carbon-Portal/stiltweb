@@ -2,9 +2,9 @@ package se.lu.nateko.cp.stiltcluster
 
 import java.io.InputStream
 
-class ProcessRunner(command: String, logSizeBound: Int) {
+class ProcessRunner(command: Seq[String], logSizeBound: Int) {
 
-	private val process = new ProcessBuilder(command).start()
+	private val process = new ProcessBuilder(command: _*).start()
 
 	private val outStream = process.getInputStream
 	private val errStream = process.getErrorStream

@@ -12,7 +12,9 @@ object WorkMasterApp extends App {
 	val conf = ConfigLoader.load()
 
 	val system = ActorSystem("StiltCluster", conf)
-	val worker = system.actorOf(Props[WorkMaster], name = "backend")
+
+	val workMasterProps = WorkMaster.props(ConfigLoader.loadStiltEnv)
+	val worker = system.actorOf(workMasterProps, name = "backend")
 
 	sys.addShutdownHook{
 		if(!system.whenTerminated.isCompleted){

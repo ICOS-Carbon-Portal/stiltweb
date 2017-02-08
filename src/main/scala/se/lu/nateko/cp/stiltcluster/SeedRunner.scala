@@ -10,4 +10,6 @@ class SeedRunner {
 	val system = ActorSystem("StiltCluster", conf)
 
 	system.actorOf(Props[WorkReceptionist], name = "frontend")
+	val workMasterProps = WorkMaster.props(ConfigLoader.loadStiltEnv, 2)
+	system.actorOf(workMasterProps, name = "backend")
 }

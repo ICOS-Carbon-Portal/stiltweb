@@ -9,6 +9,7 @@ case object StopWorkMaster
 case class CancelJob(id: String)
 
 case object GetStatus
+case object CollectStatus
 
 case class JobStatus(
 	id: String,
@@ -32,3 +33,7 @@ case class Job(
 case class JobRun(job: Job, parallelism: Int){
 	def runId = "job_" + this.hashCode()
 }
+
+case class WorkMasterStatus(work: Seq[(JobRun, JobStatus)], freeCores: Int)
+
+case class Thanks(ids: Seq[String])
