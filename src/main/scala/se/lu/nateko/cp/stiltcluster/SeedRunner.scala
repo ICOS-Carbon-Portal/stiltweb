@@ -5,11 +5,11 @@ import akka.actor.Props
 
 class SeedRunner {
 
-	val conf = ConfigLoader.load(Some("stiltseed.conf"))
+	//TODO Add proper termination support
+
+	val conf = ConfigLoader.load(Some("stiltfrontend.conf"))
 
 	val system = ActorSystem("StiltCluster", conf)
 
-	system.actorOf(Props[WorkReceptionist], name = "frontend")
-	val workMasterProps = WorkMaster.props(ConfigLoader.loadStiltEnv, 2)
-	system.actorOf(workMasterProps, name = "backend")
+	system.actorOf(Props[WorkReceptionist], name = "receptionist")
 }

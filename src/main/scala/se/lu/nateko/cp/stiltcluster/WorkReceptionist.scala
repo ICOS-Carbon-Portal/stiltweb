@@ -4,23 +4,39 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Terminated
 import java.time.LocalDate
+import scala.collection.mutable.Map
 
 class WorkReceptionist extends Actor{
 	import WorkReceptionist._
 
 	private var nodes = IndexedSeq.empty[ActorRef]
+	private val status = Map.empty[ActorRef, WorkMasterStatus]
+
 	val log = context.system.log
 
 	def receive = {
-		case WorkMasterRegistration if ! nodes.contains(sender()) =>
-			context watch sender()
-			nodes = nodes :+ sender()
-			log.info("WORK MASTER REGISTERED: " + sender())
 
-			sender() ! testJob
+		case StopAllWork =>
+			nodes.foreach(_ ! StopAllWork)
+
+		case s: WorkMasterStatus =>
+			status += ((sender(), s))
 
 		case run: JobRun =>
+			val oldStatus = status(sender())
+			val newStatus = oldStatus.copy(
+				work = oldStatus.work :+ ((run, JobStatus.init(run.runId)))
+			)
+			status += ((sender(), newStatus))
 			log.info("STARTED STILT RUN: " + run.toString)
+
+		case WorkMasterRegistration(nCores) if ! nodes.contains(sender()) =>
+			context watch sender()
+			nodes = nodes :+ sender()
+			status += ((sender(), WorkMasterStatus(Nil, nCores)))
+
+			log.info("WORK MASTER REGISTERED: " + sender())
+			log.info("CURRENT WORK MASTERs: " + nodes.mkString(", "))
 
 		case Terminated(w) =>
 			log.info("WORK MASTER UNREGISTERED: " + sender())

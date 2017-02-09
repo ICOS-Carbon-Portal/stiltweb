@@ -44,6 +44,9 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 			sender() ! run
 		}
 
+		case jc: CancelJob =>
+			workers.get(jc.id).foreach(_ ! jc)
+
 		case GetStatus => sender ! myStatus
 
 		case Thanks(ids) =>
@@ -68,27 +71,22 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 
 		case MemberUp(m) => register(m)
 
-		case StopWorkMaster =>
-			val boss = sender()
-
-			if(workers.isEmpty) boss ! myStatus
-			else workers.foreach{
-				case (id, worker) => worker ! CancelJob(id)
+		case StopAllWork =>
+			if(workers.isEmpty) context stop self
+			else {
+				workers.foreach{
+					case (id, worker) => worker ! CancelJob(id)
+				}
+				context become shuttingDown
 			}
-			context become shuttingDown(boss)
 
 	}
 
-	def shuttingDown(boss: ActorRef): Receive = {
-		case js: JobStatus =>
-			status += ((js.id, js))
+	def shuttingDown: Receive = {
+		case JobCanceled(js) =>
 			sender() ! PoisonPill
 			workers -= js.id
-
-			if(workers.isEmpty) boss ! myStatus
-
-		case finalThanks: Thanks =>
-			context stop self
+			if(workers.isEmpty) context stop self
 	}
 
 	private def myStatus = WorkMasterStatus(
@@ -105,8 +103,8 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 
 	private def register(member: Member): Unit = if (member.hasRole("frontend")) {
 		context.actorSelection(
-			RootActorPath(member.address) / "user" / "frontend"
-		) ! WorkMasterRegistration
+			RootActorPath(member.address) / "user" / "receptionist"
+		) ! WorkMasterRegistration(coresPoolSize)
 	}
 }
 
