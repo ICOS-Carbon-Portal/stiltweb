@@ -31,7 +31,9 @@ object Main extends App {
 			complete((StatusCodes.InternalServerError, msg))
 	}
 
-	val route = new MainRoute(config).route
+	val route = handleExceptions(exceptionHandler){
+	  new MainRoute(config).route
+	}
 
 	Http()
 		.bindAndHandle(route, "127.0.0.1", 9010)

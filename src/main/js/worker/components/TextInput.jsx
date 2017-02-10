@@ -16,6 +16,10 @@ export default class TextInput extends Component {
 	onTextChange(){
 		const input = ReactDOM.findDOMNode(this.refs.input);
 		this.setState({val: input.value});
+
+		if (this.props.action){
+			this.props.action(input.value);
+		}
 	}
 
 	render(){

@@ -2,6 +2,9 @@ import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import * as LCommon from 'icos-cp-leaflet-common';
 
+const warningRadius = 20000;
+const coordDecimals = 2;
+
 export default class LMap extends Component{
 	constructor(props){
 		super(props);
@@ -14,7 +17,8 @@ export default class LMap extends Component{
 				spiderfyDistanceMultiplier: 1.8
 			}),
 			circles: L.layerGroup(),
-			clickMarker: L.circleMarker()
+			clickMarker: L.circleMarker(),
+			clickedPos: null
 		}
 	}
 
@@ -39,19 +43,27 @@ export default class LMap extends Component{
 			const self = this;
 
 			map.on('click', function (e) {
-				mapClick(map, e, self);
+				const lat = e.latlng.lat.toFixed(coordDecimals);
+				const lon = e.latlng.lng.toFixed(coordDecimals);
+
+				mapClick(map, lat, lon, self);
 			});
 		}
 	}
 
 	componentWillReceiveProps(nextProps){
 		const prevProps = this.props;
+		const clickedPos = this.app.clickedPos;
+		const map = this.app.map;
+
 		const buildMarkers = (nextProps.stations.length > 0 && prevProps.stations.length != nextProps.stations.length) ||
 			(nextProps.selectedStation != undefined && prevProps.selectedStation != nextProps.selectedStation);
+		const updateCircleMarker = nextProps.selectedStation != undefined && nextProps.selectedStation.id === undefined
+			&& clickedPos != null && (nextProps.selectedStation.lat != clickedPos.lat || nextProps.selectedStation.lon != clickedPos.lon);
+
+		// console.log({prevProps, nextProps, buildMarkers, updateCircleMarker, clickedPos});
 
 		if (buildMarkers) {
-			const map = this.app.map;
-
 			if (nextProps.workerMode) this.buildCircles(nextProps.stations);
 			this.buildMarkers(nextProps.stations, nextProps.action, nextProps.selectedStation);
 
@@ -78,14 +90,36 @@ export default class LMap extends Component{
 				}
 			}
 		}
+
+		if (updateCircleMarker){
+			mapClick(map, nextProps.selectedStation.lat, nextProps.selectedStation.lon, this);
+		}
 	}
 
 	buildCircles(geoms){
 		const circles = this.app.circles;
 		circles.clearLayers();
+		const map = this.app.map;
+		const self = this;
 
 		geoms.forEach(geom => {
-			circles.addLayer(L.circle([geom.lat, geom.lon], 50000, {color: 'red'}));
+			const circle = L.circle([geom.lat, geom.lon], warningRadius, {color: 'red'});
+			addPopup(circle, "Avoid adding new footprints here", {closeButton: false});
+
+			circle.on('mousemove', function (e) {
+				this.closePopup();
+				this.openPopup(e.latlng);
+			});
+			circle.on('mouseout', function (e) {
+				this.closePopup();
+			});
+			circle.on('click', function (e) {
+				const lat = e.latlng.lat.toFixed(coordDecimals);
+				const lon = e.latlng.lng.toFixed(coordDecimals);
+				mapClick(map, lat, lon, self);
+			});
+
+			circles.addLayer(circle);
 		});
 	}
 
@@ -131,16 +165,46 @@ export default class LMap extends Component{
 	}
 }
 
-function mapClick(map, e, self){
+function mapClick(map, lat, lon, self){
 	map.removeLayer(self.app.clickMarker);
-
-	const lat = e.latlng.lat.toFixed(5);
-	const lon = e.latlng.lng.toFixed(5);
 
 	self.app.clickMarker = L.circleMarker([lat, lon], LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
 	map.addLayer(self.app.clickMarker);
+	self.app.clickedPos = {lat, lon};
 
-	self.props.action({lat, lon});
+	self.props.action(self.app.clickedPos);
+
+	checkProximity(self.app.markers, self.app.clickedPos)
+}
+
+function checkProximity(markers, clickedPos){
+	const clickedPos3857 = toWebMercator(parseFloat(clickedPos.lon), parseFloat(clickedPos.lat));
+	var isInside = false;
+
+	markers.eachLayer(marker => {
+		const markerPos4326 = marker.getLatLng();
+		const markerPos3857 = toWebMercator(markerPos4326.lng, markerPos4326.lat);
+
+		if ((Math.pow(clickedPos3857.x - markerPos3857.x, 2) + Math.pow(clickedPos3857.y - markerPos3857.y, 2)) < Math.pow(warningRadius, 2)) {
+			isInside = true;
+			return;
+		}
+
+		// console.log({markerPos4326, markerPos3857, clickedPos3857, isInside});
+	});
+
+	console.log({isInside});
+}
+
+function toWebMercator(lon, lat) {
+	if ((Math.abs(lon) > 180 || Math.abs(lat) > 90)) return null;
+
+	const num = lon * 0.017453292519943295;
+	const x = 6378137.0 * num;
+	const a = lat * 0.017453292519943295;
+	const y = 3189068.5 * Math.log((1.0 + Math.sin(a)) / (1.0 - Math.sin(a)));
+
+	return {x,y};
 }
 
 function addPopup(marker, text, options){

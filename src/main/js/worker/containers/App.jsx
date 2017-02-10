@@ -16,12 +16,25 @@ class App extends Component {
 		};
 	}
 
-	stationSelected(selectedStation){
+	setSelectedStation(selectedStation){
 		this.setState({selectedStation});
 	}
 
-	mapClicked(selectedStation){
-		this.setState({selectedStation});
+	updateLat(newVal){
+		this.updateCoord(true, newVal);
+	}
+
+	updateLon(newVal){
+		this.updateCoord(false, newVal);
+	}
+
+	updateCoord(isLat, newVal){
+		const selectedStation = this.state.selectedStation;
+
+		this.setState({selectedStation: {
+			lat: isLat ? newVal : selectedStation.lat,
+			lon: isLat ? selectedStation.lon : newVal
+		}});
 	}
 
 	render() {
@@ -62,7 +75,7 @@ class App extends Component {
 
 								<div style={{marginBottom: 10}}>
 									<Select
-										selectValue={this.stationSelected.bind(this)}
+										selectValue={this.setSelectedStation.bind(this)}
 										infoTxt="Select station here or on the map"
 										availableValues={props.stations}
 										value={state.selectedStation}
@@ -76,7 +89,7 @@ class App extends Component {
 										workerMode={true}
 										stations={props.stations}
 										selectedStation={state.selectedStation}
-										action={this.mapClicked.bind(this)}
+										action={this.setSelectedStation.bind(this)}
 									/>
 								</div>
 							</div>
@@ -90,10 +103,10 @@ class App extends Component {
 							<div className="panel-body">
 
 								<label style={labelStyle}>Latitude (decimal degree)</label>
-								<TextInput style={textInputStyle} value={lat} />
+								<TextInput style={textInputStyle} value={lat} action={this.updateLat.bind(this)} />
 
 								<label style={labelStyle}>Longitude (decimal degree)</label>
-								<TextInput style={textInputStyle} value={lon} />
+								<TextInput style={textInputStyle} value={lon} action={this.updateLon.bind(this)} />
 
 								<label style={labelStyle}>Altitude (meters)</label>
 								<TextInput style={textInputStyle} value={alt} />

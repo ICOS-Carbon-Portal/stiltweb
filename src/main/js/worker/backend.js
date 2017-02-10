@@ -1,5 +1,5 @@
 import 'whatwg-fetch';
-import {checkStatus, sparql, getJson, getBinaryTable, getBinRaster, tableFormatForSpecies} from 'icos-cp-backend';
+import {sparql, getJson, getBinaryTable, getBinRaster, tableFormatForSpecies} from 'icos-cp-backend';
 import {stationInfoQuery} from './sparqlQueries';
 import {groupBy, copyprops} from 'icos-cp-utils';
 import config from './config';
