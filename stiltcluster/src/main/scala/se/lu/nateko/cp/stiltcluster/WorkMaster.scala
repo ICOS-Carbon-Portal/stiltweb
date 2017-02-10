@@ -31,7 +31,6 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 	override def postStop(): Unit = {
 		cluster.unsubscribe(self)
 		cluster.leave(cluster.selfAddress)
-		context.system.terminate()
 	}
 
 	def receive = {
@@ -39,7 +38,10 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 		case job: Job => if(freeCores > 0) {
 			val run = JobRun(job, preferredParallelism)
 			val worker = context.actorOf(Worker.props(conf))
-			workers += ((run.runId, worker))
+			val id = run.runId
+			workers += ((id, worker))
+			runs += ((id, run))
+			status += ((id, JobStatus.init(id)))
 			worker ! run
 			sender() ! run
 		}
@@ -56,7 +58,6 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 			}
 
 		case js: JobStatus =>
-			context.system.log.info(js.toString)
 			status += ((js.id, js))
 			if(js.exitValue.isDefined){
 				sender() ! PoisonPill
@@ -95,7 +96,9 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 	)
 
 	private def freeCores: Int = {
-		val occupied = runs.values.map(_.parallelism).sum
+		val occupied = runs.values.collect{
+			case run if status.get(run.runId).flatMap(_.exitValue).isEmpty => run.parallelism
+		}.sum
 		Math.max(coresPoolSize - occupied, 0)
 	}
 

@@ -12,17 +12,18 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.server.RouteResult.route2HandlerFlow
 import akka.stream.ActorMaterializer
-import se.lu.nateko.cp.stiltcluster.SeedRunner
+import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 
 object Main extends App {
 
-	val cluster = new SeedRunner
+	val cluster = new StiltClusterApi
 
 	implicit val system = ActorSystem("stiltweb")
 	implicit val materializer = ActorMaterializer(namePrefix = Some("stiltweb_mat"))
 	implicit val dispatcher = system.dispatcher
 
 	val config = ConfigReader.getDefault
+	val service = new StiltResultsFetcher(config)
 
 	val exceptionHandler = ExceptionHandler{
 		case ex =>
@@ -32,7 +33,7 @@ object Main extends App {
 	}
 
 	val route = handleExceptions(exceptionHandler){
-	  new MainRoute(config).route
+		new MainRoute(service, cluster).route
 	}
 
 	Http()
@@ -40,9 +41,10 @@ object Main extends App {
 		.onSuccess{
 			case binding =>
 				sys.addShutdownHook{
+					val ctxt =  scala.concurrent.ExecutionContext.Implicits.global
 					val doneFuture = binding.unbind().flatMap{
-						_ => system.terminate().zip(cluster.system.terminate())
-					}
+						_ => system.terminate().zip(cluster.shutdown()(ctxt))
+					}(ctxt)
 					Await.result(doneFuture, 3 seconds)
 				}
 				println(binding)

@@ -18,7 +18,7 @@ object WorkMasterApp extends App {
 		hostname == seedHostname
 	}
 
-	val system = ActorSystem("StiltCluster", conf)
+	val system = ActorSystem(conf.getString("stiltcluster.name"), conf)
 
 	val reservedCores = if(thisIsFrontendVm) 2 else 0
 
@@ -28,9 +28,10 @@ object WorkMasterApp extends App {
 	sys.addShutdownHook{
 		if(!system.whenTerminated.isCompleted){
 			import scala.concurrent.ExecutionContext.Implicits.global
-			val done = gracefulStop(worker, 5 seconds, StopAllWork)
-				.flatMap(_ => system.whenTerminated)
-			Await.result(done, 6 seconds)
+			val done = gracefulStop(worker, 3 seconds, StopAllWork)
+				.recover{case _ => false}
+				.flatMap(_ => system.terminate())
+			Await.result(done, 5 seconds)
 		}
 	}
 }

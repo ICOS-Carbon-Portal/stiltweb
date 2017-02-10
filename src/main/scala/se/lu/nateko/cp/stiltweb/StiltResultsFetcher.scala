@@ -1,21 +1,16 @@
-package se.lu.nateko.cp.stiltweb.services
+package se.lu.nateko.cp.stiltweb
 
-import se.lu.nateko.cp.stiltweb.{NetCdfConfig, StiltWebConfig}
 import java.nio.file.Paths
 import java.io.File
 import java.nio.file.Files
-
 import scala.collection.JavaConversions._
 import java.nio.file.Path
-
 import akka.stream.scaladsl.Source
-
 import scala.io.{Source => IoSource}
 import akka.util.ByteString
 import akka.NotUsed
 import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
 import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
-import se.lu.nateko.cp.stiltweb.formats.csv.NumericScv
 
 
 class StiltResultsFetcher(config: StiltWebConfig) {

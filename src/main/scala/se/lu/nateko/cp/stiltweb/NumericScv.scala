@@ -1,9 +1,8 @@
-package se.lu.nateko.cp.stiltweb.formats.csv
+package se.lu.nateko.cp.stiltweb
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-
 import scala.io.{Source => IoSource}
 
 object NumericScv {
