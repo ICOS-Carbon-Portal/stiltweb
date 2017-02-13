@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {AnimatedToasters} from 'icos-cp-toaster';
+import * as Toaster from 'icos-cp-toaster';
 import StationsMap from '../../common/components/LMap.jsx';
 import Select from '../../common/components/Select.jsx';
 import TextInput from '../components/TextInput.jsx';
@@ -18,6 +18,10 @@ class App extends Component {
 
 	setSelectedStation(selectedStation){
 		this.setState({selectedStation});
+	}
+
+	toastWarning(mess){
+		this.setState({toasterData: new Toaster.ToasterData(Toaster.TOAST_WARNING, mess)});
 	}
 
 	updateLat(newVal){
@@ -41,6 +45,8 @@ class App extends Component {
 		const state = this.state;
 		const props = this.props;
 
+		const toasterData = props.toasterData ? props.toasterData : state.toasterData
+
 		const lat = state.selectedStation ? state.selectedStation.lat : '';
 		const lon = state.selectedStation ? state.selectedStation.lon : '';
 		const alt = state.selectedStation && state.selectedStation.alt ? state.selectedStation.alt : defaultAlt;
@@ -53,11 +59,11 @@ class App extends Component {
 
 		return (
 			<div>
-				<AnimatedToasters
+				<Toaster.AnimatedToasters
 					autoCloseDelay={5000}
 					fadeInTime={100}
 					fadeOutTime={400}
-					toasterData={props.toasterData}
+					toasterData={toasterData}
 					maxWidth={400}
 				/>
 
@@ -90,6 +96,7 @@ class App extends Component {
 										stations={props.stations}
 										selectedStation={state.selectedStation}
 										action={this.setSelectedStation.bind(this)}
+										toastWarning={this.toastWarning.bind(this)}
 									/>
 								</div>
 							</div>

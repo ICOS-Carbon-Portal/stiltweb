@@ -2,8 +2,14 @@ import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import * as LCommon from 'icos-cp-leaflet-common';
 
-const warningRadius = 20000;
+const warningRadius = (lat => {
+	return 20000 * Math.cos(Math.PI / 180 * lat);
+});
 const coordDecimals = 2;
+// const mask = L.latLngBounds(
+// 	L.latLng(latMin, lonMin),
+// 	L.latLng(latMax, lonMax)
+// );
 
 export default class LMap extends Component{
 	constructor(props){
@@ -19,7 +25,7 @@ export default class LMap extends Component{
 			circles: L.layerGroup(),
 			clickMarker: L.circleMarker(),
 			clickedPos: null
-		}
+		};
 	}
 
 	componentDidMount() {
@@ -43,10 +49,7 @@ export default class LMap extends Component{
 			const self = this;
 
 			map.on('click', function (e) {
-				const lat = e.latlng.lat.toFixed(coordDecimals);
-				const lon = e.latlng.lng.toFixed(coordDecimals);
-
-				mapClick(map, lat, lon, self);
+				mapClick(map, e.latlng, self);
 			});
 		}
 	}
@@ -103,7 +106,7 @@ export default class LMap extends Component{
 		const self = this;
 
 		geoms.forEach(geom => {
-			const circle = L.circle([geom.lat, geom.lon], warningRadius, {color: 'red'});
+			const circle = L.circle([geom.lat, geom.lon], {radius: warningRadius(geom.lat), color: 'red'});
 			addPopup(circle, "Avoid adding new footprints here", {closeButton: false});
 
 			circle.on('mousemove', function (e) {
@@ -114,13 +117,11 @@ export default class LMap extends Component{
 				this.closePopup();
 			});
 			circle.on('click', function (e) {
-				const lat = e.latlng.lat.toFixed(coordDecimals);
-				const lon = e.latlng.lng.toFixed(coordDecimals);
-				mapClick(map, lat, lon, self);
+				mapClick(map, e.latlng, self);
 			});
 
 			circles.addLayer(circle);
-		});
+	 	});
 	}
 
 	buildMarkers(geoms, action, selectedStation){
@@ -165,46 +166,35 @@ export default class LMap extends Component{
 	}
 }
 
-function mapClick(map, lat, lon, self){
+function mapClick(map, clickedPosLatlng, self){
 	map.removeLayer(self.app.clickMarker);
 
-	self.app.clickMarker = L.circleMarker([lat, lon], LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
+	self.app.clickMarker = L.circleMarker(clickedPosLatlng, LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
 	map.addLayer(self.app.clickMarker);
-	self.app.clickedPos = {lat, lon};
+
+	self.app.clickedPos = {
+		lat: clickedPosLatlng.lat.toFixed(coordDecimals),
+		lon: clickedPosLatlng.lng.toFixed(coordDecimals)
+	};
 
 	self.props.action(self.app.clickedPos);
 
-	checkProximity(self.app.markers, self.app.clickedPos)
+	if (checkProximity(self.app.markers, clickedPosLatlng)){
+		self.props.toastWarning("The position of your new footprint is too close to an existing footprint!");
+	}
 }
 
-function checkProximity(markers, clickedPos){
-	const clickedPos3857 = toWebMercator(parseFloat(clickedPos.lon), parseFloat(clickedPos.lat));
-	var isInside = false;
+function checkProximity(markers, clickedPosLatlng){
+	var isTooClose = false;
 
 	markers.eachLayer(marker => {
-		const markerPos4326 = marker.getLatLng();
-		const markerPos3857 = toWebMercator(markerPos4326.lng, markerPos4326.lat);
-
-		if ((Math.pow(clickedPos3857.x - markerPos3857.x, 2) + Math.pow(clickedPos3857.y - markerPos3857.y, 2)) < Math.pow(warningRadius, 2)) {
-			isInside = true;
+		if (marker.getLatLng().distanceTo(clickedPosLatlng) < warningRadius(clickedPosLatlng.lat)){
+			isTooClose = true;
 			return;
 		}
-
-		// console.log({markerPos4326, markerPos3857, clickedPos3857, isInside});
 	});
 
-	console.log({isInside});
-}
-
-function toWebMercator(lon, lat) {
-	if ((Math.abs(lon) > 180 || Math.abs(lat) > 90)) return null;
-
-	const num = lon * 0.017453292519943295;
-	const x = 6378137.0 * num;
-	const a = lat * 0.017453292519943295;
-	const y = 3189068.5 * Math.log((1.0 + Math.sin(a)) / (1.0 - Math.sin(a)));
-
-	return {x,y};
+	return isTooClose;
 }
 
 function addPopup(marker, text, options){
