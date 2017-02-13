@@ -1,14 +1,20 @@
 import 'whatwg-fetch';
-import {sparql, getJson, getBinaryTable, getBinRaster, tableFormatForSpecies} from 'icos-cp-backend';
+import {sparql, getJson} from 'icos-cp-backend';
 import {stationInfoQuery} from './sparqlQueries';
 import {groupBy, copyprops} from 'icos-cp-utils';
 import config from './config';
 
+export function makeDashboardWebsocketConnection(onUpdate){
+	const l = window.location;
+	const url = ((l.protocol === "https:") ? "wss://" : "ws://") + l.host + l.pathname + 'wsdashboardinfo';
+	const ws = new WebSocket(url);
+	ws.addEventListener('message', event => onUpdate(JSON.parse(event.data)));
+}
+
 export function getInitialData(){
 	return Promise.all([
-		tableFormatForSpecies(config.wdcggSpec, config),
 		getStationInfo()
-	]).then(([wdcggFormat, stations]) => {return {wdcggFormat, stations};});
+	]).then(([stations]) => {return {stations};});
 }
 
 function getStationInfo(){

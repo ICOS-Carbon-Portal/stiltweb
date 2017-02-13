@@ -1,6 +1,7 @@
-import {getInitialData, getStationData} from './backend';
+import {getInitialData, makeDashboardWebsocketConnection} from './backend';
 
 export const FETCHED_INITDATA = 'FETCHED_INITDATA';
+export const GOT_DASHBOARD_STATE = 'GOT_DASHBOARD_STATE';
 export const ERROR = 'ERROR';
 
 
@@ -18,3 +19,13 @@ export const fetchInitData = dispatch => {
 		err => dispatch(failWithError(err))
 	);
 }
+
+export const establishWsCommunication = dispatch => makeDashboardWebsocketConnection(eventData => {
+console.log(eventData);
+		dispatch({
+			type: GOT_DASHBOARD_STATE,
+			dashboardState: eventData
+		});
+	}
+)
+
