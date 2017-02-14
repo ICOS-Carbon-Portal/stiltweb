@@ -16,6 +16,8 @@ import akka.actor.Cancellable
 import akka.stream.scaladsl.Sink
 import akka.stream.scaladsl.Source
 import akka.stream.scaladsl.Keep
+import akka.http.scaladsl.model.ws.Message
+import se.lu.nateko.cp.stiltweb.StiltJsonSupport
 
 class StiltClusterApi {
 
@@ -44,18 +46,24 @@ class StiltClusterApi {
 			.flatMap(_ => system.terminate())
 	}
 
-	val websocketsFlow: Flow[Any, DashboardInfo, Cancellable] = {
-		val sink = Sink.ignore
-		val source = Source.tick[Unit](0 seconds, 2 seconds, ())
+	val websocketsFlow: Flow[Message, Message, Cancellable] = {
+		import StiltJsonSupport._
+		import spray.json._
+		import akka.http.scaladsl.model.ws.TextMessage.Strict
+
+		val source: Source[Message, Cancellable] = Source
+			.tick[Unit](0 seconds, 2 seconds, ())
 			.mapAsync(1)(_ => dashboardInfo)
-			.scan[(Option[DashboardInfo], DashboardInfo)]((None, null)){case ((emit, previous), next) =>
-				if(next == previous) (None, previous)
-				else (Some(next), next)
+			.scan[(Option[Message], DashboardInfo)]((None, null)){
+				case ((emit, previous), next) =>
+					if(next == previous)
+						(None, previous)
+					else
+						(Some(Strict(next.toJson.compactPrint)), next)
 			}.collect{
-				case (Some(di), _) => Future.successful(di)
+				case (Some(msg), _) => msg
 			}
-		Flow.fromSinkAndSourceMat(sink, source)(Keep.right)
-			.keepAlive(30 seconds, () => dashboardInfo)
-			.mapAsync(1)(di => di)
+		Flow.fromSinkAndSourceMat(Sink.ignore, source)(Keep.right)
+			.keepAlive(30 seconds, () => Strict(""))
 	}
 }

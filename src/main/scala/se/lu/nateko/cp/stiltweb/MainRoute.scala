@@ -6,7 +6,6 @@ import akka.http.scaladsl.server.Directives._
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import se.lu.nateko.cp.stiltcluster.StiltResultsRequest
 import se.lu.nateko.cp.stiltcluster.Job
-import akka.http.scaladsl.model.ws.TextMessage
 
 class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi) {
 
@@ -66,10 +65,7 @@ class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi) {
 				getFromResource("www/worker.js")
 			} ~
 			path("wsdashboardinfo"){
-				handleWebSocketMessages(cluster.websocketsFlow.map{di =>
-					import spray.json._
-					TextMessage.Strict(di.toJson.compactPrint)
-				})
+				handleWebSocketMessages(cluster.websocketsFlow)
 			}
 		} ~
 		post{

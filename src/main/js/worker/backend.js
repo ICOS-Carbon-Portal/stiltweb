@@ -8,7 +8,13 @@ export function makeDashboardWebsocketConnection(onUpdate){
 	const l = window.location;
 	const url = ((l.protocol === "https:") ? "wss://" : "ws://") + l.host + l.pathname + 'wsdashboardinfo';
 	const ws = new WebSocket(url);
-	ws.addEventListener('message', event => onUpdate(JSON.parse(event.data)));
+	ws.addEventListener('message', event => {
+		if(event.data) onUpdate(JSON.parse(event.data))
+	});
+	ws.addEventListener('close', event => {
+		console.log("Websocket connection closed, will try reestablishing in 60 seconds");
+		setTimeout(() => makeDashboardWebsocketConnection(onUpdate), 60000);
+	});
 }
 
 export function getInitialData(){
