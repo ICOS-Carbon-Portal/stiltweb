@@ -4,16 +4,13 @@ import reducer from './reducer';
 import {fetchInitData, establishWsCommunication} from './actions';
 
 const initState = {
-	wdcggFormat: null,
-	stations: [],
-	selectedStation: null,
-	error: null
+	stations: []
 };
 
-/*
+
 function logger({ getState }) {
 	return (next) => (action) => {
-		console.log('will dispatch', action)
+//		console.log('will dispatch', action)
 
 		// Call the next dispatch method in the middleware chain.
 		let returnValue = next(action)
@@ -22,13 +19,13 @@ function logger({ getState }) {
 
 		// This will likely be the action itself, unless
 		// a middleware further in chain changed it.
-		return returnValue
+		return returnValue;
 	}
 }
-*/
+
 
 export default function(){
-	const store = createStore(reducer, initState, applyMiddleware(thunkMiddleware));//, logger));
+	const store = createStore(reducer, initState, applyMiddleware(thunkMiddleware, logger));
 	store.dispatch(fetchInitData);
 	store.dispatch(establishWsCommunication);
 	return store;

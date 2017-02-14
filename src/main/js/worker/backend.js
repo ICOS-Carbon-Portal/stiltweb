@@ -1,5 +1,5 @@
 import 'whatwg-fetch';
-import {sparql, getJson} from 'icos-cp-backend';
+import {sparql, getJson, checkStatus} from 'icos-cp-backend';
 import {stationInfoQuery} from './sparqlQueries';
 import {groupBy, copyprops} from 'icos-cp-utils';
 import config from './config';
@@ -21,6 +21,16 @@ export function getInitialData(){
 	return Promise.all([
 		getStationInfo()
 	]).then(([stations]) => {return {stations};});
+}
+
+export function enqueueJob(job){
+	return fetch('enqueuejob', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(job)
+	}).then(checkStatus);
 }
 
 function getStationInfo(){

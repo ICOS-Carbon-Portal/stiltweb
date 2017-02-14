@@ -1,7 +1,10 @@
-import {getInitialData, makeDashboardWebsocketConnection} from './backend';
+import {getInitialData, makeDashboardWebsocketConnection, enqueueJob} from './backend';
 
 export const FETCHED_INITDATA = 'FETCHED_INITDATA';
 export const GOT_DASHBOARD_STATE = 'GOT_DASHBOARD_STATE';
+export const STATION_SELECTED = 'STATION_SELECTED';
+export const JOBDEF_UPDATED = 'JOBDEF_UPDATED';
+export const STARTED_JOB = 'STARTED_JOB';
 export const ERROR = 'ERROR';
 
 
@@ -21,11 +24,31 @@ export const fetchInitData = dispatch => {
 }
 
 export const establishWsCommunication = dispatch => makeDashboardWebsocketConnection(eventData => {
-console.log(eventData);
-		dispatch({
-			type: GOT_DASHBOARD_STATE,
-			dashboardState: eventData
-		});
-	}
-)
+	dispatch({
+		type: GOT_DASHBOARD_STATE,
+		dashboardState: eventData
+	});
+})
+
+export function stationSelected(selectedStation){
+	return {
+		type: STATION_SELECTED,
+		selectedStation
+	};
+}
+
+export function jobdefUpdated(update){
+	return {
+		type: JOBDEF_UPDATED,
+		update
+	};
+}
+
+export const startJob = (dispatch, getState) => {
+	const job = getState().jobdef;
+	enqueueJob(job).then(
+		() => dispatch({type: STARTED_JOB}),
+		err => dispatch(failWithError(err))
+	);
+}
 
