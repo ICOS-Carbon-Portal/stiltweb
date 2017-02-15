@@ -20,6 +20,7 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 	private[this] val resFilePattern = resFileGlob.replace("????", "(\\d{4})").r
 	private[this] val resFolder = "Results"
 	private[this] val footPrintsFolder = "Footprints"
+	private[this] val fpnameRegex = """^foot\d{4}x\d\dx\d\dx\d\dx(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+).+$""".r
 
 	def resFileName(year: Int): String = resFileGlob.replace("????", year.toString)
 
@@ -31,6 +32,50 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 
 		val stationFolders = new File(config.mainFolder, resFolder).listFiles().filter(_.isDirectory)
 		stationFolders.map(stFold => (stFold.getName, stationYears(stFold))).toMap
+	}
+
+	def getStationInfos: Seq[StiltStationInfo] = {
+		val stiltToIcos: Map[String, String] = config.stations.collect{
+			case Seq(stilt, icos, _) if !icos.isEmpty => (stilt, icos)
+		}.toMap
+
+		val stiltToWdcgg: Map[String, String] = config.stations.collect{
+			case Seq(stilt, _, wdcgg) if !wdcgg.isEmpty => (stilt, wdcgg)
+		}.toMap
+
+		val stiltToYears: Map[String, Seq[Int]] = getStationsAndYears
+
+		val stationFpFolders = new File(config.mainFolder, footPrintsFolder).listFiles().filter(_.isDirectory)
+
+		stationFpFolders.map{folder =>
+			val stiltId = folder.getName
+			val (lat, lon, alt) = latLonAlt(folder)
+			val years = stiltToYears.get(stiltId).getOrElse(Nil)
+			StiltStationInfo(stiltId, lat, lon, alt, years, stiltToIcos.get(stiltId), stiltToWdcgg.get(stiltId))
+		}
+	}
+
+	private def latLonAlt(footPrintsFolder: File): (Double, Double, Int) = {
+		val fpFileNames = listFileNames(footPrintsFolder.toPath, "foot*.nc", Some(5))
+
+		val latLonAlts = fpFileNames.collect{
+			case fp @ fpnameRegex(latStr, latSignStr, lonStr, lonSignStr, altStr) =>
+				try{
+					val lat = latStr.toDouble * (if(latSignStr == "N") 1 else -1)
+					val lon = lonStr.toDouble * (if(lonSignStr == "E") 1 else -1)
+					val alt = altStr.toInt
+					(lat, lon, alt)
+				}catch{
+					case err: Throwable => throw new Exception(
+						s"Could not parse footprint filename $fp to extract lat/lon/alt",
+						err
+					)
+				}
+		}
+
+		latLonAlts.headOption.getOrElse(throw new Exception(
+			s"Could not find a parseable footprint file in folder ${footPrintsFolder.getAbsolutePath}")
+		)
 	}
 
 	def getFootprintFiles(stationId: String, year: Int): Seq[String] = {
@@ -59,13 +104,14 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 
 object StiltResultFetcher{
 
-	def listFileNames(dir: Path, fileGlob: String): Seq[String] = {
+	def listFileNames(dir: Path, fileGlob: String, limit: Option[Int] = None): Seq[String] = {
 		val dirStream = Files.newDirectoryStream(dir, fileGlob)
 		try{
-			dirStream
-				.iterator()
-				.map(_.getFileName.toString)
-				.toIndexedSeq
+			val fnameIter = dirStream.iterator().map(_.getFileName.toString)
+			(limit match{
+				case None => fnameIter
+				case Some(lim) => fnameIter.take(lim)
+			}).toIndexedSeq
 		} finally {
 			dirStream.close()
 		}

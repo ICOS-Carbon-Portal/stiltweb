@@ -1,6 +1,6 @@
-import {getInitialData, makeDashboardWebsocketConnection, enqueueJob} from './backend';
+import {getStationInfo, makeDashboardWebsocketConnection, enqueueJob} from './backend';
 
-export const FETCHED_INITDATA = 'FETCHED_INITDATA';
+export const FETCHED_STATIONS = 'FETCHED_STATIONS';
 export const GOT_DASHBOARD_STATE = 'GOT_DASHBOARD_STATE';
 export const STATION_SELECTED = 'STATION_SELECTED';
 export const JOBDEF_UPDATED = 'JOBDEF_UPDATED';
@@ -16,9 +16,9 @@ function failWithError(error){
 	};
 }
 
-export const fetchInitData = dispatch => {
-	getInitialData().then(
-		initData => dispatch(Object.assign({type: FETCHED_INITDATA}, initData)),
+export const fetchStationInfo = dispatch => {
+	getStationInfo().then(
+		stations => dispatch({type: FETCHED_STATIONS, stations}),
 		err => dispatch(failWithError(err))
 	);
 }

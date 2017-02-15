@@ -1,4 +1,4 @@
-import {ERROR, FETCHED_INITDATA, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, STARTED_JOB} from './actions';
+import {ERROR, FETCHED_STATIONS, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, STARTED_JOB} from './actions';
 
 import {copyprops, deepUpdate} from 'icos-cp-utils';
 import * as Toaster from 'icos-cp-toaster';
@@ -13,7 +13,7 @@ export default function(state, action){
 				toasterData: new Toaster.ToasterData(Toaster.TOAST_ERROR, action.error.message.split('\n')[0])
 			});
 
-		case FETCHED_INITDATA:
+		case FETCHED_STATIONS:
 			return updateWith(['stations']);
 
 		case STATION_SELECTED:

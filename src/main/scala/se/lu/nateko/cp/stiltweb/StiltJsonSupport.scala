@@ -10,7 +10,6 @@ import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.JobInfo
 import se.lu.nateko.cp.stiltcluster.JobRun
 import se.lu.nateko.cp.stiltcluster.JobStatus
-import se.lu.nateko.cp.stiltcluster.StiltResultsRequest
 import spray.json.DefaultJsonProtocol
 import spray.json.DeserializationException
 import spray.json.JsString
@@ -23,7 +22,7 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 	implicit val templateMarshaller = TemplatePageMarshalling.marshaller
 
 	implicit val stiltResultsRequestFormat = jsonFormat3(StiltResultsRequest)
-
+	implicit val stiltStationInfoFormat = jsonFormat7(StiltStationInfo)
 	implicit object LocalDateFormat extends JsonFormat[LocalDate]{
 		def write(d: LocalDate) = JsString(d.toString)
 		def read(value: JsValue) = value match {

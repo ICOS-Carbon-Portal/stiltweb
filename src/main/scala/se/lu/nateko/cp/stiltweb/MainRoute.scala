@@ -4,7 +4,6 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusC
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
-import se.lu.nateko.cp.stiltcluster.StiltResultsRequest
 import se.lu.nateko.cp.stiltcluster.Job
 
 class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi) {
@@ -49,13 +48,8 @@ class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi) {
 			path("dashboardinfo"){
 				onSuccess(cluster.dashboardInfo){di => complete(di)}
 			} ~
-			path("listfootprints") {
-				parameters("stationId", "year".as[Int]) { (stationId, year) =>
-					complete(service.getFootprintFiles(stationId, year))
-				}
-			} ~
-			path("stationyears") {
-				complete(service.getStationsAndYears)
+			path("stationinfo") {
+				complete(service.getStationInfos)
 			} ~
 			pathEnd{redirect("worker/", StatusCodes.Found)} ~
 			pathSingleSlash {

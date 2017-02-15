@@ -16,9 +16,9 @@ case class NetCdfConfig(
 
 case class StiltWebConfig(
 	auth: PublicAuthConfig,
-	pathToMockData: String,
 	mainFolder: String,
-	netcdf: NetCdfConfig
+	netcdf: NetCdfConfig,
+	stations: Seq[Seq[String]]
 )
 
 object ConfigReader extends DefaultJsonProtocol{
