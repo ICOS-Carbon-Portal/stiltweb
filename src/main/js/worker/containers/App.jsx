@@ -1,8 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as Toaster from 'icos-cp-toaster';
+import {copyprops} from 'icos-cp-utils';
 import MapView from '../components/MapView.jsx';
+import DashboardView from '../components/DashboardView.jsx';
 import {stationSelected, jobdefUpdated, startJob} from '../actions';
+import {MAP_VIEW, DASHBOARD_VIEW} from '../actions';
 
 class App extends Component {
 	constructor(props) {
@@ -20,6 +23,9 @@ class App extends Component {
 	}
 
 	render() {
+		const props = this.props;
+		const subtitle = props.currentView == MAP_VIEW ? "Job starter" : "Dashboard"
+
 		return <div>
 			<Toaster.AnimatedToasters
 				autoCloseDelay={5000}
@@ -30,12 +36,14 @@ class App extends Component {
 			/>
 
 			<div className="page-header">
-				<h1>STILT footprint worker</h1>
+				<h1>STILT calculation service <small>{subtitle}</small></h1>
 			</div>
 
-			<div className="row" style={{marginTop: 10}}>
-				<MapView toastWarning={this.toastWarning.bind(this)} {...this.props}/>
-			</div>
+			{
+				props.currentView == MAP_VIEW
+					? <MapView toastWarning={this.toastWarning.bind(this)} {...props}/>
+					: <DashboardView {...copyprops(props, ['dashboardState', 'showMap'])} />
+			}
 
 		</div>;
 	}
@@ -49,7 +57,9 @@ function dispatchToProps(dispatch){
 	return {
 		selectStation: station => dispatch(stationSelected(station)),
 		updateJobdef: update => dispatch(jobdefUpdated(update)),
-		startJob: () => dispatch(startJob)
+		startJob: () => dispatch(startJob),
+		showDashboard: () => dispatch({type: DASHBOARD_VIEW}),
+		showMap: () => dispatch({type: MAP_VIEW})
 	};
 }
 

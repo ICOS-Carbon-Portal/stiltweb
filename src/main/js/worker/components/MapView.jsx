@@ -3,7 +3,7 @@ import StationsMap from '../../common/components/LMap.jsx';
 import Select from '../../common/components/Select.jsx';
 import TextInput from '../components/TextInput.jsx';
 
-export default class App extends Component {
+export default class MapView extends Component {
 	constructor(props) {
 		super(props);
 	}
@@ -25,7 +25,7 @@ export default class App extends Component {
 		const labelStyle = {display: 'block', clear: 'both'};
 		const textInputStyle = {marginBottom: 20};
 
-		return <div>
+		return <div className="row">
 
 			<div className="col-md-8">
 				<h4>Existing STILT footprints</h4>
@@ -79,9 +79,11 @@ export default class App extends Component {
 						<TextInput style={textInputStyle} value={jobdef.start} action={this.getJobdefUpdater('start')} converter={toDate}/>
 
 						<label style={labelStyle}>End date</label>
-						<TextInput value={jobdef.stop} action={this.getJobdefUpdater('stop')} converter={toDate}/>
+						<TextInput style={textInputStyle} value={jobdef.stop} action={this.getJobdefUpdater('stop')} converter={toDate}/>
 
-						<button style={{display: 'block', clear: 'both', marginTop: 40}} className="btn btn-primary" disabled={!props.jobdefComplete} onClick={props.startJob}>Create STILT footprint</button>
+						<button style={textInputStyle} className="btn btn-primary" disabled={!props.jobdefComplete} onClick={props.startJob}>Create STILT footprint</button>
+
+						<button className="btn btn-primary" onClick={props.showDashboard}>Show dashboard</button>
 
 					</div>
 				</div>

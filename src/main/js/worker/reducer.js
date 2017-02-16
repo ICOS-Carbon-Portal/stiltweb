@@ -1,4 +1,5 @@
 import {ERROR, FETCHED_STATIONS, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, STARTED_JOB} from './actions';
+import {MAP_VIEW, DASHBOARD_VIEW} from './actions';
 
 import {copyprops, deepUpdate} from 'icos-cp-utils';
 import * as Toaster from 'icos-cp-toaster';
@@ -39,10 +40,21 @@ export default function(state, action){
 			const newStation = copyprops(state.jobdef, ['lat', 'lon', 'alt']);
 			newStation.id = state.jobdef.siteId;
 			const newStations = state.stations.concat([newStation]);
-			return update({jobdef: undefined}, {jobdefComplete: false}, {stations: newStations});
+			return update({
+				jobdef: undefined,
+				jobdefComplete: false,
+				stations: newStations,
+				currentView: DASHBOARD_VIEW
+			});
 
 		case GOT_DASHBOARD_STATE:
 			return updateWith(['dashboardState']);
+
+		case DASHBOARD_VIEW:
+			return update({currentView: DASHBOARD_VIEW});
+
+		case MAP_VIEW:
+			return update({currentView: MAP_VIEW});
 
 		default:
 			return state;

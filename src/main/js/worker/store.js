@@ -1,10 +1,12 @@
 import { createStore, applyMiddleware } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import reducer from './reducer';
-import {fetchStationInfo, establishWsCommunication} from './actions';
+import {fetchStationInfo, establishWsCommunication, MAP_VIEW, DASHBOARD_VIEW} from './actions';
 
 const initState = {
-	stations: []
+	stations: [],
+	currentView: MAP_VIEW,
+	dashboardState: {running: [], done: [], queue: []}
 };
 
 

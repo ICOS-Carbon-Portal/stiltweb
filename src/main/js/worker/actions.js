@@ -7,6 +7,10 @@ export const JOBDEF_UPDATED = 'JOBDEF_UPDATED';
 export const STARTED_JOB = 'STARTED_JOB';
 export const ERROR = 'ERROR';
 
+export const MAP_VIEW = 'MAP_VIEW';
+export const DASHBOARD_VIEW = 'DASHBOARD_VIEW';
+
+
 
 function failWithError(error){
 	console.log(error);
