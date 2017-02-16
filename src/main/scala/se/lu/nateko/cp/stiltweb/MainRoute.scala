@@ -19,9 +19,6 @@ class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi) {
 			path("viewer.js") {
 				getFromResource("www/viewer.js")
 			} ~
-			path("stationyears") {
-				complete(service.getStationsAndYears)
-			} ~
 			path("listfootprints") {
 				parameters("stationId", "year".as[Int]) { (stationId, year) =>
 					complete(service.getFootprintFiles(stationId, year))
@@ -45,12 +42,6 @@ class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi) {
 	} ~
 	pathPrefix("worker"){
 		get {
-			path("dashboardinfo"){
-				onSuccess(cluster.dashboardInfo){di => complete(di)}
-			} ~
-			path("stationinfo") {
-				complete(service.getStationInfos)
-			} ~
 			pathEnd{redirect("worker/", StatusCodes.Found)} ~
 			pathSingleSlash {
 				complete(views.html.WorkerPage())
@@ -72,8 +63,13 @@ class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi) {
 			}
 		}
 	} ~
-	pathEndOrSingleSlash{
-		redirect("/viewer/", StatusCodes.Found)
+	get{
+		path("stationinfo") {
+			complete(service.getStationInfos)
+		} ~
+		pathEndOrSingleSlash{
+			redirect("/viewer/", StatusCodes.Found)
+		}
 	}
 
 }

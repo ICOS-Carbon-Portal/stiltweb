@@ -26,7 +26,7 @@ export function enqueueJob(job){
 }
 
 export function getStationInfo(){
-	return getJson('stationinfo')
+	return getJson('/stationinfo')
 		.then(sInfos => sInfos.map(
 			sInfo => {
 				const name = sInfo.wdcggId || sInfo.icosId || sInfo.id;

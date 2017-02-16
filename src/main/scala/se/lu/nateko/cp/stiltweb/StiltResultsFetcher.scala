@@ -24,16 +24,6 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 
 	def resFileName(year: Int): String = resFileGlob.replace("????", year.toString)
 
-	def getStationsAndYears: Map[String, Seq[Int]] = {
-
-		def stationYears(dir: File): Seq[Int] = listFileNames(dir.toPath, resFileGlob).collect{
-			case resFilePattern(dddd) => dddd.toInt
-		}
-
-		val stationFolders = new File(config.mainFolder, resFolder).listFiles().filter(_.isDirectory)
-		stationFolders.map(stFold => (stFold.getName, stationYears(stFold))).toMap
-	}
-
 	def getStationInfos: Seq[StiltStationInfo] = {
 		val stiltToIcos: Map[String, String] = config.stations.collect{
 			case Seq(stilt, icos, _) if !icos.isEmpty => (stilt, icos)
@@ -43,7 +33,7 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 			case Seq(stilt, _, wdcgg) if !wdcgg.isEmpty => (stilt, wdcgg)
 		}.toMap
 
-		val stiltToYears: Map[String, Seq[Int]] = getStationsAndYears
+		val stiltToYears: Map[String, Seq[Int]] = getStationYears
 
 		val stationFpFolders = new File(config.mainFolder, footPrintsFolder).listFiles().filter(_.isDirectory)
 
@@ -53,6 +43,16 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 			val years = stiltToYears.get(stiltId).getOrElse(Nil)
 			StiltStationInfo(stiltId, lat, lon, alt, years, stiltToIcos.get(stiltId), stiltToWdcgg.get(stiltId))
 		}
+	}
+
+	private def getStationYears: Map[String, Seq[Int]] = {
+
+		def stationYears(dir: File): Seq[Int] = listFileNames(dir.toPath, resFileGlob).collect{
+			case resFilePattern(dddd) => dddd.toInt
+		}
+
+		val stationFolders = new File(config.mainFolder, resFolder).listFiles().filter(_.isDirectory)
+		stationFolders.map(stFold => (stFold.getName, stationYears(stFold))).toMap
 	}
 
 	private def latLonAlt(footPrintsFolder: File): (Double, Double, Int) = {
