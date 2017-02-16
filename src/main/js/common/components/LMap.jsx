@@ -52,10 +52,20 @@ export default class LMap extends Component{
 				mapClick(map, e.latlng, self);
 			});
 		}
+		//a hack to fix the spagetti situation in this.applyChanges (former this.componentWillReceiveProps)
+		//it simulates the situation of first getting the empty station list, and then non-empty station list with props,
+		//even if the station list is non-empty from the beginning
+		if(this.props.stations.length) {
+			const noStationsProps = Object.assign({}, this.props, {stations: []});
+			this.applyChanges(this.props, noStationsProps);
+		}
 	}
 
 	componentWillReceiveProps(nextProps){
-		const prevProps = this.props;
+		this.applyChanges(nextProps, this.props);
+	}
+
+	applyChanges(nextProps, prevProps){
 		const clickedPos = this.app.clickedPos;
 		const map = this.app.map;
 
@@ -63,8 +73,6 @@ export default class LMap extends Component{
 			(nextProps.selectedStation != undefined && prevProps.selectedStation != nextProps.selectedStation);
 		const updateCircleMarker = nextProps.selectedStation != undefined && nextProps.selectedStation.id === undefined
 			&& clickedPos != null && (nextProps.selectedStation.lat != clickedPos.lat || nextProps.selectedStation.lon != clickedPos.lon);
-
-		// console.log({prevProps, nextProps, buildMarkers, updateCircleMarker, clickedPos});
 
 		if (buildMarkers) {
 			if (nextProps.workerMode) this.buildCircles(nextProps.stations);
