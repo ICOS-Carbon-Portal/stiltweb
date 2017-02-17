@@ -181,8 +181,8 @@ function mapClick(map, clickedPosLatlng, self){
 	map.addLayer(self.app.clickMarker);
 
 	self.app.clickedPos = {
-		lat: clickedPosLatlng.lat.toFixed(coordDecimals),
-		lon: clickedPosLatlng.lng.toFixed(coordDecimals)
+		lat: parseFloat(clickedPosLatlng.lat.toFixed(coordDecimals)),
+		lon: parseFloat(clickedPosLatlng.lng.toFixed(coordDecimals))
 	};
 
 	self.props.action(self.app.clickedPos);

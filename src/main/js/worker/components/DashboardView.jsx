@@ -12,6 +12,7 @@ export default class DashboardView extends Component {
 		return <WideRow>
 
 			<JobInfoList title="Running computations" jobs={ds.running}/>
+			<JobQueue jobs={ds.queue}/>
 			<JobInfoList title="Finished computations" jobs={ds.done}/>
 
 			<WideRow>
@@ -23,16 +24,9 @@ export default class DashboardView extends Component {
 }
 
 const JobInfoList = props => props.jobs.length
-	? <div className="panel panel-info">
-		<div className="panel-heading">
-			<h3 className="panel-title">{props.title}</h3>
-		</div>
-		<div className="panel-body">
-			<ul className="list-unstyled">{
+	? <InfoPanelWithList title={props.title}>{
 				props.jobs.map((jinfo, i) => <JobInfoView jobInfo={jinfo} key={jinfo.status.id + '_' + i}/>)
-			}</ul>
-		</div>
-	</div>
+		}</InfoPanelWithList>
 	: null;
 
 const WideRow = props => <div className="row">
@@ -41,3 +35,24 @@ const WideRow = props => <div className="row">
 	</div>
 </div>;
 
+const InfoPanelWithList = props => <div className="panel panel-info">
+	<div className="panel-heading">
+		<h3 className="panel-title">{props.title}</h3>
+	</div>
+	<div className="panel-body">
+		<ul className="list-unstyled">{props.children}</ul>
+	</div>
+</div>;
+
+const JobQueue = props => props.jobs.length
+	? <InfoPanelWithList title="Job queue">{
+				props.jobs.map((job, i) => <JobView job={job} key={job.siteId + '_' + i}/>)
+		}</InfoPanelWithList>
+	: null;
+
+const JobView = props => {
+	const job = props.job;
+	return <li>
+		<span className="label label-default">{`${job.siteId} (lat/lon/alt: ${job.lat} / ${job.lon} / ${job.alt}) from ${job.start} to ${job.stop}`}</span>
+	</li>;
+};

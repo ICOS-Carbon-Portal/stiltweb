@@ -28,7 +28,7 @@ class WorkReceptionist extends Actor{
 
 		case job: Job =>
 			queue.enqueue(job)
-			distributeJobs()
+			dispatchJob()
 
 		case msg @ CancelJob(id) =>
 			findNodeByJob(id).foreach(_ ! msg)
@@ -50,7 +50,7 @@ class WorkReceptionist extends Actor{
 			done ++= completed
 
 			if(!completed.isEmpty) workMaster ! Thanks(completed.map(_.status.id))
-			if(wms.freeCores > 0) distributeJobs()
+			if(wms.freeCores > 0) dispatchJob()
 
 		case run: JobRun =>
 			val oldStatus = nodes(sender())
@@ -59,6 +59,7 @@ class WorkReceptionist extends Actor{
 			)
 			nodes += ((sender(), newStatus))
 			log.info("STARTED STILT RUN: " + run.toString)
+			dispatchJob()
 
 		case StopAllWork =>
 			nodes.keys.foreach(_ ! StopAllWork)
@@ -72,18 +73,18 @@ class WorkReceptionist extends Actor{
 
 			log.info("WORK MASTER REGISTERED: " + workMaster)
 			log.info("CURRENT WORK MASTER COUNT: " + nodes.keys.size)
+			dispatchJob()
 
 		case Terminated(wm) =>
 			log.info("WORK MASTER UNREGISTERED: " + wm)
 			nodes -= wm
 	}
 
-	@tailrec private def distributeJobs(): Unit = if(!queue.isEmpty){
+	private def dispatchJob(): Unit = if(!queue.isEmpty){
 		pickNodeForJob(nodes, queue.head) match{
 			case Some(node) =>
 				val job = queue.dequeue()
 				node ! job
-				distributeJobs()
 			case None =>
 		}
 	}
@@ -117,17 +118,25 @@ object WorkReceptionist{
 	}
 
 	def pickNodeForJob(nodes: Map[ActorRef, WorkMasterStatus], job: Job): Option[ActorRef] = {
-		val maxReasonableParallelism = Math.max(cost(job) / 20, 1)
+		val maxPar = Math.max(cost(job) / 20, 1) //maximal reasonable parallelism for the job
 
 		nodes.foldLeft[Option[(ActorRef, Int)]](None){
 
-			case (acc, (actor, WorkMasterStatus(_, cores))) => acc match{
-				case None => Some((actor, cores))
+			case (acc, (actor, WorkMasterStatus(_, nextCores))) =>
+				val next = Some((actor, nextCores))
 
-				case old @ Some((_, oldCores)) =>
-					if(cores > oldCores && cores < maxReasonableParallelism) Some((actor, cores))
-					else old
-			}
+				acc match{
+					case None if nextCores > 0 => next
+					case None => None
+
+					case current @ Some((_, currentCores)) =>
+						if(
+							nextCores > 0 &&
+							nextCores < maxPar &&
+							(nextCores > currentCores || currentCores > maxPar)
+						) next
+						else current
+				}
 		}.map(_._1)
 
 	}

@@ -19,7 +19,7 @@ export default class JobInfoView extends Component {
 	
 		return <li>
 			<div className="panel panel-default">
-				<div className="panel-heading" onClick={this.handleClick.bind(this)}>
+				<div className="panel-heading" onClick={this.handleClick.bind(this)} style={{cursor: "pointer"}}>
 					{`${status.id}: ${job.siteId} from ${job.start} to ${job.stop} on ${par} cores by ${jinfo.executionNode}`}
 				</div>
 				{
@@ -27,7 +27,7 @@ export default class JobInfoView extends Component {
 					? <div className="panel-body">
 							<OutputStrings title="Standard output" stylecontext="success" strings={status.output}/>
 							<OutputStrings title="Errors" stylecontext="danger" strings={status.errors}/>
-							<OutputStrings title="STILT logs" stylecontext="info" strings={status.logs}/>
+							<OutputStrings title="STILT logs (merged, last 200 lines only)" stylecontext="info" strings={status.logs}/>
 						</div>
 					: null
 				}

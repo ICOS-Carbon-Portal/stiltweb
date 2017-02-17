@@ -14,35 +14,56 @@ class Worker(conf: StiltEnv) extends Actor{
 	private var logsProc: ProcessRunner = null
 	private var stiltRun: JobRun = null
 
+	private var status = JobStatus.init(null)
+
+	private val log = context.system.log
+
 	def receive = {
 		case run: JobRun =>
-			stiltProc = new ProcessRunner(stiltCommand(run, conf), conf.logSizeLimit)
-			logsProc = new ProcessRunner(logWatchCommand(run, conf), conf.logSizeLimit)
 			stiltRun = run
-			sender() ! getStatus
-			context become calculating
+			try{
+				stiltProc = new ProcessRunner(stiltCommand(run, conf), conf.logSizeLimit)
+				logsProc = new ProcessRunner(logWatchCommand(run, conf), conf.logSizeLimit)
+				updateStatus()
+				sender() ! status
+				log.info("STARTED JOB RUN " + run)
+				context become calculating
+			}catch{
+				case err: Throwable => status = JobStatus(
+						id = run.runId,
+						exitValue = Some(1),
+						output = Nil,
+						logs = Nil,
+						errors = Seq(err.getMessage)
+					)
+					if(stiltProc != null) stiltProc.destroyForcibly()
+					if(logsProc != null) logsProc.destroyForcibly()
+			}
 	}
 
 	def calculating: Receive = {
 		case GetStatus =>
-			val status = getStatus
+			updateStatus()
 			sender() ! status
 			if(status.exitValue.isDefined) resetWorker()
 
 		case CancelJob(id) if(id == stiltRun.runId) =>
 			stiltProc.destroyForcibly()
 			logsProc.destroyForcibly()
-			sender() ! JobCanceled(getStatus)
+			updateStatus()
+			sender() ! JobCanceled(status)
 			resetWorker()
 	}
 
-	private def getStatus = JobStatus(
-		id = stiltRun.runId,
-		exitValue = stiltProc.exitValue(),
-		output = stiltProc.outputLines(),
-		logs = logsProc.outputLines(),
-		errors = stiltProc.errorLines() ++ logsProc.errorLines()
-	)
+	private def updateStatus(): Unit = if(status.exitValue.isEmpty){
+		status = JobStatus(
+			id = stiltRun.runId,
+			exitValue = stiltProc.exitValue(),
+			output = stiltProc.outputLines(),
+			logs = logsProc.outputLines(),
+			errors = stiltProc.errorLines() ++ logsProc.errorLines()
+		)
+	}
 
 	private def resetWorker(): Unit = {
 		stiltProc = null; logsProc = null; stiltRun = null
@@ -71,17 +92,16 @@ object Worker{
 	def logWatchCommand(run: JobRun, env: StiltEnv): Seq[String] = {
 		// cd /opt/STILT_modelling/testrun01 && tail -F stilt_01.HTM2012job_1.log -F stilt_02.HTM2012job_1.log ...
 		val job = run.job
-		val jobFolder = new File(env.mainFolder, run.runId).getAbsolutePath
 
 		val logFiles = (1 to run.parallelism).map{ n =>
 			val par = n.formatted("%02d")
-			s"stilt_${par}.${job.siteId}${job.start.getYear}${run.runId}.log"
+			s"./${run.runId}/stilt_${par}.${job.siteId}${job.start.getYear}${run.runId}.log"
 		}
 		val logList = logFiles.mkString("-F ", " -F ", "")
 
 		Seq(
 			"docker", "exec", env.containerName, "/bin/bash", "-c",
-			s"cd $jobFolder && tail $logList"
+			s"cd ${env.mainFolder} && tail $logList"
 		)
 	}
 

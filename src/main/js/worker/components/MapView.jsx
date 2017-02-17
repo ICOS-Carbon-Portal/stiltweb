@@ -81,7 +81,7 @@ export default class MapView extends Component {
 						<label style={labelStyle}>End date</label>
 						<TextInput style={textInputStyle} value={jobdef.stop} action={this.getJobdefUpdater('stop')} converter={toDate}/>
 
-						<button style={textInputStyle} className="btn btn-primary" disabled={!props.jobdefComplete} onClick={props.startJob}>Create STILT footprint</button>
+						<button style={textInputStyle} className="btn btn-primary" disabled={!props.jobdefComplete} onClick={props.startJob}>Dispatch STILT job</button>
 
 						<button className="btn btn-primary" onClick={props.showDashboard}>Show dashboard</button>
 
