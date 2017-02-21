@@ -6,10 +6,6 @@ const warningRadius = (lat => {
 	return 20000 * Math.cos(Math.PI / 180 * lat);
 });
 const coordDecimals = 2;
-// const mask = L.latLngBounds(
-// 	L.latLng(latMin, lonMin),
-// 	L.latLng(latMax, lonMax)
-// );
 
 export default class LMap extends Component{
 	constructor(props){
@@ -24,7 +20,8 @@ export default class LMap extends Component{
 			}),
 			circles: L.layerGroup(),
 			clickMarker: L.circleMarker(),
-			clickedPos: null
+			clickedPos: null,
+			maskHole: null
 		};
 	}
 
@@ -35,6 +32,7 @@ export default class LMap extends Component{
 			{
 				layers: [baseMaps.Topographic],
 				worldCopyJump: false,
+				continuousWorld: true,
 				maxBounds: [[-90, -180],[90, 180]],
 				attributionControl: false
 			}
@@ -66,24 +64,18 @@ export default class LMap extends Component{
 	}
 
 	applyChanges(nextProps, prevProps){
-		const clickedPos = this.app.clickedPos;
 		const map = this.app.map;
 
 		const buildMarkers = (nextProps.stations.length > 0 && prevProps.stations.length != nextProps.stations.length) ||
-			(nextProps.selectedStation != undefined && prevProps.selectedStation != nextProps.selectedStation);
-		const updateCircleMarker = nextProps.selectedStation != undefined && nextProps.selectedStation.id === undefined
-			&& clickedPos != null && (nextProps.selectedStation.lat != clickedPos.lat || nextProps.selectedStation.lon != clickedPos.lon);
+			(nextProps.selectedStation !== undefined && prevProps.selectedStation != nextProps.selectedStation);
+
+		// console.log({prevProps, nextProps, buildMarkers});
 
 		if (buildMarkers) {
-			if (nextProps.workerMode) this.buildCircles(nextProps.stations);
+			if (nextProps.workerMode) this.buildWarningCircles(nextProps.stations);
 			this.buildMarkers(nextProps.stations, nextProps.action, nextProps.selectedStation);
 
-			if (nextProps.selectedStation == undefined) {
-
-				LCommon.setView(map, nextProps.stations);
-
-			} else {
-
+			if (!nextProps.selectedStation == undefined) {
 				const mapBounds = map.getBounds();
 				const selectedStationPosition = L.latLng(nextProps.selectedStation.lat, nextProps.selectedStation.lon);
 				const markerOptions = this.app.markers.getLayers()[0].options;
@@ -102,12 +94,30 @@ export default class LMap extends Component{
 			}
 		}
 
-		if (updateCircleMarker){
-			mapClick(map, nextProps.selectedStation.lat, nextProps.selectedStation.lon, this);
+		if (!map.getZoom() && nextProps.stations.length > 0) LCommon.setView(map, nextProps.stations);
+
+		this.updateClickMarker(map, nextProps.selectedStation);
+		this.addMask(nextProps.geoBoundary);
+	}
+
+	addMask(geoBoundary){
+		const app = this.app;
+
+		if(!geoBoundary || app.maskHole) return;
+
+		app.maskHole = LCommon.polygonMask(geoBoundary);
+		app.maskHole.addTo(app.map);
+	}
+
+	updateClickMarker(map, selectedStation){
+		if (selectedStation && selectedStation.name !== undefined) {
+			map.removeLayer(this.app.clickMarker);
+		} else if (selectedStation) {
+			mapClick(map, L.latLng(selectedStation.lat, selectedStation.lon), this, false)
 		}
 	}
 
-	buildCircles(geoms){
+	buildWarningCircles(geoms){
 		const circles = this.app.circles;
 		circles.clearLayers();
 		const map = this.app.map;
@@ -137,21 +147,21 @@ export default class LMap extends Component{
 		markers.clearLayers();
 
 		//First all non selected
-		geoms.filter(geom => !selectedStation || geom.id != selectedStation.id).forEach(geom => {
+		geoms.filter(geom => !selectedStation || geom.siteId != selectedStation.siteId).forEach(geom => {
 			const marker = L.circleMarker([geom.lat, geom.lon], LCommon.pointIcon(6, 1, 'rgb(255,100,100)', 'black'));
 
-			addPopup(marker, geom.name + " (" + geom.id + ")", {offset:[0,0], closeButton: false});
+			addPopup(marker, geom.name + " (" + geom.siteId + ")", {offset:[0,0], closeButton: false});
 			addEvents(this.app, marker, action, geom);
 
 			markers.addLayer(marker);
 		});
 
 		//Then the selected
-		const selected = geoms.find(geom => selectedStation && geom.id == selectedStation.id);
+		const selected = geoms.find(geom => selectedStation && geom.siteId == selectedStation.siteId);
 		if (selected){
 			const marker = L.circleMarker([selected.lat, selected.lon], LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
 
-			addPopup(marker, selected.name + " (" + selected.id + ")", {offset:[0,0], closeButton: false});
+			addPopup(marker, selected.name + " (" + selected.siteId + ")", {offset:[0,0], closeButton: false});
 			addEvents(this.app, marker, action, selected);
 
 			markers.addLayer(marker);
@@ -174,7 +184,7 @@ export default class LMap extends Component{
 	}
 }
 
-function mapClick(map, clickedPosLatlng, self){
+function mapClick(map, clickedPosLatlng, self, triggerAction = true){
 	map.removeLayer(self.app.clickMarker);
 
 	self.app.clickMarker = L.circleMarker(clickedPosLatlng, LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
@@ -185,7 +195,7 @@ function mapClick(map, clickedPosLatlng, self){
 		lon: parseFloat(clickedPosLatlng.lng.toFixed(coordDecimals))
 	};
 
-	self.props.action(self.app.clickedPos);
+	if (triggerAction) self.props.action(self.app.clickedPos);
 
 	if (checkProximity(self.app.markers, clickedPosLatlng)){
 		self.props.toastWarning("The position of your new footprint is too close to an existing footprint!");

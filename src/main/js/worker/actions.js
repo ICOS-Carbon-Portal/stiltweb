@@ -4,6 +4,7 @@ export const FETCHED_STATIONS = 'FETCHED_STATIONS';
 export const GOT_DASHBOARD_STATE = 'GOT_DASHBOARD_STATE';
 export const STATION_SELECTED = 'STATION_SELECTED';
 export const JOBDEF_UPDATED = 'JOBDEF_UPDATED';
+export const USE_EXISTING = 'USE_EXISTING';
 export const STARTED_JOB = 'STARTED_JOB';
 export const ERROR = 'ERROR';
 
@@ -45,6 +46,12 @@ export function jobdefUpdated(update){
 	return {
 		type: JOBDEF_UPDATED,
 		update
+	};
+}
+
+export function useExistingStationData(){
+	return {
+		type: USE_EXISTING
 	};
 }
 

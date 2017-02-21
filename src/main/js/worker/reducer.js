@@ -1,4 +1,4 @@
-import {ERROR, FETCHED_STATIONS, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, STARTED_JOB} from './actions';
+import {ERROR, FETCHED_STATIONS, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, USE_EXISTING, STARTED_JOB} from './actions';
 import {MAP_VIEW, DASHBOARD_VIEW} from './actions';
 
 import {copyprops, deepUpdate} from 'icos-cp-utils';
@@ -10,31 +10,26 @@ export default function(state, action){
 	switch(action.type){
 
 		case ERROR:
-			return Object.assign({}, state, {
-				toasterData: new Toaster.ToasterData(Toaster.TOAST_ERROR, action.error.message.split('\n')[0])
-			});
+			return update({toasterData: new Toaster.ToasterData(Toaster.TOAST_ERROR, action.error.message.split('\n')[0])});
 
 		case FETCHED_STATIONS:
-			return updateWith(['stations']);
+			return update({workerData: state.workerData.withStations(action.stations)});
 
 		case STATION_SELECTED:
-			const station = Object.assign({id: undefined, alt: 100}, action.selectedStation);
-			var jobdef = Object.assign(
-				{},
-				state.jobdef,
-				copyprops(station, ['lat', 'lon', 'alt']),
-				{alreadyExists: !!station.id, siteId: station.id}
-			);
-			return update({selectedStation: station}, {jobdef}, {jobdefComplete: jobdefIsComplete(jobdef)});
+			return update({workerData: state.workerData.withSelectedStation(action.selectedStation, true)});
 
 		case JOBDEF_UPDATED:
-			var jobdef = Object.assign({}, state.jobdef, action.update);
-			const existing = state.stations.find(station => station.id == jobdef.siteId);
-			if(existing)
-				Object.assign(jobdef, copyprops(existing, ['lat', 'lon', 'alt']), {alreadyExists: true});
-			else
-				Object.assign(jobdef, {alreadyExists: false});
-			return update({jobdef}, {jobdefComplete: jobdefIsComplete(jobdef)});
+			const workerData = state.workerData.withUpdatedFormData(action.update);
+
+			if (workerData.selectedStation.isExisting && !workerData.isFormAndSelStationSame) {
+				const msg = 'You have entered the site code for an existing station. Press "Load data" to use its parameters.';
+				return update({workerData}, {toasterData: new Toaster.ToasterData(Toaster.TOAST_INFO, msg)});
+			} else {
+				return update({workerData});
+			}
+
+		case USE_EXISTING:
+			return update({workerData: state.workerData.withUseExistingStationData()});
 
 		case STARTED_JOB:
 			const newStation = copyprops(state.jobdef, ['lat', 'lon', 'alt']);
@@ -79,6 +74,13 @@ export default function(state, action){
 
 
 function jobdefIsComplete(job){
-	return job && job.lat !== undefined && job.lon !== undefined && job.alt !== undefined && job.siteId && job.start && job.stop && Date.parse(job.stop) > Date.parse(job.start);
+	return !!job
+		&& job.lat !== undefined
+		&& job.lon !== undefined
+		&& job.alt !== undefined
+		&& !!job.siteId
+		&& !!job.start
+		&& !!job.stop
+		&& Date.parse(job.stop) > Date.parse(job.start);
 }
 

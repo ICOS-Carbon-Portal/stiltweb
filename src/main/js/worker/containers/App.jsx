@@ -4,7 +4,7 @@ import * as Toaster from 'icos-cp-toaster';
 import {copyprops} from 'icos-cp-utils';
 import MapView from '../components/MapView.jsx';
 import DashboardView from '../components/DashboardView.jsx';
-import {stationSelected, jobdefUpdated, startJob} from '../actions';
+import {stationSelected, jobdefUpdated, useExistingStationData, startJob} from '../actions';
 import {MAP_VIEW, DASHBOARD_VIEW} from '../actions';
 
 class App extends Component {
@@ -57,6 +57,7 @@ function dispatchToProps(dispatch){
 	return {
 		selectStation: station => dispatch(stationSelected(station)),
 		updateJobdef: update => dispatch(jobdefUpdated(update)),
+		useExistingStationData: update => dispatch(useExistingStationData(update)),
 		startJob: () => dispatch(startJob),
 		showDashboard: () => dispatch({type: DASHBOARD_VIEW}),
 		showMap: () => dispatch({type: MAP_VIEW})

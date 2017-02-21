@@ -33,7 +33,7 @@ export default class TextInput extends Component {
 	}
 
 	render(){
-		const props = copyprops(this.props, ['disabled']);
+		const props = copyprops(this.props, ['disabled', 'maxLength']);
 		const style = Object.assign(
 			{},
 			this.props.style,

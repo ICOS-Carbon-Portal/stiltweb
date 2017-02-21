@@ -3,6 +3,13 @@ import StationsMap from '../../common/components/LMap.jsx';
 import Select from '../../common/components/Select.jsx';
 import TextInput from '../components/TextInput.jsx';
 
+const geoBoundary = {
+	latMin: 33,
+	lonMin: -15,
+	latMax: 72.9166666666667,
+	lonMax: 34.875
+};
+
 export default class MapView extends Component {
 	constructor(props) {
 		super(props);
@@ -17,13 +24,19 @@ export default class MapView extends Component {
 		};
 	}
 
+	onLoadDataBtnClick(){
+		this.props.useExistingStationData();
+	}
+
 	render() {
 		const props = this.props;
-		const jobdef = props.jobdef || {lat: '', lon: '', alt: '', siteId: '', start: '', stop: ''};
-		const stationForTheMap = isNumber(jobdef.lat) && isNumber(jobdef.lon) ? jobdef : undefined;
+		const formData = props.workerData.formData;
+		const isExisting = props.workerData.selectedStation.isExisting;
 
 		const labelStyle = {display: 'block', clear: 'both'};
-		const textInputStyle = {marginBottom: 20};
+		const verticalMargin = {marginBottom: 20};
+
+		// console.log(formData);
 
 		return <div className="row">
 
@@ -35,11 +48,11 @@ export default class MapView extends Component {
 
 						<div style={{marginBottom: 10}}>
 							<Select
-								selectValue={props.selectStation}
+								selectValue={props.workerData.selectedStation}
 								infoTxt="Select station here or on the map"
-								availableValues={props.stations}
-								value={props.selectedStation}
-								presenter={station => station ? `${station.name} (${station.id})` : station}
+								availableValues={props.workerData.stations}
+								value={props.workerData.selectedStation}
+								presenter={station => station ? `${station.name} (${station.siteId})` : station}
 								sort={true}
 							/>
 						</div>
@@ -47,10 +60,11 @@ export default class MapView extends Component {
 						<div style={{width: '100%', height: 600}}>
 							<StationsMap
 								workerMode={true}
-								stations={props.stations}
-								selectedStation={stationForTheMap}
+								stations={props.workerData.stations}
+								selectedStation={props.workerDataselectedStation}
 								action={props.selectStation}
 								toastWarning={props.toastWarning}
+								geoBoundary={geoBoundary}
 							/>
 						</div>
 					</div>
@@ -64,24 +78,34 @@ export default class MapView extends Component {
 					<div className="panel-body">
 
 						<label style={labelStyle}>Latitude (decimal degree)</label>
-						<TextInput style={textInputStyle} value={jobdef.lat} action={this.getJobdefUpdater('lat')} converter={toGeo} disabled={jobdef.alreadyExists}/>
+						<TextInput style={verticalMargin} value={formData.lat} action={this.getJobdefUpdater('lat')} converter={toLat} disabled={isExisting}/>
 
 						<label style={labelStyle}>Longitude (decimal degree)</label>
-						<TextInput style={textInputStyle} value={jobdef.lon} action={this.getJobdefUpdater('lon')} converter={toGeo} disabled={jobdef.alreadyExists}/>
+						<TextInput style={verticalMargin} value={formData.lon} action={this.getJobdefUpdater('lon')} converter={toLon} disabled={isExisting}/>
 
 						<label style={labelStyle}>Altitude (meters)</label>
-						<TextInput style={textInputStyle} value={jobdef.alt} action={this.getJobdefUpdater('alt')} converter={toInt}/>
+						<TextInput style={verticalMargin} value={formData.alt} action={this.getJobdefUpdater('alt')} converter={toInt} disabled={isExisting}/>
 
 						<label style={labelStyle}>3 letter code</label>
-						<TextInput style={textInputStyle} value={jobdef.siteId} action={this.getJobdefUpdater('siteId')} converter={s => s.toUpperCase()}/>
+						<div className="input-group" style={verticalMargin}>
+							<TextInput value={formData.siteId} action={this.getJobdefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="5"/>
+							<span className="input-group-btn">
+								<button className="btn btn-primary"
+										onClick={this.onLoadDataBtnClick.bind(this)}
+										disabled={!isExisting}>Load data</button>
+							</span>
+						</div>
 
-						<label style={labelStyle}>Start date</label>
-						<TextInput style={textInputStyle} value={jobdef.start} action={this.getJobdefUpdater('start')} converter={toDate}/>
+						<label style={labelStyle}>Start date (YYYY-MM-DD)</label>
+						<TextInput style={verticalMargin} value={formData.start} action={this.getJobdefUpdater('start')} converter={toDate} maxLength="10"/>
 
-						<label style={labelStyle}>End date</label>
-						<TextInput style={textInputStyle} value={jobdef.stop} action={this.getJobdefUpdater('stop')} converter={toDate}/>
+						<label style={labelStyle}>End date (YYYY-MM-DD)</label>
+						<TextInput value={formData.stop} action={this.getJobdefUpdater('stop')} converter={toDate} maxLength="10"/>
 
-						<button style={textInputStyle} className="btn btn-primary" disabled={!props.jobdefComplete} onClick={props.startJob}>Dispatch STILT job</button>
+						<button style={{display: 'block', clear: 'both', marginTop: 40, marginBottom: 20}}
+								className="btn btn-primary"
+								disabled={!props.workerData.isJobDefComplete}
+								onClick={props.startJob}>Dispatch STILT job</button>
 
 						<button className="btn btn-primary" onClick={props.showDashboard}>Show dashboard</button>
 
@@ -92,10 +116,21 @@ export default class MapView extends Component {
 	}
 }
 
-function toGeo(str){
+function toLat(str){
 	const res = parseFloat(parseFloat(str).toFixed(2));
-	if(!isNumber(res)) throw new Error("This is not a number")
-	else if(res.toString() != str) throw new Error("The number is not in a canonical format")
+
+	if (!isNumber(res)) throw new Error("This is not a number");
+	else if (res < geoBoundary.latMin || res > geoBoundary.latMax) throw new Error("The position lies outside of boundary");
+	else if(res.toString() != str) throw new Error("The number is not in a canonical format");
+	else return res;
+}
+
+function toLon(str){
+	const res = parseFloat(parseFloat(str).toFixed(2));
+
+	if (!isNumber(res)) throw new Error("This is not a number");
+	else if (res < geoBoundary.lonMin || res > geoBoundary.lonMax) throw new Error("The position lies outside of boundary");
+	else if(res.toString() != str) throw new Error("The number is not in a canonical format");
 	else return res;
 }
 
