@@ -1,46 +1,53 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.Actor
-import akka.actor.ActorRef
-import akka.actor.Address
-import akka.actor.Terminated
-import java.time.LocalDate
 import scala.collection.mutable.Map
 import scala.collection.mutable.Queue
-import scala.collection.mutable.Buffer
-import scala.annotation.tailrec
-import scala.concurrent.duration.DurationInt
+import scala.collection.mutable.Set
+
+import akka.actor.Actor
+import akka.actor.ActorRef
+import akka.actor.Terminated
+import akka.stream.actor.ActorPublisherMessage.Cancel
 
 class WorkReceptionist extends Actor{
 	import WorkReceptionist._
 
 	private val nodes = Map.empty[ActorRef, WorkMasterStatus]
 	private val queue = Queue.empty[Job]
-	private val done = Buffer.empty[JobInfo]
+	private val done = Set.empty[JobInfo]
 
-	override def preStart(): Unit = {
-		context.system.scheduler.schedule(2 seconds, 2 seconds, self, CollectStatus)(context.system.dispatcher)
-	}
+	private val subscribers = Set.empty[ActorRef]
 
 	val log = context.system.log
 
 	def receive = {
 
+		case Subscribe =>
+			val streamPublisher = sender()
+			subscribers += streamPublisher
+			streamPublisher ! getDashboardInfo
+
+		case Cancel =>
+			subscribers -= sender()
+
 		case job: Job =>
 			queue.enqueue(job)
-			dispatchJob()
+			//if all workmasters are busy inform the clients about the queue increase:
+			if(!dispatchJob()) notifySubscribers()
 
 		case msg @ CancelJob(id) =>
 			findNodeByJob(id).foreach(_ ! msg)
 
-		case CollectStatus =>
-			nodes.keys.foreach(_ ! GetStatus)
-
-		case GetStatus =>
-			sender() ! getDashboardInfo
-
 		case wms: WorkMasterStatus =>
 			val workMaster = sender()
+
+			if(!nodes.contains(workMaster)){
+				workMaster ! Hi
+				context watch workMaster
+				log.info("WORK MASTER REGISTERED: " + workMaster)
+				log.info("NEW WORK MASTER COUNT: " + (nodes.keys.size + 1))
+			}
+
 			nodes += ((workMaster, wms))
 
 			val completed = wms.work.collect{
@@ -50,44 +57,33 @@ class WorkReceptionist extends Actor{
 			done ++= completed
 
 			if(!completed.isEmpty) workMaster ! Thanks(completed.map(_.status.id))
-			if(wms.freeCores > 0) dispatchJob()
 
-		case run: JobRun =>
-			val oldStatus = nodes(sender())
-			val newStatus = oldStatus.copy(
-				work = oldStatus.work :+ ((run, JobStatus.init(run.runId)))
-			)
-			nodes += ((sender(), newStatus))
-			log.info("STARTED STILT RUN: " + run.toString)
-			dispatchJob()
+			queue.dequeueAll(wms.isRunning)
+
+			if(wms.freeCores > 0) dispatchJob()
+			notifySubscribers()
 
 		case StopAllWork =>
 			nodes.keys.foreach(_ ! StopAllWork)
 			context stop self
 
-		case WorkMasterRegistration(nCores) if ! nodes.contains(sender()) =>
-			val workMaster = sender()
-			context watch workMaster
-			nodes += ((workMaster, WorkMasterStatus(Nil, nCores)))
-			workMaster ! GetStatus
-
-			log.info("WORK MASTER REGISTERED: " + workMaster)
-			log.info("CURRENT WORK MASTER COUNT: " + nodes.keys.size)
-			dispatchJob()
-
 		case Terminated(wm) =>
 			log.info("WORK MASTER UNREGISTERED: " + wm)
 			nodes -= wm
+			notifySubscribers()
 	}
 
-	private def dispatchJob(): Unit = if(!queue.isEmpty){
-		pickNodeForJob(nodes, queue.head) match{
-			case Some(node) =>
-				val job = queue.dequeue()
-				node ! job
-			case None =>
-		}
+	private def notifySubscribers(): Unit = {
+		val info = getDashboardInfo
+		subscribers.foreach(_ ! info)
 	}
+
+	private def dispatchJob(): Boolean = (
+		for(job <- queue.headOption; node <- pickNodeForJob(nodes, job)) yield {
+			queue.dequeue()
+			node ! job
+		}
+	).isDefined
 
 	private def getDashboardInfo = DashboardInfo(
 		running = nodes.flatMap{
@@ -95,9 +91,9 @@ class WorkReceptionist extends Actor{
 				work.collect{
 					case (run, status) if status.exitValue.isEmpty => JobInfo(run, status, node.path.address)
 				}
-		}.toSeq,
-		done = done,
-		queue = queue
+		}.toVector,
+		done = done.toVector,
+		queue = queue.toVector
 	)
 
 	private def findNodeByJob(jobId: String): Option[ActorRef] = nodes.keys.find{

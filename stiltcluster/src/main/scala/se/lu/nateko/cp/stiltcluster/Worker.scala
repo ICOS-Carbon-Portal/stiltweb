@@ -1,12 +1,18 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.Actor
-import akka.actor.Props
+import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.io.File
 
-class Worker(conf: StiltEnv) extends Actor{
+import akka.actor.Actor
+import akka.actor.ActorRef
+import akka.actor.Cancellable
+import akka.actor.Props
+
+import scala.collection.immutable.Seq
+import scala.concurrent.duration.DurationInt
+
+class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 
 	import Worker._
 
@@ -15,21 +21,37 @@ class Worker(conf: StiltEnv) extends Actor{
 	private var stiltRun: JobRun = null
 
 	private var status = JobStatus.init(null)
+	private var pulse: Cancellable = null
 
 	private val log = context.system.log
+	implicit val exeCtxt =  context.system.dispatcher
+
+	override def preStart(): Unit = {
+	}
 
 	def receive = {
 		case run: JobRun =>
+
 			stiltRun = run
+
 			try{
 				stiltProc = new ProcessRunner(stiltCommand(run, conf), conf.logSizeLimit)
 				logsProc = new ProcessRunner(logWatchCommand(run, conf), conf.logSizeLimit)
+
 				updateStatus()
-				sender() ! status
+				master ! status
+
 				log.info("STARTED JOB RUN " + run)
+
+				pulse = context.system.scheduler.schedule(2 seconds, 2 seconds, self, Tick)
 				context become calculating
 			}catch{
-				case err: Throwable => status = JobStatus(
+				case err: Throwable =>
+
+					log.warning("FAILED STARTING JOB RUN " + stiltRun)
+					log.warning("... " + err.getMessage)
+
+					status = JobStatus(
 						id = run.runId,
 						exitValue = Some(1),
 						output = Nil,
@@ -42,16 +64,24 @@ class Worker(conf: StiltEnv) extends Actor{
 	}
 
 	def calculating: Receive = {
-		case GetStatus =>
+		case Tick =>
+
+			val oldStatus = status
 			updateStatus()
-			sender() ! status
-			if(status.exitValue.isDefined) resetWorker()
+
+			if(status != oldStatus){
+				master ! status
+				if(status.exitValue.isDefined) {
+					log.info("FINISHED JOB RUN " + stiltRun)
+					resetWorker()
+				}
+			}
 
 		case CancelJob(id) if(id == stiltRun.runId) =>
 			stiltProc.destroyForcibly()
 			logsProc.destroyForcibly()
 			updateStatus()
-			sender() ! JobCanceled(status)
+			master ! JobCanceled(status)
 			resetWorker()
 	}
 
@@ -66,7 +96,8 @@ class Worker(conf: StiltEnv) extends Actor{
 	}
 
 	private def resetWorker(): Unit = {
-		stiltProc = null; logsProc = null; stiltRun = null
+		pulse.cancel()
+		stiltProc = null; logsProc = null; stiltRun = null; pulse = null
 		context.unbecome()
 	}
 }
@@ -74,7 +105,9 @@ class Worker(conf: StiltEnv) extends Actor{
 
 object Worker{
 
-	def props(env: StiltEnv) = Props(classOf[Worker], env)
+	def props(env: StiltEnv, master: ActorRef) = Props(classOf[Worker], env, master)
+
+	private val Tick = "Tick"
 
 	def stiltCommand(run: JobRun, env: StiltEnv): Seq[String] = {
 		//docker exec stilt_stilt_1 /bin/bash -c \
@@ -101,7 +134,7 @@ object Worker{
 
 		Seq(
 			"docker", "exec", env.containerName, "/bin/bash", "-c",
-			s"cd ${env.mainFolder} && tail $logList"
+			s"sleep 1 && cd ${env.mainFolder} && tail $logList"
 		)
 	}
 

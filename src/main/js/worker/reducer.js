@@ -79,6 +79,6 @@ export default function(state, action){
 
 
 function jobdefIsComplete(job){
-	return job && job.lat !== undefined && job.lon !== undefined && job.alt !== undefined && job.siteId && job.start && job.stop && Date.parse(job.stop) > Date.parse(job.start);
+	return job && job.lat !== undefined && job.lon !== undefined && job.alt !== undefined && job.siteId && job.start && job.stop && Date.parse(job.stop) >= Date.parse(job.start);
 }
 
