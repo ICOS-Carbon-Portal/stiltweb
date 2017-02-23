@@ -5,10 +5,13 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import se.lu.nateko.cp.stiltcluster.Job
+import se.lu.nateko.cp.cpauth.core.PublicAuthConfig
 
-class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi) {
+class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi, authConf: PublicAuthConfig) {
 
 	import StiltJsonSupport._
+	val authRouting = new AuthRouting(authConf)
+	import authRouting.user
 
 	def route: Route = pathPrefix("viewer") {
 		get {
@@ -55,11 +58,18 @@ class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi) {
 		} ~
 		post{
 			path("enqueuejob"){
-				entity(as[Job]){job =>
-					cluster.addJob(job)
-					complete(StatusCodes.OK)
+				user{userId =>
+					entity(as[Job]){job =>
+						if(job.userId == userId.email){
+							cluster.addJob(job)
+							complete(StatusCodes.OK)
+						}else{
+							complete((StatusCodes.Forbidden, "Wrong user id in the job definition!"))
+						}
+					} ~
+					complete((StatusCodes.BadRequest, "Wrong request payload, expected a proper Job object"))
 				} ~
-				complete((StatusCodes.BadRequest, "Wrong request payload, expected a proper Job object"))
+				complete((StatusCodes.Forbidden, "Please log in with Carbon Portal"))
 			}
 		}
 	} ~
@@ -69,6 +79,12 @@ class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi) {
 		} ~
 		pathEndOrSingleSlash{
 			redirect("/viewer/", StatusCodes.Found)
+		} ~
+		path("whoami"){
+			user{userId =>
+				complete((StatusCodes.OK, userId.email))
+			} ~
+			complete((StatusCodes.OK, ""))
 		}
 	}
 

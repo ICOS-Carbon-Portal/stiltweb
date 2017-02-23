@@ -1,6 +1,7 @@
 package se.lu.nateko.cp.stiltcluster
 
 import java.io.InputStream
+import scala.collection.immutable.Seq
 
 class ProcessRunner(command: Seq[String], logSizeBound: Int) {
 
@@ -18,11 +19,13 @@ class ProcessRunner(command: Seq[String], logSizeBound: Int) {
 		Some(process.exitValue)
 	}
 
-	def destroyForcibly(): Unit = if(process.isAlive){
-		process.destroyForcibly()
-		process.waitFor()
-		closeStreams()
-	}
+	def destroyForcibly(): Unit =
+		if(process.isAlive){
+			readStreams()
+			closeStreams()
+			process.destroyForcibly()
+		} else
+			closeStreams()
 
 	def outputLines(): Seq[String] = {tick(); outLog.lines}
 	def errorLines(): Seq[String] = {tick(); errLog.lines}
@@ -32,7 +35,6 @@ class ProcessRunner(command: Seq[String], logSizeBound: Int) {
 	}
 
 	private def closeStreams(): Unit = if(!isClosed){
-		readStreams()
 		outStream.close()
 		errStream.close()
 		outLog.flush()

@@ -1,6 +1,7 @@
 package se.lu.nateko.cp.stiltcluster
 
 import scala.collection.mutable.Queue
+import scala.collection.immutable.Seq
 import scala.annotation.tailrec
 
 class LogLineQueue(sizeBound: Int){
@@ -18,7 +19,7 @@ class LogLineQueue(sizeBound: Int){
 		remainder = Array.empty[Byte]
 	}
 
-	def lines: Seq[String] = queue
+	def lines: Seq[String] = queue.toVector
 
 	@tailrec private def enqueueCompleteLines(): Unit = {
 		val nlPos = remainder.indexOf(10)

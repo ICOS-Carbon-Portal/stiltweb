@@ -1,18 +1,18 @@
 package se.lu.nateko.cp.stiltcluster
 
+import scala.collection.mutable.Map
+
 import akka.actor.Actor
+import akka.actor.ActorRef
+import akka.actor.PoisonPill
+import akka.actor.Props
 import akka.actor.RootActorPath
+import akka.actor.Terminated
+import akka.cluster.Cluster
+import akka.cluster.ClusterEvent.CurrentClusterState
+import akka.cluster.ClusterEvent.MemberUp
 import akka.cluster.Member
 import akka.cluster.MemberStatus
-import akka.cluster.Cluster
-import akka.cluster.ClusterEvent.MemberUp
-import akka.cluster.ClusterEvent.CurrentClusterState
-import akka.actor.Props
-import java.time.temporal.ChronoUnit
-import akka.actor.ActorRef
-import scala.collection.mutable.Map
-import scala.concurrent.duration.DurationInt
-import akka.actor.PoisonPill
 
 class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 
@@ -23,9 +23,12 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 	val runs = Map.empty[String, JobRun]
 	val status = Map.empty[String, JobStatus]
 
+	private val devnull = context.system.actorOf(Props.empty)
+
+	private var receptionist: ActorRef = devnull
+
 	override def preStart(): Unit = {
 		cluster.subscribe(self, classOf[MemberUp])
-		context.system.scheduler.schedule(2 seconds, 2 seconds, self, CollectStatus)(context.system.dispatcher)
 	}
 
 	override def postStop(): Unit = {
@@ -35,21 +38,29 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 
 	def receive = {
 
-		case job: Job => if(freeCores > 0) {
+		case Hi =>
+			receptionist = sender()
+			context watch receptionist
+
+		case Terminated(dead) =>
+			if(receptionist == dead) receptionist = devnull
+
+		case job: Job => if(freeCores == 0) {
+			receptionist ! myStatus
+			receptionist ! job
+		} else {
 			val run = JobRun(job, preferredParallelism)
-			val worker = context.actorOf(Worker.props(conf))
+			val worker = context.actorOf(Worker.props(conf, self))
 			val id = run.runId
 			workers += ((id, worker))
 			runs += ((id, run))
 			status += ((id, JobStatus.init(id)))
 			worker ! run
-			sender() ! run
+			receptionist ! myStatus
 		}
 
 		case jc: CancelJob =>
 			workers.get(jc.id).foreach(_ ! jc)
-
-		case GetStatus => sender ! myStatus
 
 		case Thanks(ids) =>
 			ids.filter(id => !workers.contains(id)).foreach{id =>
@@ -63,9 +74,7 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 				sender() ! PoisonPill
 				workers -= js.id
 			}
-
-		case CollectStatus =>
-			workers.values.foreach(_ ! GetStatus)
+			receptionist ! myStatus
 
 		case state: CurrentClusterState =>
 			state.members.filter(_.status == MemberStatus.Up) foreach register
@@ -91,7 +100,7 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 	}
 
 	private def myStatus = WorkMasterStatus(
-		work = runs.keys.map{id => (runs(id), status(id))}.toSeq,
+		work = runs.keys.map{id => (runs(id), status(id))}.toVector,
 		freeCores = freeCores
 	)
 
@@ -107,7 +116,7 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 	private def register(member: Member): Unit = if (member.hasRole("frontend")) {
 		context.actorSelection(
 			RootActorPath(member.address) / "user" / "receptionist"
-		) ! WorkMasterRegistration(coresPoolSize)
+		) ! myStatus
 	}
 }
 

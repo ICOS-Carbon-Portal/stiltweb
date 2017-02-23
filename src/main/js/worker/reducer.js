@@ -1,4 +1,4 @@
-import {ERROR, FETCHED_STATIONS, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, USE_EXISTING_STATION, STARTED_JOB} from './actions';
+import {ERROR, FETCHED_INIT_INFO, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, USE_EXISTING_STATION, STARTED_JOB} from './actions';
 import {MAP_VIEW, DASHBOARD_VIEW} from './actions';
 
 import {copyprops, deepUpdate} from 'icos-cp-utils';
@@ -12,8 +12,8 @@ export default function(state, action){
 		case ERROR:
 			return update({toasterData: new Toaster.ToasterData(Toaster.TOAST_ERROR, action.error.message.split('\n')[0])});
 
-		case FETCHED_STATIONS:
-			return update({workerData: state.workerData.withStations(action.stations)});
+		case FETCHED_INIT_INFO:
+			return update({workerData: state.workerData.withStations(action.stations), userId: action.userId});
 
 		case STATION_SELECTED:
 			return update({workerData: state.workerData.withSelectedStation(action.selectedStation, true)});
@@ -74,6 +74,6 @@ function jobdefIsComplete(job){
 		&& !!job.siteId
 		&& !!job.start
 		&& !!job.stop
-		&& Date.parse(job.stop) > Date.parse(job.start);
+		&& Date.parse(job.stop) >= Date.parse(job.start);
 }
 
