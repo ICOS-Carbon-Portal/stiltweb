@@ -36,7 +36,12 @@ class App extends Component {
 			/>
 
 			<div className="page-header">
-				<h1>STILT calculation service <small>{subtitle}</small></h1>
+				<div className="pull-right">{
+					props.userId && props.userId.length
+						? <span>{"Logged in as " + props.userId}</span>
+						: <a href={"https://cpauth.icos-cp.eu/login/?targetUrl=" + window.location.toString()}>Log in</a>
+				}</div>
+					<h1>STILT calculation service <small>{subtitle}</small></h1>
 			</div>
 
 			{

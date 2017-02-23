@@ -63,7 +63,10 @@ lazy val stiltweb = (project in file("."))
 			runNpmTask("npm run gulp publishviewer", log)
 		},
 
-		frontendThenAssembly := Def.sequential(buildFrontend, assembly).value,
+		frontendThenAssembly := {
+			(assembly in stiltcluster).value
+			Def.sequential(buildFrontend, assembly).value
+		},
 
 		deploy := {
 			val log = streams.value.log
@@ -78,11 +81,10 @@ lazy val stiltweb = (project in file("."))
 					log.warn("Performing a TEST deployment, use 'deploy to production' for a real one")
 					"--check"
 			}
-			val jarPath = frontendThenAssembly.value.getCanonicalPath
-			val confPath = new java.io.File("./application.conf").getCanonicalPath
-			val ymlPath = new java.io.File("../infrastructure/devops/stiltweb/setup_stiltweb.yml").getCanonicalPath
-			sbt.Process(s"""ansible-playbook $check -i stiltmaster, $ymlPath """ +
-				s"""--ask-sudo -e doi_jar_file=$jarPath""").run(true).exitValue()
+			frontendThenAssembly.value
+			val ymlPath = new java.io.File("../infrastructure/devops/stilt.yml").getCanonicalPath
+			val inventoryPath = new java.io.File("../infrastructure/devops/production.inventory").getCanonicalPath
+			sbt.Process(s"""ansible-playbook $check -i $inventoryPath $ymlPath""").run(true).exitValue()
 		}
 	)
 
