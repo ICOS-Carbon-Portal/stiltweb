@@ -29,7 +29,8 @@ case class Job(
 	lon: Double,
 	alt: Int,
 	start: LocalDate,
-	stop: LocalDate
+	stop: LocalDate,
+	userId: String
 )
 
 case class JobRun(job: Job, parallelism: Int){

@@ -32,8 +32,9 @@ object Main extends App {
 			complete((StatusCodes.InternalServerError, msg))
 	}
 
-	val route = handleExceptions(exceptionHandler){
-		new MainRoute(service, cluster).route
+	val route = {
+		val inner = new MainRoute(service, cluster, config.auth).route
+		handleExceptions(exceptionHandler){inner}
 	}
 
 	Http()

@@ -1,7 +1,7 @@
 import { createStore, applyMiddleware } from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import reducer from './reducer';
-import {fetchStationInfo, establishWsCommunication, MAP_VIEW, DASHBOARD_VIEW} from './actions';
+import {fetchInitialInfo, establishWsCommunication, MAP_VIEW, DASHBOARD_VIEW} from './actions';
 
 const initState = {
 	stations: [],
@@ -28,7 +28,7 @@ function logger({ getState }) {
 
 export default function(){
 	const store = createStore(reducer, initState, applyMiddleware(thunkMiddleware, logger));
-	store.dispatch(fetchStationInfo);
+	store.dispatch(fetchInitialInfo);
 	store.dispatch(establishWsCommunication);
 	return store;
 }

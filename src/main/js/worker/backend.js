@@ -21,6 +21,7 @@ export function enqueueJob(job){
 		headers: {
 			'Content-Type': 'application/json'
 		},
+		credentials: 'include',
 		body: JSON.stringify(job)
 	}).then(checkStatus);
 }
@@ -33,5 +34,11 @@ export function getStationInfo(){
 				return Object.assign(copyprops(sInfo, ['id', 'lat', 'lon', 'alt']), {name});
 			})
 		);
+}
+
+export function getWhoIam(){
+	return fetch('/whoami', {credentials: 'include'})
+		.then(checkStatus)
+		.then(resp => resp.text());
 }
 

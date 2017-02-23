@@ -1,6 +1,6 @@
-import {getStationInfo, makeDashboardWebsocketConnection, enqueueJob} from './backend';
+import {getStationInfo, getWhoIam, makeDashboardWebsocketConnection, enqueueJob} from './backend';
 
-export const FETCHED_STATIONS = 'FETCHED_STATIONS';
+export const FETCHED_INIT_INFO = 'FETCHED_INIT_INFO';
 export const GOT_DASHBOARD_STATE = 'GOT_DASHBOARD_STATE';
 export const STATION_SELECTED = 'STATION_SELECTED';
 export const JOBDEF_UPDATED = 'JOBDEF_UPDATED';
@@ -20,11 +20,13 @@ function failWithError(error){
 	};
 }
 
-export const fetchStationInfo = dispatch => {
-	getStationInfo().then(
-		stations => dispatch({type: FETCHED_STATIONS, stations}),
-		err => dispatch(failWithError(err))
-	);
+export const fetchInitialInfo = dispatch => {
+	Promise.all([getStationInfo(), getWhoIam()])
+		.then(([stations, userId]) => {return {stations, userId};})
+		.then(
+			initInfo => dispatch(Object.assign({type: FETCHED_INIT_INFO}, initInfo)),
+			err => dispatch(failWithError(err))
+		);
 }
 
 export const establishWsCommunication = dispatch => makeDashboardWebsocketConnection(eventData => {
@@ -49,7 +51,8 @@ export function jobdefUpdated(update){
 }
 
 export const startJob = (dispatch, getState) => {
-	const job = getState().jobdef;
+	const state = getState();
+	const job = Object.assign({}, state.jobdef, {userId: state.userId});
 	enqueueJob(job).then(
 		() => dispatch({type: STARTED_JOB}),
 		err => dispatch(failWithError(err))
