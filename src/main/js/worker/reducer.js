@@ -1,4 +1,4 @@
-import {ERROR, FETCHED_STATIONS, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, USE_EXISTING, STARTED_JOB} from './actions';
+import {ERROR, FETCHED_STATIONS, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, USE_EXISTING_STATION, STARTED_JOB} from './actions';
 import {MAP_VIEW, DASHBOARD_VIEW} from './actions';
 
 import {copyprops, deepUpdate} from 'icos-cp-utils';
@@ -21,26 +21,19 @@ export default function(state, action){
 		case JOBDEF_UPDATED:
 			const workerData = state.workerData.withUpdatedFormData(action.update);
 
-			if (workerData.selectedStation.isExisting && !workerData.isFormAndSelStationSame) {
+			if (workerData.isFormAndExistingStationDifferent) {
 				const msg = 'You have entered the site code for an existing station. Press "Load data" to use its parameters.';
 				return update({workerData}, {toasterData: new Toaster.ToasterData(Toaster.TOAST_INFO, msg)});
 			} else {
 				return update({workerData});
 			}
 
-		case USE_EXISTING:
-			return update({workerData: state.workerData.withUseExistingStationData()});
+		case USE_EXISTING_STATION:
+			return update({workerData: state.workerData.withExistingStationData()});
 
 		case STARTED_JOB:
-			const newStation = copyprops(state.jobdef, ['lat', 'lon', 'alt']);
-			newStation.id = state.jobdef.siteId;
-			const newStations = state.stations.concat([newStation]);
-			return update({
-				jobdef: undefined,
-				jobdefComplete: false,
-				stations: newStations,
-				currentView: DASHBOARD_VIEW
-			});
+			const newStation = copyprops(state.workerData.jobDef, ['lat', 'lon', 'alt', 'siteId']);
+			return update({workerData: state.workerData.resetAndAddNewStation(newStation)});
 
 		case GOT_DASHBOARD_STATE:
 			return updateWith(['dashboardState']);

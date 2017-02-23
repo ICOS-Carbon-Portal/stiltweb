@@ -4,7 +4,7 @@ export const FETCHED_STATIONS = 'FETCHED_STATIONS';
 export const GOT_DASHBOARD_STATE = 'GOT_DASHBOARD_STATE';
 export const STATION_SELECTED = 'STATION_SELECTED';
 export const JOBDEF_UPDATED = 'JOBDEF_UPDATED';
-export const USE_EXISTING = 'USE_EXISTING';
+export const USE_EXISTING_STATION = 'USE_EXISTING_STATION';
 export const STARTED_JOB = 'STARTED_JOB';
 export const ERROR = 'ERROR';
 
@@ -51,12 +51,13 @@ export function jobdefUpdated(update){
 
 export function useExistingStationData(){
 	return {
-		type: USE_EXISTING
+		type: USE_EXISTING_STATION
 	};
 }
 
 export const startJob = (dispatch, getState) => {
-	const job = getState().jobdef;
+	const job = getState().workerData.jobDef;
+	console.log(job);
 	enqueueJob(job).then(
 		() => dispatch({type: STARTED_JOB}),
 		err => dispatch(failWithError(err))

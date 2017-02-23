@@ -7,8 +7,21 @@ export default class StationInfo {
 		this._name = name || ''
 	}
 
+	withLat(lat){
+		return new StationInfo(lat, this._lon, this._alt, this._siteId, this._name);
+	}
+
+	withLon(lon){
+		return new StationInfo(this._lat, lon, this._alt, this._siteId, this._name);
+	}
+
 	get isExisting(){
 		return !!this._siteId;
+	}
+
+	get hasPosition(){
+		return !isNaN(parseFloat(this._lat)) && isFinite(this._lat)
+			&& !isNaN(parseFloat(this._lon)) && isFinite(this._lon)
 	}
 
 	get lat(){

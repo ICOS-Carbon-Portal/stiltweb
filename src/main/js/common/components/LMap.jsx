@@ -20,8 +20,7 @@ export default class LMap extends Component{
 			}),
 			circles: L.layerGroup(),
 			clickMarker: L.circleMarker(),
-			clickedPos: null,
-			maskHole: null
+			maskHole: undefined
 		};
 	}
 
@@ -50,49 +49,17 @@ export default class LMap extends Component{
 				mapClick(map, e.latlng, self);
 			});
 		}
-		//a hack to fix the spagetti situation in this.applyChanges (former this.componentWillReceiveProps)
-		//it simulates the situation of first getting the empty station list, and then non-empty station list with props,
-		//even if the station list is non-empty from the beginning
-		if(this.props.stations.length) {
-			const noStationsProps = Object.assign({}, this.props, {stations: []});
-			this.applyChanges(this.props, noStationsProps);
-		}
+
+		// Update map if we are returning to this view from another view
+		this.componentWillReceiveProps(this.props);
 	}
 
 	componentWillReceiveProps(nextProps){
-		this.applyChanges(nextProps, this.props);
-	}
-
-	applyChanges(nextProps, prevProps){
 		const map = this.app.map;
 
-		const buildMarkers = (nextProps.stations.length > 0 && prevProps.stations.length != nextProps.stations.length) ||
-			(nextProps.selectedStation !== undefined && prevProps.selectedStation != nextProps.selectedStation);
-
-		// console.log({prevProps, nextProps, buildMarkers});
-
-		if (buildMarkers) {
-			if (nextProps.workerMode) this.buildWarningCircles(nextProps.stations);
-			this.buildMarkers(nextProps.stations, nextProps.action, nextProps.selectedStation);
-
-			if (!nextProps.selectedStation == undefined) {
-				const mapBounds = map.getBounds();
-				const selectedStationPosition = L.latLng(nextProps.selectedStation.lat, nextProps.selectedStation.lon);
-				const markerOptions = this.app.markers.getLayers()[0].options;
-				const markerPoint = map.latLngToLayerPoint(L.latLng(selectedStationPosition));
-				const markerBoundaryLL = map.layerPointToLatLng(
-					L.point(markerPoint.x - markerOptions.radius, markerPoint.y)
-				);
-				const markerBoundaryUR = map.layerPointToLatLng(
-					L.point(markerPoint.x + markerOptions.radius, markerPoint.y)
-				);
-				const selectedStationBounds = L.latLngBounds(markerBoundaryLL, markerBoundaryUR);
-
-				if (!mapBounds.contains(selectedStationBounds)){
-					map.panTo(selectedStationPosition);
-				}
-			}
-		}
+		this.buildWarningCircles(nextProps.workerMode, nextProps.stations);
+		this.buildMarkers(nextProps.stations, nextProps.action, nextProps.selectedStation);
+		this.panMap(nextProps.selectedStation, this.app.markers, map);
 
 		if (!map.getZoom() && nextProps.stations.length > 0) LCommon.setView(map, nextProps.stations);
 
@@ -100,24 +67,52 @@ export default class LMap extends Component{
 		this.addMask(nextProps.geoBoundary);
 	}
 
+	panMap(selectedStation, markers, map){
+		if (!map.getZoom() || selectedStation.lat === undefined || selectedStation.lon === undefined) return;
+
+		const mapBounds = map.getBounds();
+		const selectedStationPosition = L.latLng(selectedStation.lat, selectedStation.lon);
+		const markerOptions = markers.getLayers()[0].options;
+		const markerPoint = map.latLngToLayerPoint(L.latLng(selectedStationPosition));
+		const markerBoundaryLL = map.layerPointToLatLng(
+			L.point(markerPoint.x - markerOptions.radius, markerPoint.y)
+		);
+		const markerBoundaryUR = map.layerPointToLatLng(
+			L.point(markerPoint.x + markerOptions.radius, markerPoint.y)
+		);
+		const selectedStationBounds = L.latLngBounds(markerBoundaryLL, markerBoundaryUR);
+
+		if (!mapBounds.contains(selectedStationBounds)){
+			map.panTo(selectedStationPosition);
+		}
+	}
+
 	addMask(geoBoundary){
 		const app = this.app;
 
-		if(!geoBoundary || app.maskHole) return;
+		if(!geoBoundary || app.maskHole || !this.app.map.getZoom()) return;
 
 		app.maskHole = LCommon.polygonMask(geoBoundary);
 		app.maskHole.addTo(app.map);
 	}
 
 	updateClickMarker(map, selectedStation){
-		if (selectedStation && selectedStation.name !== undefined) {
+		if (!selectedStation) return;
+
+		if (selectedStation.isExisting) {
 			map.removeLayer(this.app.clickMarker);
-		} else if (selectedStation) {
-			mapClick(map, L.latLng(selectedStation.lat, selectedStation.lon), this, false)
+		} else if (selectedStation.hasPosition) {
+			const clickMarkerPos = this.app.clickMarker.getLatLng();
+
+			if (selectedStation.lat !== clickMarkerPos.lat || selectedStation.lon !== clickMarkerPos.lng) {
+				mapClick(map, L.latLng(selectedStation.lat, selectedStation.lon), this, false)
+			}
 		}
 	}
 
-	buildWarningCircles(geoms){
+	buildWarningCircles(workerMode, geoms){
+		if (!workerMode || geoms.length == 0) return;
+
 		const circles = this.app.circles;
 		circles.clearLayers();
 		const map = this.app.map;
@@ -150,7 +145,7 @@ export default class LMap extends Component{
 		geoms.filter(geom => !selectedStation || geom.siteId != selectedStation.siteId).forEach(geom => {
 			const marker = L.circleMarker([geom.lat, geom.lon], LCommon.pointIcon(6, 1, 'rgb(255,100,100)', 'black'));
 
-			addPopup(marker, geom.name + " (" + geom.siteId + ")", {offset:[0,0], closeButton: false});
+			addPopup(marker, getPopupTxt(geom), {offset:[0,0], closeButton: false});
 			addEvents(this.app, marker, action, geom);
 
 			markers.addLayer(marker);
@@ -161,7 +156,7 @@ export default class LMap extends Component{
 		if (selected){
 			const marker = L.circleMarker([selected.lat, selected.lon], LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
 
-			addPopup(marker, selected.name + " (" + selected.siteId + ")", {offset:[0,0], closeButton: false});
+			addPopup(marker, getPopupTxt(selected), {offset:[0,0], closeButton: false});
 			addEvents(this.app, marker, action, selected);
 
 			markers.addLayer(marker);
@@ -184,35 +179,36 @@ export default class LMap extends Component{
 	}
 }
 
+function getPopupTxt(station){
+	return station.name
+		? station.siteId + " (" + station.name + ")"
+		: station.siteId;
+}
+
 function mapClick(map, clickedPosLatlng, self, triggerAction = true){
 	map.removeLayer(self.app.clickMarker);
 
 	self.app.clickMarker = L.circleMarker(clickedPosLatlng, LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
 	map.addLayer(self.app.clickMarker);
 
-	self.app.clickedPos = {
-		lat: parseFloat(clickedPosLatlng.lat.toFixed(coordDecimals)),
-		lon: parseFloat(clickedPosLatlng.lng.toFixed(coordDecimals))
-	};
+	if (triggerAction) self.props.action(clickedPosLatlng);
 
-	if (triggerAction) self.props.action(self.app.clickedPos);
-
-	if (checkProximity(self.app.markers, clickedPosLatlng)){
+	if (isTooClose(self.app.markers, clickedPosLatlng)){
 		self.props.toastWarning("The position of your new footprint is too close to an existing footprint!");
 	}
 }
 
-function checkProximity(markers, clickedPosLatlng){
-	var isTooClose = false;
+function isTooClose(markers, clickedPosLatlng){
+	var proximityFail = false;
 
 	markers.eachLayer(marker => {
 		if (marker.getLatLng().distanceTo(clickedPosLatlng) < warningRadius(clickedPosLatlng.lat)){
-			isTooClose = true;
+			proximityFail = true;
 			return;
 		}
 	});
 
-	return isTooClose;
+	return proximityFail;
 }
 
 function addPopup(marker, text, options){

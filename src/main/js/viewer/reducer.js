@@ -11,7 +11,12 @@ export default function(state, action){
 	switch(action.type){
 
 		case FETCHED_INITDATA:
-			return updateWith(['wdcggFormat', 'stations', 'countriesTopo']);
+			const stations = action.stations.map(s => {
+				return Object.assign(s, {siteId: s.id});
+			});
+			const newState = updateWith(['wdcggFormat', 'countriesTopo']);
+
+			return Object.assign(newState, {stations});
 
 		case FETCHED_RASTER:
 			return state.desiredFootprint.date == action.footprint.date

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import StationsMap from '../../common/components/LMap.jsx';
 import Select from '../../common/components/Select.jsx';
 import TextInput from '../components/TextInput.jsx';
+import StationInfo from '../models/StationInfo';
 
 const geoBoundary = {
 	latMin: 33,
@@ -32,11 +33,12 @@ export default class MapView extends Component {
 		const props = this.props;
 		const formData = props.workerData.formData;
 		const isExisting = props.workerData.selectedStation.isExisting;
+		const selectedStation = props.workerData.isFormAndExistingStationDifferent
+			? new StationInfo(formData.lat, formData.lon)
+			: props.workerData.selectedStation;
 
 		const labelStyle = {display: 'block', clear: 'both'};
 		const verticalMargin = {marginBottom: 20};
-
-		// console.log(formData);
 
 		return <div className="row">
 
@@ -48,11 +50,11 @@ export default class MapView extends Component {
 
 						<div style={{marginBottom: 10}}>
 							<Select
-								selectValue={props.workerData.selectedStation}
+								selectValue={props.selectStation}
 								infoTxt="Select station here or on the map"
 								availableValues={props.workerData.stations}
 								value={props.workerData.selectedStation}
-								presenter={station => station ? `${station.name} (${station.siteId})` : station}
+								presenter={station => station ? `${station.siteId} (${station.name})` : station}
 								sort={true}
 							/>
 						</div>
@@ -61,7 +63,7 @@ export default class MapView extends Component {
 							<StationsMap
 								workerMode={true}
 								stations={props.workerData.stations}
-								selectedStation={props.workerDataselectedStation}
+								selectedStation={selectedStation}
 								action={props.selectStation}
 								toastWarning={props.toastWarning}
 								geoBoundary={geoBoundary}
