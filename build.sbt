@@ -15,7 +15,8 @@ lazy val commonSettings = Seq(
 	)
 )
 
-val akkaVersion = "2.4.16"
+val akkaVersion = "2.4.17"
+val akkaHttpVersion = "10.0.4"
 
 
 lazy val buildFrontend = taskKey[Unit]("Builds the front end projects")
@@ -51,10 +52,10 @@ lazy val stiltweb = (project in file("."))
 		name := "stiltweb",
 		version := "0.1.0",
 		libraryDependencies ++= Seq(
-			"ch.qos.logback"      % "logback-classic"                    % "1.1.3",
+			"com.typesafe.akka"  %% "akka-http-spray-json"               % akkaHttpVersion,
 			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.5-SNAPSHOT",
 			"se.lu.nateko.cp"    %% "views-core"                         % "0.2-SNAPSHOT",
-			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.0-SNAPSHOT" exclude("commons-logging", "commons-logging"),
+			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.0-SNAPSHOT",
 			"org.scalatest"      %% "scalatest"                          % "3.0.1"            % "test"
 		),
 		buildFrontend := {
