@@ -1,34 +1,34 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import {copyprops} from 'icos-cp-utils';
 
 export default class TextInput extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			val: this.props.value || ''
+			val: this.props.value,
+			error: null
 		};
 	}
 
 	componentWillReceiveProps(nextProps){
-		if(nextProps.value !== undefined) this.setState({val: nextProps.value});
+		if (this.state.val !== nextProps.value) this.setState({val: nextProps.value});
 	}
 
-	onTextChange(){
-		const input = ReactDOM.findDOMNode(this.refs.input);
-		var val = input.value;
-		this.setState({val, error: null});
+	onTextChange(event){
+		const self = this;
+		const val = event.target.value;
 
-		if (this.props.action){
-			if(this.props.converter){
-				try{
-					val = this.props.converter(val);
-					this.props.action(val);
-				}catch(err){
-					this.setState({error: err.message});
-					this.props.action(undefined);
-				}
-			} else this.props.action(val);
+		function act(value, error){
+			self.props.action({value, error});
+		}
+
+		try {
+			const converted = this.props.converter(val);
+			act(converted, null);
+			this.setState({val: converted, error: null});
+		} catch(err){
+			this.setState({val, error: err.message});
+			act(val, "" + err.message);
 		}
 	}
 
@@ -41,7 +41,7 @@ export default class TextInput extends Component {
 		);
 
 		return <input ref="input" className="form-control" type="text" {...props}
-			value={this.state.val} title={this.state.error} style={style}
+			value={this.state.val || ''} title={this.state.error} style={style}
 			onChange={this.onTextChange.bind(this)}
 		/>;
 	}

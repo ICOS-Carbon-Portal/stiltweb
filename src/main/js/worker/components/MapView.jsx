@@ -18,10 +18,8 @@ export default class MapView extends Component {
 
 	getJobdefUpdater(prop){
 		const props = this.props;
-		return function(val){
-			const update = {};
-			update[prop] = val;
-			props.updateJobdef(update);
+		return function(update){
+			props.updateJobdef(Object.assign({propertyName: prop}, update));
 		};
 	}
 
@@ -39,6 +37,10 @@ export default class MapView extends Component {
 
 		const labelStyle = {display: 'block', clear: 'both'};
 		const verticalMargin = {marginBottom: 20};
+
+		// console.log({props, formData, form: props.workerData._workerFormData, selSt: props.workerData._selectedStation,
+		// 	hasErrors: props.workerData.hasErrors, isJobDefComplete: props.workerData.isJobDefComplete, jobDef: props.workerData.jobDef
+		// });
 
 		return <div className="row">
 

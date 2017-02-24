@@ -7,6 +7,10 @@ export default class StationInfo {
 		this._name = name || ''
 	}
 
+	withSelectedStation(selSt){
+		return new StationInfo(selSt.lat, selSt.lon, selSt.alt, selSt.siteId, selSt.name);
+	}
+
 	withLat(lat){
 		return new StationInfo(lat, this._lon, this._alt, this._siteId, this._name);
 	}

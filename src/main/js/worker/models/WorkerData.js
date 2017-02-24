@@ -2,17 +2,26 @@ import StationInfo from './StationInfo';
 import WorkerFormData from './WorkerFormData';
 
 export default class WorkerData{
-	constructor(stations, workerFormData, selectedStation){
+	constructor(stations, workerFormData, selectedStation, errors){
 		this._stations = stations || [];
 		this._workerFormData = workerFormData || new WorkerFormData();
 		this._selectedStation = selectedStation || new StationInfo();
+		this._errors = errors || {
+			lat: undefined,
+			lon: undefined,
+			alt: undefined,
+			siteId: undefined,
+			start: undefined,
+			stop: undefined
+		};
 	}
 
 	withExistingStationData(){
 		return new WorkerData(
 			this._stations,
 			new WorkerFormData(this._selectedStation.lat, this._selectedStation.lon, this._selectedStation.alt, this._selectedStation.siteId),
-			this._selectedStation
+			this._selectedStation,
+			this._errors
 		);
 	}
 
@@ -27,7 +36,7 @@ export default class WorkerData{
 			};
 		});
 
-		return new WorkerData(stationsFormatted, this._workerFormData, this._selectedStation);
+		return new WorkerData(stationsFormatted, this._workerFormData, this._selectedStation,this._errors);
 	}
 
 	resetAndAddNewStation(station){
@@ -38,32 +47,40 @@ export default class WorkerData{
 		return this._stations;
 	}
 
-	withUpdatedFormData(update){
-		const keys = Object.keys(update);
-		const key = keys.length == 1 ? keys[0] : undefined;
-		const val = update[key];
+	get hasErrors(){
+		const props = Object.keys(this._errors);
+		return !!props.find(key => !!this._errors[key], this);
+	}
 
-		if (val) {
+	withUpdatedFormData(update){
+		const key = update.propertyName;
+		Object.assign(this._errors, {[key]: update.error});
+
+		if (key) {
+			const val = update.value;
+
 			switch(key) {
 				case "siteId":
 					const existingStation = this._stations.find(station => station.siteId == val);
-					const workerData = new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation);
 
-					if (existingStation)
-						return this.withSelectedStation(existingStation, false);
-					else if (this.selectedStation.isExisting)
-						return this.withClearedSelectedStation();
+					if (existingStation) {
+						return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation.withSelectedStation(existingStation), this._errors);
+						// return this.withSelectedStation(existingStation, false);
+					} else if (this.selectedStation.isExisting) {
+						return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), undefined, this._errors);
+						// return this.withClearedSelectedStation();
+					}
 					else
-						return workerData;
+						return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation, this._errors);
 
 				case "lat":
-					return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation.withLat(val));
+					return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation.withLat(val), this._errors);
 
 				case "lon":
-					return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation.withLon(val));
+					return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation.withLon(val), this._errors);
 
 				default:
-					return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation);
+					return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation, this._errors);
 			}
 		} else {
 			return this;
@@ -108,12 +125,13 @@ export default class WorkerData{
 		return new WorkerData(
 			this._stations,
 			workerFormData,
-			new StationInfo(selectedStation.lat, selectedStation.lon || selectedStation.lng, selectedStation.alt, selectedStation.siteId, selectedStation.name)
+			new StationInfo(selectedStation.lat, selectedStation.lon || selectedStation.lng, selectedStation.alt, selectedStation.siteId, selectedStation.name),
+			this._errors
 		);
 	}
 
 	withClearedSelectedStation(){
-		return new WorkerData(this._stations, this._workerFormData, undefined);
+		return new WorkerData(this._stations, this._workerFormData, undefined, this._errors);
 	}
 
 	get selectedStation(){
@@ -121,10 +139,10 @@ export default class WorkerData{
 	}
 
 	get isFormAndSelStationSame(){
-		return this._selectedStation.lat === this._workerFormData.lat
-			&& this._selectedStation.lon === this._workerFormData.lon
-			&& this._selectedStation.alt === this._workerFormData.alt
-			&& this._selectedStation.siteId === this._workerFormData.siteId;
+		return (this._selectedStation.lat === this._workerFormData.lat || !this._workerFormData.lat)
+			&& (this._selectedStation.lon === this._workerFormData.lon || !this._workerFormData.lon)
+			&& (this._selectedStation.alt === this._workerFormData.alt || !this._workerFormData.alt)
+			&& (this._selectedStation.siteId === this._workerFormData.siteId || !this._workerFormData.siteId);
 	}
 
 	get isFormAndExistingStationDifferent(){
@@ -132,16 +150,13 @@ export default class WorkerData{
 	}
 
 	get isJobDefComplete(){
-		if (this._selectedStation.isExisting){
-			return false;
-		} else {
-			return !!this._workerFormData.lat
-				&& !!this._workerFormData.lon
-				&& !!this._workerFormData.alt
-				&& this._workerFormData.siteId && this._workerFormData.siteId.length >= 3
-				&& !!this._workerFormData.start
-				&& !!this._workerFormData.stop;
-		}
+		return !this.hasErrors
+			&& !!this._workerFormData.lat
+			&& !!this._workerFormData.lon
+			&& !!this._workerFormData.alt
+			&& this._workerFormData.siteId && this._workerFormData.siteId.length >= 3
+			&& !!this._workerFormData.start
+			&& !!this._workerFormData.stop;
 	}
 }
 
@@ -154,9 +169,13 @@ function getDataforForm(workerFormData, selectedStation, key, isExisting){
 }
 
 function round(val){
-	if (val) {
-		return parseFloat(val.toFixed(2));
+	if (val && isNumber(val)) {
+		return parseFloat(parseFloat(val).toFixed(2));
 	} else {
 		return val;
 	}
+}
+
+function isNumber(n){
+	return !isNaN(parseFloat(n)) && isFinite(n);
 }

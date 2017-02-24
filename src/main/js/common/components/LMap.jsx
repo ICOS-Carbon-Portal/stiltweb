@@ -99,12 +99,13 @@ export default class LMap extends Component{
 	updateClickMarker(map, selectedStation){
 		if (!selectedStation) return;
 
-		if (selectedStation.isExisting) {
+		if (selectedStation.isExisting || !selectedStation.hasPosition) {
 			map.removeLayer(this.app.clickMarker);
+			this.app.clickMarker = L.circleMarker();
 		} else if (selectedStation.hasPosition) {
 			const clickMarkerPos = this.app.clickMarker.getLatLng();
 
-			if (selectedStation.lat !== clickMarkerPos.lat || selectedStation.lon !== clickMarkerPos.lng) {
+			if (!clickMarkerPos || selectedStation.lat !== clickMarkerPos.lat || selectedStation.lon !== clickMarkerPos.lng) {
 				mapClick(map, L.latLng(selectedStation.lat, selectedStation.lon), this, false)
 			}
 		}

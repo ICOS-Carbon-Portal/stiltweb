@@ -28,7 +28,7 @@ function logger({ getState }) {
 
 
 export default function(){
-	const store = createStore(reducer, initState, applyMiddleware(thunkMiddleware, logger));
+	const store = createStore(reducer, initState, applyMiddleware(thunkMiddleware));//, logger));
 	store.dispatch(fetchInitialInfo);
 	store.dispatch(establishWsCommunication);
 	return store;
