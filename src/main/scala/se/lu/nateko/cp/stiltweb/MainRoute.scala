@@ -7,17 +7,18 @@ import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.cpauth.core.PublicAuthConfig
 
-class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi, authConf: PublicAuthConfig) {
+class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 
 	import StiltJsonSupport._
-	val authRouting = new AuthRouting(authConf)
+	val authRouting = new AuthRouting(config.auth)
 	import authRouting.user
 
-	def route: Route = pathPrefix("viewer") {
+	def viewerRoute(service: StiltResultsFetcher): Route = {
 		get {
-			pathEnd{redirect("viewer/", StatusCodes.Found)} ~
-			pathSingleSlash {
-				complete(views.html.ViewerPage())
+			path("footprint") {
+				parameters("stationId", "footprint") { (stationId, filename) =>
+					complete(service.getFootprintRaster(stationId, filename))
+				}
 			} ~
 			path("viewer.js") {
 				getFromResource("www/viewer.js")
@@ -27,9 +28,12 @@ class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi, authConf
 					complete(service.getFootprintFiles(stationId, year))
 				}
 			} ~
-			path("footprint") {
-				parameters("stationId", "footprint") { (stationId, filename) =>
-					complete(service.getFootprintRaster(stationId, filename))
+			path("stationinfo") {
+				complete(service.getStationInfos)
+			} ~
+			redirectToTrailingSlashIfMissing(StatusCodes.Found){
+				pathSingleSlash {
+					complete(views.html.ViewerPage())
 				}
 			}
 		} ~
@@ -42,6 +46,16 @@ class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi, authConf
 				}
 			}
 		}
+	}
+
+	val standardViewerRoute = viewerRoute(new StiltResultsFetcher(config, None))
+
+	def route: Route = pathPrefix("viewer") {
+		pathPrefix("job_.+".r){ jobId =>
+			val service = new StiltResultsFetcher(config, Some(jobId))
+			viewerRoute(service)
+		} ~
+		standardViewerRoute
 	} ~
 	pathPrefix("worker"){
 		get {
@@ -74,9 +88,6 @@ class MainRoute(service: StiltResultsFetcher, cluster: StiltClusterApi, authConf
 		}
 	} ~
 	get{
-		path("stationinfo") {
-			complete(service.getStationInfos)
-		} ~
 		pathEndOrSingleSlash{
 			redirect("/viewer/", StatusCodes.Found)
 		} ~

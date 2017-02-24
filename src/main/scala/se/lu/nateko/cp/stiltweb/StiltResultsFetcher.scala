@@ -13,14 +13,13 @@ import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
 import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
 
 
-class StiltResultsFetcher(config: StiltWebConfig) {
+class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) {
 	import StiltResultFetcher._
 
-	private[this] val resFileGlob = "stiltresults????.csv"
-	private[this] val resFilePattern = resFileGlob.replace("????", "(\\d{4})").r
-	private[this] val resFolder = "Results"
-	private[this] val footPrintsFolder = "Footprints"
-	private[this] val fpnameRegex = """^foot\d{4}x\d\dx\d\dx\d\dx(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+).+$""".r
+	val mainFolder = jobId match{
+		case None => config.mainFolder
+		case Some(job) => config.jobsOutputFolder + "/" + job
+	}
 
 	def resFileName(year: Int): String = resFileGlob.replace("????", year.toString)
 
@@ -35,7 +34,7 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 
 		val stiltToYears: Map[String, Seq[Int]] = getStationYears
 
-		val stationFpFolders = new File(config.mainFolder, footPrintsFolder).listFiles().filter(_.isDirectory)
+		val stationFpFolders = new File(mainFolder, footPrintsFolder).listFiles().filter(_.isDirectory)
 
 		stationFpFolders.map{folder =>
 			val stiltId = folder.getName
@@ -51,7 +50,7 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 			case resFilePattern(dddd) => dddd.toInt
 		}
 
-		val stationFolders = new File(config.mainFolder, resFolder).listFiles().filter(_.isDirectory)
+		val stationFolders = new File(mainFolder, resFolder).listFiles().filter(_.isDirectory)
 		stationFolders.map(stFold => (stFold.getName, stationYears(stFold))).toMap
 	}
 
@@ -79,12 +78,12 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 	}
 
 	def getFootprintFiles(stationId: String, year: Int): Seq[String] = {
-		val stationPath = Paths.get(config.mainFolder, footPrintsFolder, stationId)
+		val stationPath = Paths.get(mainFolder, footPrintsFolder, stationId)
 		listFileNames(stationPath, "foot" + year + "*.nc")
 	}
 
 	def getStiltResultJson(stationId: String, year: Int, columns: Seq[String]): Source[ByteString, NotUsed] = {
-		val resultsPath = Paths.get(config.mainFolder, resFolder, stationId, resFileName(year))
+		val resultsPath = Paths.get(mainFolder, resFolder, stationId, resFileName(year))
 		val src = IoSource.fromFile(resultsPath.toFile)
 		NumericScv.getJsonSource(src, columns)
 	}
@@ -93,7 +92,7 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 		val factory = {
 			import config.netcdf._
 			import scala.collection.JavaConversions._
-			val footprintsFolder = Paths.get(config.mainFolder, footPrintsFolder, stationId).toString + File.separator
+			val footprintsFolder = Paths.get(mainFolder, footPrintsFolder, stationId).toString + File.separator
 			new ViewServiceFactoryImpl(footprintsFolder, dateVars, latitudeVars, longitudeVars, elevationVars)
 		}
 		val service = factory.getNetCdfViewService(filename)
@@ -103,6 +102,12 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 }
 
 object StiltResultFetcher{
+
+	val resFileGlob = "stiltresults????.csv"
+	val resFilePattern = resFileGlob.replace("????", "(\\d{4})").r
+	val resFolder = "Results"
+	val footPrintsFolder = "Footprints"
+	val fpnameRegex = """^foot\d{4}x\d\dx\d\dx\d\dx(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+).+$""".r
 
 	def listFileNames(dir: Path, fileGlob: String, limit: Option[Int] = None): Seq[String] = {
 		val dirStream = Files.newDirectoryStream(dir, fileGlob)

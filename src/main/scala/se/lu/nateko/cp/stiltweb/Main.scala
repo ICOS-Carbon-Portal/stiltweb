@@ -23,7 +23,6 @@ object Main extends App {
 	implicit val dispatcher = system.dispatcher
 
 	val config = ConfigReader.getDefault
-	val service = new StiltResultsFetcher(config)
 
 	val exceptionHandler = ExceptionHandler{
 		case ex =>
@@ -33,7 +32,7 @@ object Main extends App {
 	}
 
 	val route = {
-		val inner = new MainRoute(service, cluster, config.auth).route
+		val inner = new MainRoute(config, cluster).route
 		handleExceptions(exceptionHandler){inner}
 	}
 

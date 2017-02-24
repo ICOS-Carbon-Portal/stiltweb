@@ -17,6 +17,7 @@ case class NetCdfConfig(
 case class StiltWebConfig(
 	auth: PublicAuthConfig,
 	mainFolder: String,
+	jobsOutputFolder: String,
 	netcdf: NetCdfConfig,
 	stations: Seq[Seq[String]]
 )
@@ -25,7 +26,7 @@ object ConfigReader extends DefaultJsonProtocol{
 
 	implicit val pubAuthConfigFormat = jsonFormat2(PublicAuthConfig)
 	implicit val netcdfConfigFormat = jsonFormat4(NetCdfConfig)
-	implicit val cpdataConfigFormat = jsonFormat4(StiltWebConfig)
+	implicit val cpdataConfigFormat = jsonFormat5(StiltWebConfig)
 
 	def getDefault: StiltWebConfig = fromAppConfig(getAppConfig)
 

@@ -19,7 +19,7 @@ function getCountriesGeoJson(){
 }
 
 function getStationInfo(){
-	return getJson('/stationinfo').then(stInfos => {
+	return getJson('stationinfo').then(stInfos => {
 
 		const wdcggNames = stInfos.map(stInfo => stInfo.wdcggId).filter(i => i);
 
