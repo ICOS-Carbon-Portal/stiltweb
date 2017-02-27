@@ -15,20 +15,27 @@ export default class TextInput extends Component {
 	}
 
 	onTextChange(event){
-		const self = this;
 		const val = event.target.value;
-
-		function act(value, error){
-			self.props.action({value, error});
-		}
 
 		try {
 			const converted = this.props.converter(val);
-			act(converted, null);
+
+			act(this, converted, null);
 			this.setState({val: converted, error: null});
 		} catch(err){
 			this.setState({val, error: err.message});
-			act(val, "" + err.message);
+			act(this, val, "" + err.message);
+		}
+	}
+
+	onTextBlur(event){
+		const orgVal = event.target.value;
+		const parsedVal = parseFloat(parseFloat(orgVal).toFixed(2));
+
+		// Update state only for numbers
+		if(isNaN(Date.parse(orgVal)) && isNumber(parsedVal) && parsedVal.toString() != orgVal) {
+			act(this, parsedVal, null);
+			this.setState({val: parsedVal, error: null});
 		}
 	}
 
@@ -42,7 +49,15 @@ export default class TextInput extends Component {
 
 		return <input ref="input" className="form-control" type="text" {...props}
 			value={this.state.val || ''} title={this.state.error} style={style}
-			onChange={this.onTextChange.bind(this)}
+			onChange={this.onTextChange.bind(this)} onBlur={this.onTextBlur.bind(this)}
 		/>;
 	}
+}
+
+function act(self, value, error){
+	self.props.action({value, error});
+}
+
+function isNumber(n){
+	return !isNaN(parseFloat(n)) && isFinite(n);
 }

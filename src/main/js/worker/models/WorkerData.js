@@ -19,7 +19,14 @@ export default class WorkerData{
 	withExistingStationData(){
 		return new WorkerData(
 			this._stations,
-			new WorkerFormData(this._selectedStation.lat, this._selectedStation.lon, this._selectedStation.alt, this._selectedStation.siteId),
+			new WorkerFormData(
+				this._selectedStation.lat,
+				this._selectedStation.lon,
+				this._selectedStation.alt,
+				this._selectedStation.siteId,
+				this._workerFormData.start,
+				this._workerFormData.stop
+			),
 			this._selectedStation,
 			this._errors
 		);
@@ -65,13 +72,11 @@ export default class WorkerData{
 
 					if (existingStation) {
 						return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation.withSelectedStation(existingStation), this._errors);
-						// return this.withSelectedStation(existingStation, false);
 					} else if (this.selectedStation.isExisting) {
 						return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), undefined, this._errors);
-						// return this.withClearedSelectedStation();
-					}
-					else
+					} else {
 						return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation, this._errors);
+					}
 
 				case "lat":
 					return new WorkerData(this._stations, this._workerFormData.withUpdate(key, val), this._selectedStation.withLat(val), this._errors);
@@ -101,11 +106,13 @@ export default class WorkerData{
 	}
 
 	get jobDef(){
+		const isExisting = this.selectedStation.isExisting;
+
 		return this.isJobDefComplete
 			? {
-				lat: round(this._workerFormData.lat),
-				lon: round(this._workerFormData.lon),
-				alt: this._workerFormData.alt,
+				lat: round(getDataforForm(this._workerFormData, this._selectedStation, 'lat', isExisting)),
+				lon: round(getDataforForm(this._workerFormData, this._selectedStation, 'lon', isExisting)),
+				alt: getDataforForm(this._workerFormData, this._selectedStation, 'alt', isExisting),
 				siteId: this._workerFormData.siteId,
 				start: this._workerFormData.start,
 				stop: this._workerFormData.stop
@@ -115,12 +122,29 @@ export default class WorkerData{
 
 	withSelectedStation(selectedStation, isSourceMapClick){
 		const isExisting = !!selectedStation.siteId;
+		const siteId = isSourceMapClick
+			? this.isFormSiteIdExisting(this._workerFormData.siteId)
+				? ''
+				: this._workerFormData.siteId
+			: selectedStation.siteId;
 
 		const workerFormData = isSourceMapClick
-			? new WorkerFormData(selectedStation.lat, selectedStation.lon || selectedStation.lng, selectedStation.alt, selectedStation.siteId)
+			? new WorkerFormData(
+				selectedStation.lat,
+				selectedStation.lon || selectedStation.lng,
+				selectedStation.alt,
+				siteId,
+				this._workerFormData.start,
+				this._workerFormData.stop)
 			: isExisting && this._workerFormData.lat && this._workerFormData.lon
 				? this._workerFormData // Do not overwrite form if it has values
-				: new WorkerFormData(selectedStation.lat, selectedStation.lon || selectedStation.lng, selectedStation.alt, selectedStation.siteId)
+				: new WorkerFormData(
+					selectedStation.lat,
+					selectedStation.lon || selectedStation.lng,
+					selectedStation.alt,
+					siteId,
+					this._workerFormData.start,
+					this._workerFormData.stop)
 
 		return new WorkerData(
 			this._stations,
@@ -149,12 +173,24 @@ export default class WorkerData{
 		return this._selectedStation.isExisting && !this.isFormAndSelStationSame;
 	}
 
+	isFormSiteIdExisting(siteId){
+		return this._stations.some(st => st.siteId == siteId);
+	}
+
 	get isJobDefComplete(){
-		return !this.hasErrors
-			&& !!this._workerFormData.lat
-			&& !!this._workerFormData.lon
-			&& !!this._workerFormData.alt
-			&& this._workerFormData.siteId && this._workerFormData.siteId.length >= 3
+		const isExisting = this.selectedStation.isExisting;
+		const isSiteIdAllowed = (isExisting
+			&& this._selectedStation.lat == this._workerFormData.lat
+			&& this._selectedStation.lon == this._workerFormData.lon
+			&& this._selectedStation.alt == this._workerFormData.alt
+			&& this._selectedStation.siteId == this._workerFormData.siteId)
+			|| (!isExisting && !!this._workerFormData.siteId);
+
+		return !this.hasErrors && isSiteIdAllowed
+			&& !!getDataforForm(this._workerFormData, this._selectedStation, 'lat', isExisting)
+			&& !!getDataforForm(this._workerFormData, this._selectedStation, 'lon', isExisting)
+			&& !!getDataforForm(this._workerFormData, this._selectedStation, 'alt', isExisting)
+			&& !!this._workerFormData.siteId && this._workerFormData.siteId.length >= 3
 			&& !!this._workerFormData.start
 			&& !!this._workerFormData.stop;
 	}
@@ -169,8 +205,14 @@ function getDataforForm(workerFormData, selectedStation, key, isExisting){
 }
 
 function round(val){
-	if (val && isNumber(val)) {
-		return parseFloat(parseFloat(val).toFixed(2));
+	if (val && isNumber(val)){
+		const valStr = '' + val;
+
+		if (valStr.match(/\.$/) || valStr.match(/\.0+$/)) {
+			return val;
+		} else {
+			return parseFloat(parseFloat(val).toFixed(2));
+		}
 	} else {
 		return val;
 	}

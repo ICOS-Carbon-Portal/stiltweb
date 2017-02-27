@@ -39,7 +39,7 @@ export default class MapView extends Component {
 		const verticalMargin = {marginBottom: 20};
 
 		// console.log({props, formData, form: props.workerData._workerFormData, selSt: props.workerData._selectedStation,
-		// 	hasErrors: props.workerData.hasErrors, isJobDefComplete: props.workerData.isJobDefComplete, jobDef: props.workerData.jobDef
+		// 	hasErrors: props.workerData.hasErrors, errors: props.workerData._errors, isJobDefComplete: props.workerData.isJobDefComplete, jobDef: props.workerData.jobDef
 		// });
 
 		return <div className="row">
@@ -125,6 +125,7 @@ function toLat(str){
 
 	if (!isNumber(res)) throw new Error("This is not a number");
 	else if (res < geoBoundary.latMin || res > geoBoundary.latMax) throw new Error("The position lies outside of boundary");
+	else if (str.match(/\.$/) || str.match(/\.0+$/)) return str;
 	else if(res.toString() != str) throw new Error("The number is not in a canonical format");
 	else return res;
 }
@@ -134,6 +135,7 @@ function toLon(str){
 
 	if (!isNumber(res)) throw new Error("This is not a number");
 	else if (res < geoBoundary.lonMin || res > geoBoundary.lonMax) throw new Error("The position lies outside of boundary");
+	else if (str.match(/\.$/) || str.match(/\.0+$/)) return str;
 	else if(res.toString() != str) throw new Error("The number is not in a canonical format");
 	else return res;
 }
