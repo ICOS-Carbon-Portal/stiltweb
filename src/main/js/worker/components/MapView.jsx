@@ -109,7 +109,7 @@ export default class MapView extends Component {
 
 						<button style={{display: 'block', clear: 'both', marginTop: 40, marginBottom: 20}}
 								className="btn btn-primary"
-								disabled={!props.workerData.isJobDefComplete}
+								disabled={!props.workerData.isJobDefComplete || !props.userId}
 								onClick={props.startJob}>Dispatch STILT job</button>
 
 						<button className="btn btn-primary" onClick={props.showDashboard}>Show dashboard</button>
