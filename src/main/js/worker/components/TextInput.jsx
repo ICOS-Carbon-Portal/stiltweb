@@ -8,24 +8,32 @@ export default class TextInput extends Component {
 			val: this.props.value,
 			error: null
 		};
+		this.sendVal = undefined;
 	}
 
 	componentWillReceiveProps(nextProps){
-		if (this.state.val !== nextProps.value) this.setState({val: nextProps.value});
+		if (this.state.val != nextProps.value) {
+			const val = nextProps.value
+				? nextProps.value + ""
+				: "";
+			this.updateText(val);
+		}
 	}
 
-	onTextChange(event){
-		const val = event.target.value;
-
+	updateText(val){
 		try {
 			const converted = this.props.converter(val);
 
-			act(this, converted, null);
 			this.setState({val: converted, error: null});
-		} catch(err){
+			act(this, converted, null);
+		} catch(err) {
 			this.setState({val, error: err.message});
 			act(this, val, "" + err.message);
 		}
+	}
+
+	onTextChange(event){
+		this.updateText(event.target.value);
 	}
 
 	onTextBlur(event){
@@ -55,7 +63,9 @@ export default class TextInput extends Component {
 }
 
 function act(self, value, error){
-	self.props.action({value, error});
+	if (value != self.sendVal) self.props.action({value, error});
+
+	self.sendVal = value;
 }
 
 function isNumber(n){

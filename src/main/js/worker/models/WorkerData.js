@@ -121,7 +121,6 @@ export default class WorkerData{
 	}
 
 	withSelectedStation(selectedStation, isSourceMapClick){
-		const isExisting = !!selectedStation.siteId;
 		const siteId = isSourceMapClick
 			? this.isFormSiteIdExisting(this._workerFormData.siteId)
 				? ''
@@ -136,7 +135,7 @@ export default class WorkerData{
 				siteId,
 				this._workerFormData.start,
 				this._workerFormData.stop)
-			: isExisting && this._workerFormData.lat && this._workerFormData.lon
+			: selectedStation.isExisting && this._workerFormData.lat && this._workerFormData.lon
 				? this._workerFormData // Do not overwrite form if it has values
 				: new WorkerFormData(
 					selectedStation.lat,

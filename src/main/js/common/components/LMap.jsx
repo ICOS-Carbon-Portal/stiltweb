@@ -5,7 +5,7 @@ import * as LCommon from 'icos-cp-leaflet-common';
 const warningRadius = (lat => {
 	return 20000 * Math.cos(Math.PI / 180 * lat);
 });
-const coordDecimals = 2;
+
 
 export default class LMap extends Component{
 	constructor(props){
@@ -20,7 +20,8 @@ export default class LMap extends Component{
 			}),
 			circles: L.layerGroup(),
 			clickMarker: L.circleMarker(),
-			maskHole: undefined
+			maskHole: undefined,
+			isOutside: undefined
 		};
 	}
 
@@ -46,6 +47,7 @@ export default class LMap extends Component{
 			const self = this;
 
 			map.on('click', function (e) {
+				self.app.isOutside = isOutside(self.props.geoBoundary, e.latlng);
 				mapClick(map, e.latlng, self);
 			});
 		}
@@ -56,6 +58,7 @@ export default class LMap extends Component{
 
 	componentWillReceiveProps(nextProps){
 		const map = this.app.map;
+		this.app.isOutside = isOutside(nextProps.geoBoundary, nextProps.selectedStation);
 
 		this.buildWarningCircles(nextProps.workerMode, nextProps.stations);
 		this.buildMarkers(nextProps.stations, nextProps.action, nextProps.selectedStation);
@@ -68,7 +71,10 @@ export default class LMap extends Component{
 	}
 
 	panMap(selectedStation, markers, map){
-		if (!map.getZoom() || selectedStation.lat === undefined || selectedStation.lon === undefined) return;
+		if (!map.getZoom()
+			|| selectedStation.lat === undefined
+			|| selectedStation.lon === undefined
+			|| this.app.isOutside) return;
 
 		const mapBounds = map.getBounds();
 		const selectedStationPosition = L.latLng(selectedStation.lat, selectedStation.lon);
@@ -105,7 +111,7 @@ export default class LMap extends Component{
 		} else if (selectedStation.hasPosition) {
 			const clickMarkerPos = this.app.clickMarker.getLatLng();
 
-			if (!clickMarkerPos || selectedStation.lat !== clickMarkerPos.lat || selectedStation.lon !== clickMarkerPos.lng) {
+			if (!clickMarkerPos || selectedStation.lat != clickMarkerPos.lat || selectedStation.lon != clickMarkerPos.lng) {
 				mapClick(map, L.latLng(selectedStation.lat, selectedStation.lon), this, false)
 			}
 		}
@@ -187,15 +193,44 @@ function getPopupTxt(station){
 }
 
 function mapClick(map, clickedPosLatlng, self, triggerAction = true){
+	const pos = roundPos(clickedPosLatlng);
+	if (triggerAction) self.props.action(pos);
 	map.removeLayer(self.app.clickMarker);
 
-	self.app.clickMarker = L.circleMarker(clickedPosLatlng, LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
+	if (self.app.isOutside){
+		self.app.clickMarker = L.circleMarker(pos);
+		self.props.toastError("The position is outside of the boundary!");
+		return;
+	}
+
+	self.app.clickMarker = L.circleMarker(pos, LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
 	map.addLayer(self.app.clickMarker);
 
-	if (triggerAction) self.props.action(clickedPosLatlng);
-
-	if (isTooClose(self.app.markers, clickedPosLatlng)){
+	if (isTooClose(self.app.markers, pos)) {
 		self.props.toastWarning("The position of your new footprint is too close to an existing footprint!");
+	}
+}
+
+function roundPos(pos){
+	return {
+		lat: parseFloat(parseFloat(pos.lat).toFixed(2)),
+		lng: parseFloat(parseFloat(pos.lng).toFixed(2))
+	}
+}
+
+function isOutside(geoBoundary, pos){
+	if (geoBoundary && pos.lat && (pos.lng || pos.lon)){
+		const latLng = pos.hasOwnProperty("lng")
+			? pos
+			: {
+				lat: parseFloat(pos.lat),
+				lng: parseFloat(pos.lon)
+			};
+
+		return latLng.lat < geoBoundary.latMin || latLng.lat > geoBoundary.latMax
+			|| latLng.lng < geoBoundary.lonMin || latLng.lng > geoBoundary.lonMax;
+	} else {
+		return false;
 	}
 }
 

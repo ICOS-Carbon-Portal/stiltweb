@@ -22,6 +22,10 @@ class App extends Component {
 		this.setState({toasterData: new Toaster.ToasterData(Toaster.TOAST_WARNING, mess)});
 	}
 
+	toastError(mess){
+		this.setState({toasterData: new Toaster.ToasterData(Toaster.TOAST_ERROR, mess)});
+	}
+
 	render() {
 		const props = this.props;
 		const subtitle = props.currentView == MAP_VIEW ? "Job starter" : "Dashboard"
@@ -46,7 +50,10 @@ class App extends Component {
 
 			{
 				props.currentView == MAP_VIEW
-					? <MapView toastWarning={this.toastWarning.bind(this)} {...props}/>
+					? <MapView
+						toastWarning={this.toastWarning.bind(this)}
+						toastError={this.toastError.bind(this)}
+						{...props}/>
 					: <DashboardView {...copyprops(props, ['dashboardState', 'showMap'])} />
 			}
 
