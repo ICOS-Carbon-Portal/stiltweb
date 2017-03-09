@@ -126,10 +126,11 @@ object Worker{
 		// cd /opt/STILT_modelling/testrun01 && tail -F stilt_01.HTM2012job_1.log -F stilt_02.HTM2012job_1.log ...
 		val job = run.job
 
-		val logFiles = (1 to run.parallelism).map{ n =>
-			val par = n.formatted("%02d")
-			s"./${run.runId}/stilt_${par}.${job.siteId}${job.start.getYear}${run.runId}.log"
-		}
+		val logFiles = s"./${run.runId}/prepare_input.${job.siteId}${run.runId}.log" +:
+			(1 to run.parallelism).map{ n =>
+				val par = n.formatted("%02d")
+				s"./${run.runId}/stilt_${par}.${job.siteId}${job.start.getYear}${run.runId}.log"
+			}
 		val logList = logFiles.mkString("-F ", " -F ", "")
 
 		Seq(

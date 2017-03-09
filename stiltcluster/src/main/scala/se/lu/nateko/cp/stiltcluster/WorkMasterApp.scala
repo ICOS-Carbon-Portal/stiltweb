@@ -12,7 +12,6 @@ object WorkMasterApp extends App {
 	val conf = ConfigLoader.load()
 
 	val thisIsFrontendVm: Boolean = {
-		//we plan only one cluster seed, and it will run next to the frontend cluster node (same VM)
 		val hostname = conf.getString("akka.remote.netty.tcp.hostname")
 		val seedHostname = conf.getString("stiltcluster.seedhost")
 		hostname == seedHostname
