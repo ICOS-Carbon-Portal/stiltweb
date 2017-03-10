@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import JobInfoView from './JobInfoView.jsx';
+import JobInfoView, {InfoPanelWithList} from './JobInfoView.jsx';
 
 export default class DashboardView extends Component {
 	constructor(props) {
@@ -32,15 +32,6 @@ const JobInfoList = props => props.jobs.length
 const WideRow = props => <div className="row">
 	<div className="col-md-12">
 		{props.children}
-	</div>
-</div>;
-
-const InfoPanelWithList = props => <div className="panel panel-info">
-	<div className="panel-heading">
-		<h3 className="panel-title">{props.title}</h3>
-	</div>
-	<div className="panel-body">
-		<ul className="list-unstyled">{props.children}</ul>
 	</div>
 </div>;
 

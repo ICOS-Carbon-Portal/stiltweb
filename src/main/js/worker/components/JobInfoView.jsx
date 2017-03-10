@@ -20,11 +20,24 @@ export default class JobInfoView extends Component {
 		return <li>
 			<div className="panel panel-default">
 				<div className="panel-heading" onClick={this.handleClick.bind(this)} style={{cursor: "pointer"}}>
-					{`${status.id}: ${job.siteId} from ${job.start} to ${job.stop} on ${par} cores by ${jinfo.executionNode}`}
+					{`${status.id}: ${job.siteId} from ${job.start} to ${job.stop} by ${job.userId}`}
 				</div>
 				{
 				this.state.expanded
 					? <div className="panel-body">
+							<InfoPanelWithList title="Calculation status">
+								<li>{status.exitValue === 0
+									? <span>Calculation finished, view results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a></span>
+									: Number.isInteger(status.exitValue)
+										? <span>Calculation failed</span>
+										: <span>Calculation is running</span>
+								}</li>
+								<li><b>Lat: </b>{job.lat}</li>
+								<li><b>Lon: </b>{job.lon}</li>
+								<li><b>Alt: </b>{job.alt}</li>
+								<li><b>Number of cores: </b>{par}</li>
+								<li><b>Execution node: </b>{jinfo.executionNode}</li>
+							</InfoPanelWithList>
 							<OutputStrings title="Standard output" stylecontext="success" strings={status.output}/>
 							<OutputStrings title="Errors" stylecontext="danger" strings={status.errors}/>
 							<OutputStrings title="STILT logs (merged, last 200 lines only)" stylecontext="info" strings={status.logs}/>
@@ -51,4 +64,14 @@ const OutputStrings = props => {
 		</div>
 		: null;
 }
+
+
+export const InfoPanelWithList = props => <div className="panel panel-info">
+	<div className="panel-heading">
+		<h3 className="panel-title">{props.title}</h3>
+	</div>
+	<div className="panel-body">
+		<ul className="list-unstyled">{props.children}</ul>
+	</div>
+</div>;
 
