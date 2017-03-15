@@ -22,7 +22,9 @@ export default class TextInput extends Component {
 
 	updateText(val){
 		try {
-			const converted = this.props.converter(val);
+			const converted = this.props.converter
+				? this.props.converter(val)
+				: val;
 
 			this.setState({val: converted, error: null});
 			act(this, converted, null);
@@ -48,14 +50,14 @@ export default class TextInput extends Component {
 	}
 
 	render(){
-		const props = copyprops(this.props, ['disabled', 'maxLength']);
+		const props = copyprops(this.props, ['disabled', 'maxLength', 'onClick']);
 		const style = Object.assign(
 			{},
 			this.props.style,
 			(this.state.error ? {backgroundColor: "pink"} : {})
 		);
 
-		return <input ref="input" className="form-control" type="text" {...props}
+		return <input className="form-control" type="text" {...props}
 			value={this.state.val || ''} title={this.state.error} style={style}
 			onChange={this.onTextChange.bind(this)} onBlur={this.onTextBlur.bind(this)}
 		/>;
@@ -63,7 +65,7 @@ export default class TextInput extends Component {
 }
 
 function act(self, value, error){
-	if (value != self.sendVal) self.props.action({value, error});
+	if (value != self.sendVal && self.props.action) self.props.action({value, error});
 
 	self.sendVal = value;
 }
