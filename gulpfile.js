@@ -3,6 +3,7 @@
 var gulp = require('gulp');
 var gp_uglify = require('gulp-uglify');
 var browserify = require('browserify');
+var bcss = require('browserify-css');
 var buffer = require('vinyl-buffer');
 var del = require('del');
 var source = require('vinyl-source-stream');
@@ -39,6 +40,7 @@ var preprocessify = require('preprocessify');
 			entries: [paths.main],
 			debug: false
 		})
+			.transform(bcss, {global: true})
 			.transform(preprocessify({NODE_ENV: process.env.NODE_ENV}))
 			.transform(babelify, {presets: ["es2015", "react"]})
 			.bundle()
