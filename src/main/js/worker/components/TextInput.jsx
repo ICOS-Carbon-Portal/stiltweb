@@ -12,21 +12,21 @@ export default class TextInput extends Component {
 	}
 
 	componentWillReceiveProps(nextProps){
-		if (this.state.val != nextProps.value) {
+		if (this.state.val != nextProps.value || this.state.error != nextProps.error) {
 			const val = nextProps.value
 				? nextProps.value + ""
 				: "";
-			this.updateText(val);
+			this.updateText(val, nextProps.error);
 		}
 	}
 
-	updateText(val){
+	updateText(val, externalErr){
 		try {
 			const converted = this.props.converter
 				? this.props.converter(val)
 				: val;
 
-			this.setState({val: converted, error: null});
+			this.setState({val: converted, error: externalErr});
 			act(this, converted, null);
 		} catch(err) {
 			this.setState({val, error: err.message});

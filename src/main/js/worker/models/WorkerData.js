@@ -59,6 +59,10 @@ export default class WorkerData{
 		return !!props.find(key => !!this._errors[key], this);
 	}
 
+	get errors(){
+		return this._errors;
+	}
+
 	withUpdatedFormData(update){
 		const key = update.propertyName;
 		Object.assign(this._errors, {[key]: update.error});
@@ -90,6 +94,18 @@ export default class WorkerData{
 		} else {
 			return this;
 		}
+	}
+
+	withDates(dates){
+		const withStart = this._workerFormData.withUpdate('start', dates.start);
+		const withStartStop = withStart.withUpdate('stop', dates.stop);
+
+		return new WorkerData(
+			this._stations,
+			withStartStop,
+			this._selectedStation,
+			Object.assign({}, this._errors, {start: dates.startError, stop: dates.stopError})
+		);
 	}
 
 	get formData(){

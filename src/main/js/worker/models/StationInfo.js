@@ -2,7 +2,7 @@ export default class StationInfo {
 	constructor(lat, lon, alt, siteId, name) {
 		this._lat = lat || undefined,
 		this._lon = lon || undefined,
-		this._alt = alt || (lat && lon ? 100 : undefined),
+		this._alt = alt || undefined,
 		this._siteId = siteId || '',
 		this._name = name || ''
 	}

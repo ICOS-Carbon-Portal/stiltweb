@@ -4,6 +4,7 @@ export const FETCHED_INIT_INFO = 'FETCHED_INIT_INFO';
 export const GOT_DASHBOARD_STATE = 'GOT_DASHBOARD_STATE';
 export const STATION_SELECTED = 'STATION_SELECTED';
 export const JOBDEF_UPDATED = 'JOBDEF_UPDATED';
+export const DATES_UPDATED = 'DATES_UPDATED';
 export const USE_EXISTING_STATION = 'USE_EXISTING_STATION';
 export const STARTED_JOB = 'STARTED_JOB';
 export const ERROR = 'ERROR';
@@ -48,6 +49,13 @@ export function jobdefUpdated(update){
 	return {
 		type: JOBDEF_UPDATED,
 		update
+	};
+}
+
+export function datesUpdated(dates){
+	return {
+		type: DATES_UPDATED,
+		dates
 	};
 }
 

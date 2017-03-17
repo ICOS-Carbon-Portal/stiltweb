@@ -3,6 +3,7 @@ import StationsMap from '../../common/components/LMap.jsx';
 import Select from '../../common/components/Select.jsx';
 import TextInput from '../components/TextInput.jsx';
 import StationInfo from '../models/StationInfo';
+import DatesValidation from '../models/DatesValidation';
 import InfiniteCalendar from 'react-infinite-calendar';
 import 'react-infinite-calendar/styles.css';
 
@@ -44,18 +45,21 @@ export default class MapView extends Component {
 	}
 
 	onStartDateSelected(date){
+		const dates = new DatesValidation(date, this.props.workerData.formData.stop);
 		setTimeout(() => this.toggleCalendar('startCalVisible'), 1);
-		this.getJobdefUpdater('start')({value: getDateStrAdjustedToTZ(date)});
+		this.props.updateDates(dates);
 	}
 
 	onStopDateSelected(date){
+		const dates = new DatesValidation(this.props.workerData.formData.start, date);
 		setTimeout(() => this.toggleCalendar('stopCalVisible'), 1);
-		this.getJobdefUpdater('stop')({value: getDateStrAdjustedToTZ(date)});
+		this.props.updateDates(dates);
 	}
 
 	render() {
 		const props = this.props;
 		const formData = props.workerData.formData;
+		const errors = props.workerData.errors;
 		const isExisting = props.workerData.selectedStation.isExisting;
 		const selectedStation = props.workerData.isFormAndExistingStationDifferent
 			? new StationInfo(formData.lat, formData.lon)
@@ -70,7 +74,7 @@ export default class MapView extends Component {
 		const stopCalStyle = this.state.stopCalVisible ? calStyle : {display:'none'};
 
 		// console.log({props, formData, form: props.workerData._workerFormData, selSt: props.workerData._selectedStation,
-		// 	hasErrors: props.workerData.hasErrors, errors: props.workerData._errors, isJobDefComplete: props.workerData.isJobDefComplete, jobDef: props.workerData.jobDef
+		// 	hasErrors: props.workerData.hasErrors, errors, isJobDefComplete: props.workerData.isJobDefComplete, jobDef: props.workerData.jobDef
 		// });
 
 		return <div className="row">
@@ -171,6 +175,7 @@ export default class MapView extends Component {
 							style={verticalMargin}
 							maxLength="10"
 							value={formData.start}
+							error={errors.start}
 							onClick={this.toggleCalendar.bind(this, 'startCalVisible')}
 						/>
 
@@ -179,6 +184,7 @@ export default class MapView extends Component {
 							style={verticalMargin}
 							maxLength="10"
 							value={formData.stop}
+							error={errors.stop}
 							onClick={this.toggleCalendar.bind(this, 'stopCalVisible')}
 						/>
 
@@ -291,22 +297,6 @@ function toInt(str){
 	else return res;
 }
 
-function toDate(str){
-	if (str.length == 0) return str;
-
-	let date = str.substring(0, 10);
-
-	if(date.length <= 9 || isNaN(Date.parse(date)) || new Date(Date.parse(date)).toISOString().substring(0, 10) != date)
-		throw new Error("This is not a correct ISO date, try YYYY-MM-DD");
-
-	return date;
-}
-
 function isNumber(n){
 	return !isNaN(parseFloat(n)) && isFinite(n);
-}
-
-function getDateStrAdjustedToTZ(date){
-	const adjDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
-	return adjDate.toISOString().substring(0, 10);
 }

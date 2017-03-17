@@ -1,4 +1,4 @@
-import {ERROR, FETCHED_INIT_INFO, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, USE_EXISTING_STATION, STARTED_JOB} from './actions';
+import {ERROR, FETCHED_INIT_INFO, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, DATES_UPDATED, USE_EXISTING_STATION, STARTED_JOB} from './actions';
 import {MAP_VIEW, DASHBOARD_VIEW} from './actions';
 
 import {copyprops, deepUpdate} from 'icos-cp-utils';
@@ -30,6 +30,9 @@ export default function(state, action){
 			} else {
 				return update({workerData});
 			}
+
+		case DATES_UPDATED:
+			return update({workerData: state.workerData.withDates(action.dates)});
 
 		case USE_EXISTING_STATION:
 			return update({workerData: state.workerData.withExistingStationData()});
