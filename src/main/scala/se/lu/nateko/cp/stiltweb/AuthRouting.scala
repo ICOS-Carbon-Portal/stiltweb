@@ -1,15 +1,14 @@
 package se.lu.nateko.cp.stiltweb
 
+
 import se.lu.nateko.cp.cpauth.core.PublicAuthConfig
 import akka.http.scaladsl.server.Directives._
 import se.lu.nateko.cp.cpauth.core.Authenticator
 import akka.http.scaladsl.server.Route
 import se.lu.nateko.cp.cpauth.core.UserId
-import akka.http.scaladsl.server.StandardRoute
 import scala.util.Success
 import scala.util.Failure
 import se.lu.nateko.cp.cpauth.core.CookieToToken
-import akka.http.scaladsl.model.StatusCodes
 import akka.http.javadsl.server.CustomRejection
 
 class AuthRouting(authConfig: PublicAuthConfig) {

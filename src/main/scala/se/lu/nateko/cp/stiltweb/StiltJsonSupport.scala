@@ -42,5 +42,5 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 	implicit val jobRunFormat = jsonFormat2(JobRun)
 	implicit val jobStatusFormat = jsonFormat5(JobStatus.apply)
 	implicit val jobInfoFormat = jsonFormat3(JobInfo)
-	implicit val dashboardInfoWriter = jsonFormat3(DashboardInfo)
+	implicit val dashboardInfoFormat = jsonFormat3(DashboardInfo)
 }
