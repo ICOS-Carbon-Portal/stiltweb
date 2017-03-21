@@ -35,7 +35,7 @@ class StiltClusterApi {
 		// The assumption is that this query will run on the same JVM as the responding actor.
 		implicit val timeout = Timeout(1 seconds)
 		ask(receptionist, PleaseSendDashboardInfo).mapTo[DashboardInfo].map{ dbi =>
-			dbi.findJobInfoById(jobId).map(_.run.job.userId)
+			dbi.findCancellableJobById(jobId).map(_.userId)
 		}
 	}
 

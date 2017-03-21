@@ -52,7 +52,7 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 					log.warning("... " + err.getMessage)
 
 					status = JobStatus(
-						id = run.runId,
+						id = run.job.id,
 						exitValue = Some(1),
 						output = Nil,
 						logs = Nil,
@@ -77,7 +77,7 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 				}
 			}
 
-		case CancelJob(id) if(id == stiltRun.runId) =>
+		case CancelJob(id) if(id == stiltRun.job.id) =>
 			stiltProc.destroyForcibly()
 			logsProc.destroyForcibly()
 			updateStatus()
@@ -87,7 +87,7 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 
 	private def updateStatus(): Unit = if(status.exitValue.isEmpty){
 		status = JobStatus(
-			id = stiltRun.runId,
+			id = stiltRun.job.id,
 			exitValue = stiltProc.exitValue(),
 			output = stiltProc.outputLines(),
 			logs = logsProc.outputLines(),
@@ -118,7 +118,7 @@ object Worker{
 		Seq(
 			"docker", "exec", env.containerName, "/bin/bash", "-c",
 			s"$script ${job.siteId} ${geoStr(job.lat)} ${geoStr(job.lon)} ${job.alt} " +
-			s"${dateStr(job.start)} ${dateStr(job.stop)} ${run.runId} ${run.parallelism}"
+			s"${dateStr(job.start)} ${dateStr(job.stop)} ${run.job.id} ${run.parallelism}"
 		)
 	}
 
@@ -126,10 +126,10 @@ object Worker{
 		// cd /opt/STILT_modelling/testrun01 && tail -F stilt_01.HTM2012job_1.log -F stilt_02.HTM2012job_1.log ...
 		val job = run.job
 
-		val logFiles = s"./${run.runId}/prepare_input.${job.siteId}${run.runId}.log" +:
+		val logFiles = s"./${run.job.id}/prepare_input.${job.siteId}${run.job.id}.log" +:
 			(1 to run.parallelism).map{ n =>
 				val par = n.formatted("%02d")
-				s"./${run.runId}/stilt_${par}.${job.siteId}${job.start.getYear}${run.runId}.log"
+				s"./${run.job.id}/stilt_${par}.${job.siteId}${job.start.getYear}${run.job.id}.log"
 			}
 		val logList = logFiles.mkString("-F ", " -F ", "")
 

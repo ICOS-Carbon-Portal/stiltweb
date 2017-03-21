@@ -31,11 +31,11 @@ case class Job(
 	start: LocalDate,
 	stop: LocalDate,
 	userId: String
-)
-
-case class JobRun(job: Job, parallelism: Int){
-	def runId = "job_" + this.hashCode()
+){
+	def id = "job_" + this.hashCode()
 }
+
+case class JobRun(job: Job, parallelism: Int)
 
 case class WorkMasterStatus(work: Seq[(JobRun, JobStatus)], freeCores: Int){
 	def isRunning(job: Job): Boolean = work.exists{

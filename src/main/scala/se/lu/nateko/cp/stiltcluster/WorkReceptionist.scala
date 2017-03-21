@@ -37,6 +37,7 @@ class WorkReceptionist extends Actor{
 
 		case msg @ CancelJob(id) =>
 			findNodeByJob(id).foreach(_ ! msg)
+			if(!queue.dequeueAll(_.id == id).isEmpty) notifySubscribers()
 
 		case wms: WorkMasterStatus =>
 			val workMaster = sender()
@@ -100,7 +101,9 @@ class WorkReceptionist extends Actor{
 	)
 
 	private def findNodeByJob(jobId: String): Option[ActorRef] = nodes.keys.find{
-		node => nodes(node).work.exists(_._1.runId == jobId)
+		node => nodes(node).work.exists{
+			case (jobRun, _) => jobRun.job.id == jobId
+		}
 	}
 
 }

@@ -51,7 +51,7 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 		} else {
 			val run = JobRun(job, preferredParallelism)
 			val worker = context.actorOf(Worker.props(conf, self))
-			val id = run.runId
+			val id = run.job.id
 			workers += ((id, worker))
 			runs += ((id, run))
 			status += ((id, JobStatus.init(id)))
@@ -106,7 +106,7 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 
 	private def freeCores: Int = {
 		val occupied = runs.values.collect{
-			case run if status.get(run.runId).flatMap(_.exitValue).isEmpty => run.parallelism
+			case run if status.get(run.job.id).flatMap(_.exitValue).isEmpty => run.parallelism
 		}.sum
 		Math.max(coresPoolSize - occupied, 0)
 	}
