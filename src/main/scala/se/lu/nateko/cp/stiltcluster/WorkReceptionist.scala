@@ -63,6 +63,9 @@ class WorkReceptionist extends Actor{
 			if(wms.freeCores > 0) dispatchJob()
 			notifySubscribers()
 
+		case PleaseSendDashboardInfo =>
+			sender ! getDashboardInfo
+
 		case StopAllWork =>
 			nodes.keys.foreach(_ ! StopAllWork)
 			context stop self

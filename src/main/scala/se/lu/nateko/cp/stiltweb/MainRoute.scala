@@ -5,7 +5,6 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import se.lu.nateko.cp.stiltcluster.Job
-import se.lu.nateko.cp.cpauth.core.PublicAuthConfig
 
 class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 
@@ -85,7 +84,25 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				} ~
 				complete((StatusCodes.Forbidden, "Please log in with Carbon Portal"))
 			}
+		} ~
+		post {
+			path("deletejob" / Segment) { jobId =>
+				user{userId =>
+					onSuccess(cluster.queryOwner(jobId)) {
+						case Some(ownerId) =>
+							if (userId.email == ownerId) {
+								cluster.cancelJob(jobId)
+								complete(StatusCodes.OK)
+							} else {
+								complete((StatusCodes.Forbidden, "User ID doesn't own job"))
+							}
+						case None =>
+							complete((StatusCodes.BadRequest, "No such Job ID"))
+					}
+				}
+			}
 		}
+
 	} ~
 	get{
 		pathEndOrSingleSlash{
