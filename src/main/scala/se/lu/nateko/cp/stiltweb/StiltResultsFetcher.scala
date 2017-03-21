@@ -21,6 +21,14 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 		case Some(job) => config.jobsOutputFolder + "/" + job
 	}
 
+    private def listSubdirectories(parent: String, child: String): Array[File] = {
+        new File(parent, child).listFiles() match {
+            // listFiles() will return null (!) if the directory doesn't exist.
+            case null  => Array.empty[File]
+            case files => files.filter(_.isDirectory)
+        }
+    }
+
 	def resFileName(year: Int): String = resFileGlob.replace("????", year.toString)
 
 	def getStationInfos: Seq[StiltStationInfo] = {
@@ -34,7 +42,7 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 
 		val stiltToYears: Map[String, Seq[Int]] = getStationYears
 
-		val stationFpFolders = new File(mainFolder, footPrintsFolder).listFiles().filter(_.isDirectory)
+        val stationFpFolders = listSubdirectories(mainFolder, footPrintsFolder)
 
 		stationFpFolders.map{folder =>
 			val stiltId = folder.getName
@@ -50,7 +58,8 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 			case resFilePattern(dddd) => dddd.toInt
 		}
 
-		val stationFolders = new File(mainFolder, resFolder).listFiles().filter(_.isDirectory)
+        val stationFolders = listSubdirectories(mainFolder, resFolder)
+
 		stationFolders.map(stFold => (stFold.getName, stationYears(stFold))).toMap
 	}
 
