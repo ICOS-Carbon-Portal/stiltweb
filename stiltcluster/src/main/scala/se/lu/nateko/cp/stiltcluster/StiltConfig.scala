@@ -4,7 +4,13 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import java.io.File
 
-case class StiltEnv(mainFolder: File, launchScript: String, containerName: String, logSizeLimit: Int)
+case class StiltEnv(debugScript: Option[String],
+                    debugLog: Option[String],
+                    mainFolder: File,
+                    launchScript: String,
+                    containerName: String,
+                    logSizeLimit: Int)
+
 
 object ConfigLoader {
 
@@ -19,8 +25,19 @@ object ConfigLoader {
 		.resolve()
 
 	def loadStiltEnv : StiltEnv = {
-		val conf = ConfigFactory.parseResources("stiltenv.conf").getConfig("stiltenv")
+		val conf = ConfigFactory.parseFile(new File("local.conf"))
+            .withFallback(ConfigFactory.parseResources("stiltenv.conf"))
+            .getConfig("stiltenv")
+
+        val debugScript: Option[String] =
+            if (conf.hasPath("debugScript")) Some(conf.getString("debugScript")) else None
+
+        val debugLog: Option[String] =
+            if (conf.hasPath("debugLog")) Some(conf.getString("debugLog")) else None
+
 		StiltEnv(
+            debugScript = debugScript,
+            debugLog = debugLog,
 			mainFolder = new File(conf.getString("mainFolder")),
 			launchScript = conf.getString("launchScript"),
 			containerName = conf.getString("containerName"),

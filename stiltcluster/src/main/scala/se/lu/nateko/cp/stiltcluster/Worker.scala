@@ -35,8 +35,21 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 			stiltRun = run
 
 			try{
-				stiltProc = new ProcessRunner(stiltCommand(run, conf), conf.logSizeLimit)
-				logsProc = new ProcessRunner(logWatchCommand(run, conf), conf.logSizeLimit)
+                conf.debugScript match {
+                    case Some(path) => {
+                        val cmd = debugCommand(path, run, conf)
+                        log.info(s"Running debug script as ${cmd}")
+                        stiltProc = new ProcessRunner(cmd, conf.logSizeLimit)
+                        logsProc  = conf.debugLog match {
+                            case Some(path) => new ProcessRunner(Seq("/usr/bin/tail", "-f", path), conf.logSizeLimit)
+                            case None => new ProcessRunner(Seq("/bin/sleep", "365d"), conf.logSizeLimit)
+                        }
+                    }
+                    case None => { 
+				        stiltProc = new ProcessRunner(stiltCommand(run, conf), conf.logSizeLimit)
+				        logsProc = new ProcessRunner(logWatchCommand(run, conf), conf.logSizeLimit)
+                    }
+                }
 
 				updateStatus()
 				master ! status
@@ -108,6 +121,15 @@ object Worker{
 	def props(env: StiltEnv, master: ActorRef) = Props(classOf[Worker], env, master)
 
 	private val Tick = "Tick"
+
+	def debugCommand(script: String, run: JobRun, env: StiltEnv): Seq[String] = {
+        val job = run.job
+        Seq(
+            s"${script}",
+            s"${job.siteId} ${geoStr(job.lat)} ${geoStr(job.lon)} ${job.alt} " +
+		    s"${dateStr(job.start)} ${dateStr(job.stop)} ${run.job.id} ${run.parallelism}"
+        )
+	}
 
 	def stiltCommand(run: JobRun, env: StiltEnv): Seq[String] = {
 		//docker exec stilt_stilt_1 /bin/bash -c \
