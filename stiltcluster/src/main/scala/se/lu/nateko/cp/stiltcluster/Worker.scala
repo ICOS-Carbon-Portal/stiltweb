@@ -11,6 +11,7 @@ import akka.actor.Props
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success, Try}
 
 class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 
@@ -90,12 +91,20 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 				}
 			}
 
-		case CancelJob(id) if(id == stiltRun.job.id) =>
-			stiltProc.destroyForcibly()
-			logsProc.destroyForcibly()
-			updateStatus()
-			master ! JobCanceled(status)
-			resetWorker()
+		case CancelJob(id) =>
+			if(id == stiltRun.job.id){
+				log.info(s"Worker cancelling job ${id}")
+				stiltProc.destroyForcibly()
+				logsProc.destroyForcibly()
+				removeJobDirectories(conf, stiltRun.job.id) match {
+					case Failure(err) => log.error(err.getMessage)
+					case _ =>
+				}
+				master ! JobCanceled(id)
+				resetWorker()
+			} else {
+				log.error(s"Cannot cancel job ${id} - since I'm not the owner (I own job ${stiltRun.job.id})")
+			}
 	}
 
 	private def updateStatus(): Unit = if(status.exitValue.isEmpty){
@@ -121,6 +130,30 @@ object Worker{
 	def props(env: StiltEnv, master: ActorRef) = Props(classOf[Worker], env, master)
 
 	private val Tick = "Tick"
+
+	private def removeJobDirectories(env: StiltEnv, jobId: String ): Try[Unit] = {
+		val logsFolder = s"${env.mainFolder}/${jobId}"
+		val outputFolder = s"${env.mainFolder}/Output/${jobId}"
+		val cmd = Seq("docker", "exec", env.containerName, "/bin/bash", "-c",
+						 s"rm -rf '${logsFolder}' '${outputFolder}'")
+
+		Try{
+			val proc = new ProcessBuilder(cmd: _*).start()
+			val done: Boolean = proc.waitFor(10, java.util.concurrent.TimeUnit.SECONDS)
+			if(done){
+				val exitCode: Int = proc.exitValue
+				if(exitCode == 0) Success(())
+				else {
+					val errStream = proc.getErrorStream
+					val errBytes = Array.ofDim[Byte](errStream.available())
+					errStream.read(errBytes)
+					errStream.close()
+					val errMsg = new String(errBytes, "UTF-8")
+					Failure(new Exception(s"Exit code was $exitCode, the stderr was\n$errMsg"))
+				}
+			} else Failure(new Exception(s"Folder removal timed out"))
+		}.flatten
+	}
 
 	def debugCommand(script: String, run: JobRun, env: StiltEnv): Seq[String] = {
         val job = run.job

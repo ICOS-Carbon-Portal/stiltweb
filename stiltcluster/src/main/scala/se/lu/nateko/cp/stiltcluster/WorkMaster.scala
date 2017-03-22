@@ -16,6 +16,7 @@ import akka.cluster.MemberStatus
 
 class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 
+	private val log = context.system.log
 	val cluster = Cluster(context.system)
 	val coresPoolSize = Runtime.getRuntime.availableProcessors - reservedCores
 
@@ -60,6 +61,7 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 		}
 
 		case jc: CancelJob =>
+			log.info(s"Workmaster passsing on CancelJob request ${jc.id}")
 			workers.get(jc.id).foreach(_ ! jc)
 
 		case Thanks(ids) =>
@@ -90,12 +92,21 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 				context become shuttingDown
 			}
 
+		case JobCanceled(id) =>
+			workers -= id
+			runs -= id
+			status -= id
+			sender() ! PoisonPill
+			receptionist ! myStatus
+		case unknown =>
+			log.info(s"Workmaster received unknown messager ${unknown}")
+
 	}
 
 	def shuttingDown: Receive = {
-		case JobCanceled(js) =>
+		case JobCanceled(id) =>
 			sender() ! PoisonPill
-			workers -= js.id
+			workers -= id
 			if(workers.isEmpty) context stop self
 	}
 

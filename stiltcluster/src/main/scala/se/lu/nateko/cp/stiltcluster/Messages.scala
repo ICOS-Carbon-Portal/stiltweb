@@ -21,7 +21,7 @@ object JobStatus{
 	def init(id: String) = JobStatus(id, None, Nil, Nil, Nil)
 }
 
-case class JobCanceled(status: JobStatus)
+case class JobCanceled(id: String)
 
 case class Job(
 	siteId: String,

@@ -22,17 +22,12 @@ export default class JobInfoView extends Component {
 
 	render() {
 		const props = this.props;
-		const jinfo = props.jobInfo;
+		const jinfo = this.props.jobInfo;
 	
 		const par = jinfo.run ? jinfo.run.parallelism : undefined;
 		const job = jinfo.run ? jinfo.run.job : jinfo;
 		const status = jinfo.status || undefined;
 		const jobId = jinfo.status ? jinfo.status.id : jinfo.id;
-		const statusCSS = jinfo.status
-			? jinfo.status.exitValue === 0
-				? "panel panel-success"
-				: "panel panel-danger"
-			: "panel panel-default";
 		const allowCancel = props.cancelJob && props.toggleYesNoView;
 
 		// console.log({props});
@@ -50,7 +45,7 @@ export default class JobInfoView extends Component {
 				: null
 			}
 
-			<div className={statusCSS}>
+			<div className="panel panel-default">
 				<div className="panel-heading" onClick={this.handleClick.bind(this)} style={{cursor: "pointer"}}>
 					{allowCancel
 						? <button className="btn btn-primary" onClick={this.handleCancelClick.bind(this)}>
@@ -65,7 +60,7 @@ export default class JobInfoView extends Component {
 				{
 				this.state.expanded
 					? status
-						? <RunningFinished status={status} job={job} jinfo={jinfo} par={par} />
+						? <RunningAndFinished status={status} job={job} jinfo={jinfo} par={par} />
 						: <Queue job={job} />
 					: null
 				}
@@ -75,9 +70,11 @@ export default class JobInfoView extends Component {
 }
 
 const StatusLabel = props => {
+	const status = props.status;
+	console.log({status})
 	return <span style={{fontSize: '120%', position: 'relative', top: -2, marginRight: 20}}>
-		{props.status && props.status.exitValue
-			? props.status.exitValue === 0
+		{status && Number.isInteger(status.exitValue)
+			? status.exitValue === 0
 				? <span className="label label-success">Calculation finished</span>
 				: <span className="label label-danger">Calculation failed</span>
 			: null
@@ -108,7 +105,7 @@ const Queue = props => {
 	);
 };
 
-const RunningFinished = props => {
+const RunningAndFinished = props => {
 	const job = props.job;
 	const status = props.status;
 	const jinfo = props.jinfo;
@@ -117,7 +114,7 @@ const RunningFinished = props => {
 		<div className="panel-body">
 			<InfoPanelWithList title="Job parameters">
 				<li style={{marginBottom: 10}}>{status.exitValue === 0
-					? <span className="label label-success">
+					? <span>
 						Calculation finished, view results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a>
 					</span>
 					: null
