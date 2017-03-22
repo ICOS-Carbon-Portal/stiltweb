@@ -4,12 +4,12 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import java.io.File
 
-case class StiltEnv(debugScript: Option[String],
-                    debugLog: Option[String],
-                    mainFolder: File,
-                    launchScript: String,
-                    containerName: String,
-                    logSizeLimit: Int)
+case class StiltEnv(debugRun: Option[String],
+					debugLog: Option[String],
+					mainFolder: File,
+					launchScript: String,
+					containerName: String,
+					logSizeLimit: Int)
 
 
 object ConfigLoader {
@@ -17,27 +17,24 @@ object ConfigLoader {
 	def load(extraResource: Option[String] = None): Config = ConfigFactory
 		.parseFile(new File("application.conf"))
 		.withFallback(extraResource match {
-			case Some(extra) => ConfigFactory.parseResources(extra)
-			case None => ConfigFactory.empty()
-		})
+						  case Some(extra) => ConfigFactory.parseResources(extra)
+						  case None => ConfigFactory.empty()
+					  })
 		.withFallback(ConfigFactory.parseResources("stiltcluster.conf"))
 		.withFallback(ConfigFactory.load())
 		.resolve()
 
 	def loadStiltEnv : StiltEnv = {
-		val conf = ConfigFactory.parseFile(new File("local.conf"))
-            .withFallback(ConfigFactory.parseResources("stiltenv.conf"))
-            .getConfig("stiltenv")
+		val conf = ConfigFactory.parseResources("stiltenv.conf").getConfig("stiltenv")
+		val debugRun: Option[String] =
+			if (conf.hasPath("debugRun")) Some(conf.getString("debugRun")) else None
 
-        val debugScript: Option[String] =
-            if (conf.hasPath("debugScript")) Some(conf.getString("debugScript")) else None
-
-        val debugLog: Option[String] =
-            if (conf.hasPath("debugLog")) Some(conf.getString("debugLog")) else None
+		val debugLog: Option[String] =
+			if (conf.hasPath("debugLog")) Some(conf.getString("debugLog")) else None
 
 		StiltEnv(
-            debugScript = debugScript,
-            debugLog = debugLog,
+			debugRun = debugRun,
+			debugLog = debugLog,
 			mainFolder = new File(conf.getString("mainFolder")),
 			launchScript = conf.getString("launchScript"),
 			containerName = conf.getString("containerName"),

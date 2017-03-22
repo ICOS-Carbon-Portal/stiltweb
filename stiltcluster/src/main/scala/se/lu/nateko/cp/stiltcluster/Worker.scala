@@ -30,27 +30,37 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 	override def preStart(): Unit = {
 	}
 
+	/* Start our two subprocesses. One will run the STILT simulation and the other
+	 * will monitor the STILT log files. In each case we can specify a debug
+	 * command to be run instead. */
+	private def startStiltSubProcesses(): Unit = {
+		stiltProc = conf.debugRun match {
+			case Some(dbgCmd) => {
+				val cmd = debugCommand(dbgCmd, stiltRun)
+				log.info(s"Starting new job by running debug script as '${cmd.mkString(" ")}'")
+				new ProcessRunner(cmd, conf.logSizeLimit)
+			}
+			case None =>
+				new ProcessRunner(stiltCommand(stiltRun, conf), conf.logSizeLimit)
+		}
+
+		logsProc = conf.debugLog match {
+			case Some(logDbgCmd) =>
+				val cmd = debugCommand(logDbgCmd, stiltRun)
+				log.info(s"Faking log output from new job by running ${cmd.mkString(" ")}'")
+				new ProcessRunner(cmd, conf.logSizeLimit)
+			case None =>
+				new ProcessRunner(logWatchCommand(stiltRun, conf), conf.logSizeLimit)
+		}
+	}
+
 	def receive = {
 		case run: JobRun =>
 
 			stiltRun = run
 
 			try{
-                conf.debugScript match {
-                    case Some(path) => {
-                        val cmd = debugCommand(path, run, conf)
-                        log.info(s"Running debug script as ${cmd}")
-                        stiltProc = new ProcessRunner(cmd, conf.logSizeLimit)
-                        logsProc  = conf.debugLog match {
-                            case Some(path) => new ProcessRunner(Seq("/usr/bin/tail", "-f", path), conf.logSizeLimit)
-                            case None => new ProcessRunner(Seq("/bin/sleep", "365d"), conf.logSizeLimit)
-                        }
-                    }
-                    case None => { 
-				        stiltProc = new ProcessRunner(stiltCommand(run, conf), conf.logSizeLimit)
-				        logsProc = new ProcessRunner(logWatchCommand(run, conf), conf.logSizeLimit)
-                    }
-                }
+				startStiltSubProcesses()
 
 				updateStatus()
 				master ! status
@@ -135,7 +145,7 @@ object Worker{
 		val logsFolder = s"${env.mainFolder}/${jobId}"
 		val outputFolder = s"${env.mainFolder}/Output/${jobId}"
 		val cmd = Seq("docker", "exec", env.containerName, "/bin/bash", "-c",
-						 s"rm -rf '${logsFolder}' '${outputFolder}'")
+					  s"rm -rf '${logsFolder}' '${outputFolder}'")
 
 		Try{
 			val proc = new ProcessBuilder(cmd: _*).start()
@@ -155,13 +165,13 @@ object Worker{
 		}.flatten
 	}
 
-	def debugCommand(script: String, run: JobRun, env: StiltEnv): Seq[String] = {
-        val job = run.job
-        Seq(
-            s"${script}",
-            s"${job.siteId} ${geoStr(job.lat)} ${geoStr(job.lon)} ${job.alt} " +
-		    s"${dateStr(job.start)} ${dateStr(job.stop)} ${run.job.id} ${run.parallelism}"
-        )
+	def debugCommand(script: String, run: JobRun): Seq[String] = {
+		val job = run.job
+		Seq(
+			s"${script}",
+			s"${job.siteId} ${geoStr(job.lat)} ${geoStr(job.lon)} ${job.alt} " +
+			s"${dateStr(job.start)} ${dateStr(job.stop)} ${run.job.id} ${run.parallelism}"
+		)
 	}
 
 	def stiltCommand(run: JobRun, env: StiltEnv): Seq[String] = {
