@@ -10,11 +10,7 @@ import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.JobInfo
 import se.lu.nateko.cp.stiltcluster.JobRun
 import se.lu.nateko.cp.stiltcluster.JobStatus
-import spray.json.DefaultJsonProtocol
-import spray.json.DeserializationException
-import spray.json.JsString
-import spray.json.JsValue
-import spray.json.JsonFormat
+import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, RootJsonFormat}
 
 object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -38,7 +34,16 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 		)
 	}
 
-	implicit val jobFormat = jsonFormat7(Job)
+	private val jobDefaultFormat = jsonFormat7(Job)
+
+	implicit object JobFormat extends RootJsonFormat[Job]{
+		def write(job: Job) = {
+			val basic = jobDefaultFormat.write(job).asJsObject
+			JsObject(basic.fields + ("id" -> JsString(job.id)))
+		}
+		def read(value: JsValue) = jobDefaultFormat.read(value)
+	}
+
 	implicit val jobRunFormat = jsonFormat2(JobRun)
 	implicit val jobStatusFormat = jsonFormat5(JobStatus.apply)
 	implicit val jobInfoFormat = jsonFormat3(JobInfo)

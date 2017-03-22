@@ -26,6 +26,13 @@ export function enqueueJob(job){
 	}).then(checkStatus);
 }
 
+export function deleteJob(jobId){
+	return fetch('deletejob/' + jobId, {
+		method: 'POST',
+		credentials: 'include'
+	}).then(checkStatus);
+}
+
 export function getStationInfo(){
 	return getJson('/viewer/stationinfo')
 		.then(sInfos => sInfos.map(

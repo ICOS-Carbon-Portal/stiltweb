@@ -7,13 +7,29 @@ export default class DashboardView extends Component {
 	}
 
 	render() {
-		const ds = this.props.dashboardState;
+		const props = this.props;
+		const ds = props.dashboardState;
 
 		return <WideRow>
 
-			<JobInfoList title="Running computations" jobs={ds.running}/>
-			<JobQueue jobs={ds.queue}/>
-			<JobInfoList title="Finished computations" jobs={ds.done}/>
+			<JobInfoList
+				title="Job queue"
+				jobs={ds.queue}
+				toggleYesNoView={props.toggleYesNoView}
+				cancelJob={props.cancelJob}
+				yesNoViewVisible={props.yesNoViewVisible}
+			/>
+			<JobInfoList
+				title="Running computations"
+				jobs={ds.running}
+				toggleYesNoView={props.toggleYesNoView}
+				cancelJob={props.cancelJob}
+				yesNoViewVisible={props.yesNoViewVisible}
+			/>
+			<JobInfoList
+				title="Finished computations"
+				jobs={ds.done}
+			/>
 
 			<WideRow>
 				<button className="btn btn-primary" onClick={this.props.showMap}>To the job starter</button>
@@ -25,7 +41,15 @@ export default class DashboardView extends Component {
 
 const JobInfoList = props => props.jobs.length
 	? <InfoPanelWithList title={props.title}>{
-				props.jobs.map((jinfo, i) => <JobInfoView jobInfo={jinfo} key={jinfo.status.id + '_' + i}/>)
+				props.jobs.map((jinfo, i) => {
+					return <JobInfoView
+						toggleYesNoView={props.toggleYesNoView}
+						yesNoViewVisible={props.yesNoViewVisible}
+						cancelJob={props.cancelJob}
+						jobInfo={jinfo}
+						key={jinfo.run ? jinfo.run.job.siteId + '_' + i : jinfo.siteId + '_' + i}
+					/>;
+				})
 		}</InfoPanelWithList>
 	: null;
 
@@ -34,16 +58,3 @@ const WideRow = props => <div className="row">
 		{props.children}
 	</div>
 </div>;
-
-const JobQueue = props => props.jobs.length
-	? <InfoPanelWithList title="Job queue">{
-				props.jobs.map((job, i) => <JobView job={job} key={job.siteId + '_' + i}/>)
-		}</InfoPanelWithList>
-	: null;
-
-const JobView = props => {
-	const job = props.job;
-	return <li>
-		<span className="label label-default">{`${job.siteId} (lat/lon/alt: ${job.lat} / ${job.lon} / ${job.alt}) from ${job.start} to ${job.stop}`}</span>
-	</li>;
-};

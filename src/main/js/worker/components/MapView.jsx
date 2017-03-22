@@ -30,12 +30,6 @@ export default class MapView extends Component {
 		};
 	}
 
-	test(one){
-		return function(two){
-			console.log(one, two);
-		}
-	}
-
 	onLoadDataBtnClick(){
 		this.props.useExistingStationData();
 	}
@@ -111,7 +105,7 @@ export default class MapView extends Component {
 				</div>
 			</div>
 
-			<div className="col-md-2">
+			<div className="col-md-2" style={{minWidth: 310}}>
 				<h4>Create new STILT footprint</h4>
 
 				<div style={startCalStyle}>
@@ -157,10 +151,10 @@ export default class MapView extends Component {
 						<label style={labelStyle}>Longitude (decimal degree)</label>
 						<TextInput style={verticalMargin} value={formData.lon} action={this.getJobdefUpdater('lon')} converter={toLon} disabled={isExisting}/>
 
-						<label style={labelStyle}>Altitude (meters)</label>
+						<label style={labelStyle}>Altitude above ground (meters)</label>
 						<TextInput style={verticalMargin} value={formData.alt} action={this.getJobdefUpdater('alt')} converter={toInt} disabled={isExisting}/>
 
-						<label style={labelStyle}>3 letter code</label>
+						<label style={labelStyle}>Site id (usually a 3 letter code)</label>
 						<div className="input-group" style={verticalMargin}>
 							<TextInput value={formData.siteId} action={this.getJobdefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="5"/>
 							<span className="input-group-btn">
@@ -197,16 +191,20 @@ export default class MapView extends Component {
 				</div>
 			</div>
 
-			<div className="col-md-2">
+			<div className="col-md-2" style={{minWidth: 310}}>
 				<h4>Dispatched STILT jobs</h4>
 
 				<div className="panel panel-default">
 					<div className="panel-body">
-						<Job title="Job queue" jobs={ds.queue} />
-						<Job title="Running computations" jobs={ds.running} />
-						<Job title="Finished computations" jobs={ds.done} />
-
-						<button style={buttonStyle} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
+						{ ds.queue.length || ds.done.length || ds.running.length
+							? <div>
+								<Job title="Job queue" jobs={ds.queue}/>
+								<Job title="Running computations" jobs={ds.running} />
+								<Job title="Finished computations" jobs={ds.done} />
+								<button style={buttonStyle} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
+							</div>
+							: <div>No jobs have been submitted</div>
+						}
 					</div>
 				</div>
 

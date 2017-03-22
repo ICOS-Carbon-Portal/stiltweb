@@ -1,5 +1,5 @@
 import {ERROR, FETCHED_INIT_INFO, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, DATES_UPDATED, USE_EXISTING_STATION, STARTED_JOB} from './actions';
-import {MAP_VIEW, DASHBOARD_VIEW} from './actions';
+import {MAP_VIEW, DASHBOARD_VIEW, TOGGLE_YESNO} from './actions';
 
 import {copyprops, deepUpdate} from 'icos-cp-utils';
 import * as Toaster from 'icos-cp-toaster';
@@ -49,6 +49,9 @@ export default function(state, action){
 
 		case MAP_VIEW:
 			return update({currentView: MAP_VIEW});
+
+		case TOGGLE_YESNO:
+			return update({yesNoViewVisible: !state.yesNoViewVisible});
 
 		default:
 			return state;

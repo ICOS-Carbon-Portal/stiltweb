@@ -1,4 +1,4 @@
-import {getStationInfo, getWhoIam, makeDashboardWebsocketConnection, enqueueJob} from './backend';
+import {getStationInfo, getWhoIam, makeDashboardWebsocketConnection, enqueueJob, deleteJob} from './backend';
 
 export const FETCHED_INIT_INFO = 'FETCHED_INIT_INFO';
 export const GOT_DASHBOARD_STATE = 'GOT_DASHBOARD_STATE';
@@ -7,6 +7,7 @@ export const JOBDEF_UPDATED = 'JOBDEF_UPDATED';
 export const DATES_UPDATED = 'DATES_UPDATED';
 export const USE_EXISTING_STATION = 'USE_EXISTING_STATION';
 export const STARTED_JOB = 'STARTED_JOB';
+export const TOGGLE_YESNO = 'TOGGLE_YESNO';
 export const ERROR = 'ERROR';
 
 export const MAP_VIEW = 'MAP_VIEW';
@@ -63,6 +64,19 @@ export function useExistingStationData(){
 	return {
 		type: USE_EXISTING_STATION
 	};
+}
+
+export function toggleYesNoView(){
+	return {
+		type: TOGGLE_YESNO
+	};
+}
+
+export const cancelJob = jobId => dispatch => {
+	deleteJob(jobId).then(
+		() => dispatch({type: TOGGLE_YESNO}),
+		err => dispatch(failWithError(err))
+	);
 }
 
 export const startJob = (dispatch, getState) => {
