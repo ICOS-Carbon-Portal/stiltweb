@@ -25,7 +25,10 @@ object ConfigLoader {
 		.resolve()
 
 	def loadStiltEnv : StiltEnv = {
-		val conf = ConfigFactory.parseResources("stiltenv.conf").getConfig("stiltenv")
+		val conf = ConfigFactory.parseFile(new File("local.conf"))
+			.withFallback(ConfigFactory.parseResources("stiltenv.conf"))
+			.getConfig("stiltenv")
+
 		val debugRun: Option[String] =
 			if (conf.hasPath("debugRun")) Some(conf.getString("debugRun")) else None
 

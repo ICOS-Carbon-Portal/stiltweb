@@ -1,3 +1,4 @@
+local.conf
 /application.conf
 *.class
 *.log
