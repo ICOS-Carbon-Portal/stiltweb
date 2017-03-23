@@ -17,6 +17,7 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 	implicit val rasterMarshalling = RasterMarshalling.marshaller
 	implicit val templateMarshaller = TemplatePageMarshalling.marshaller
 
+	implicit val stiltResultsWhoamiFormat = jsonFormat2(WhoamiResult)
 	implicit val stiltResultsRequestFormat = jsonFormat3(StiltResultsRequest)
 	implicit val stiltStationInfoFormat = jsonFormat7(StiltStationInfo)
 	implicit object LocalDateFormat extends JsonFormat[LocalDate]{
