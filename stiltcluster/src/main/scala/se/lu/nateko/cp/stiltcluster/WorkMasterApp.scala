@@ -1,7 +1,6 @@
 package se.lu.nateko.cp.stiltcluster
 
 import akka.actor.ActorSystem
-import akka.actor.Props
 import akka.pattern.gracefulStop
 
 import scala.concurrent.duration.DurationInt

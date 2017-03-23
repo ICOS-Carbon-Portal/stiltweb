@@ -1,13 +1,11 @@
 package se.lu.nateko.cp.stiltweb
 
-import scala.collection.JavaConversions
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.ToResponseMarshallable.apply
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directive
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.server.RouteResult.route2HandlerFlow
