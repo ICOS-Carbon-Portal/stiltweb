@@ -1,6 +1,6 @@
-
 package se.lu.nateko.cp.stiltweb
 
+import java.io.File
 import se.lu.nateko.cp.cpauth.core.PublicAuthConfig
 import spray.json._
 import com.typesafe.config.Config
@@ -32,16 +32,16 @@ object ConfigReader extends DefaultJsonProtocol{
 	def getDefault: StiltWebConfig = fromAppConfig(getAppConfig)
 
 	def getAppConfig: Config = {
-		val default = ConfigFactory.load
-		val confFile = new java.io.File("application.conf").getAbsoluteFile
-		if(!confFile.exists) default
-		else ConfigFactory.parseFile(confFile).withFallback(default)
+		// First load configuration from local.conf, located in the current
+		// directory, then fall back to application.conf, referenc.conf (all
+		// found in classpath) etc etc
+		ConfigFactory.parseFile(new File("local.conf")).withFallback(ConfigFactory.load())
 	}
 
 	def fromAppConfig(applicationConfig: Config): StiltWebConfig = {
 		val renderOpts = ConfigRenderOptions.concise.setJson(true)
 		val confJson: String = applicationConfig.getValue("stiltweb").render(renderOpts)
-		
+
 		confJson.parseJson.convertTo[StiltWebConfig]
 	}
 }
