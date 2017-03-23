@@ -88,16 +88,21 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		post {
 			path("deletejob" / Segment) { jobId =>
 				user{userId =>
-					onSuccess(cluster.queryOwner(jobId)) {
-						case Some(ownerId) =>
-							if (userId.email == ownerId) {
-								cluster.cancelJob(jobId)
-								complete(StatusCodes.OK)
-							} else {
-								complete((StatusCodes.Forbidden, "User ID doesn't own job"))
-							}
-						case None =>
-							complete((StatusCodes.BadRequest, "No such Job ID"))
+					if (config.admins.exists(_ == userId.email)) {
+						cluster.cancelJob(jobId)
+						complete(StatusCodes.OK)
+					} else {
+						onSuccess(cluster.queryOwner(jobId)) {
+							case Some(ownerId) =>
+								if (userId.email == ownerId) {
+									cluster.cancelJob(jobId)
+									complete(StatusCodes.OK)
+								} else {
+									complete((StatusCodes.Forbidden, "User ID doesn't own job"))
+								}
+							case None =>
+								complete((StatusCodes.BadRequest, "No such Job ID"))
+						}
 					}
 				}
 			}
