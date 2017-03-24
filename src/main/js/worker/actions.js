@@ -25,7 +25,7 @@ function failWithError(error){
 
 export const fetchInitialInfo = dispatch => {
 	Promise.all([getStationInfo(), getWhoIam()])
-		.then(([stations, userId]) => {return {stations, userId};})
+		.then(([stations, currUser]) => {return {stations, currUser};})
 		.then(
 			initInfo => dispatch(Object.assign({type: FETCHED_INIT_INFO}, initInfo)),
 			err => dispatch(failWithError(err))
@@ -81,7 +81,7 @@ export const cancelJob = jobId => dispatch => {
 
 export const startJob = (dispatch, getState) => {
 	const state = getState();
-	const job = Object.assign({}, state.workerData.jobDef, {userId: state.userId});
+	const job = Object.assign({}, state.workerData.jobDef, {userId: state.currUser.email});
 	enqueueJob(job).then(
 		() => dispatch({type: STARTED_JOB}),
 		err => dispatch(failWithError(err))

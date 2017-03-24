@@ -28,11 +28,12 @@ export default class JobInfoView extends Component {
 		const job = jinfo.run ? jinfo.run.job : jinfo;
 		const status = jinfo.status || undefined;
 		const jobId = jinfo.status ? jinfo.status.id : jinfo.id;
-		const allowCancel = props.cancelJob && props.toggleYesNoView;
+		const allowCancel = !!props.cancelJob && !!props.toggleYesNoView
+			&& (props.currUser.email === job.userId || props.currUser.isAdmin);
 
-		// console.log({props});
+		// console.log({props, job, status, jobId, allowCancel});
 
-		return <li>
+		return <div>
 			{allowCancel
 				? <YesNoView
 					visible={props.yesNoViewVisible}
@@ -65,13 +66,13 @@ export default class JobInfoView extends Component {
 					: null
 				}
 			</div>
-		</li>;
+		</div>;
 	}
 }
 
 const StatusLabel = props => {
 	const status = props.status;
-	console.log({status})
+
 	return <span style={{fontSize: '120%', position: 'relative', top: -2, marginRight: 20}}>
 		{status && Number.isInteger(status.exitValue)
 			? status.exitValue === 0
@@ -83,9 +84,13 @@ const StatusLabel = props => {
 };
 
 const HeaderInfo = props => {
+	const job = props.job;
+
 	return <span>
-		<span><b>Site id: <i>{props.job.siteId}</i></b></span>
-		<span>{` from ${props.job.start} to ${props.job.stop} submitted by ${props.job.userId}`}</span>
+		<span><b>Site id: <i>{job.siteId}</i></b></span>
+		<span>{` - Submitted ${job.jobStart} by ${job.userId}
+			(lat: ${job.lat}, lon: ${job.lon}, alt: ${job.alt}, start: ${job.start}, stop: ${job.stop})`}
+		</span>
 	</span>;
 };
 
@@ -95,11 +100,11 @@ const Queue = props => {
 	return(
 		<div className="panel-body">
 			<InfoPanelWithList title="Job parameters">
-				<li><b>Lat: </b>{job.lat}</li>
-				<li><b>Lon: </b>{job.lon}</li>
-				<li><b>Alt: </b>{job.alt}</li>
-				<li><b>Start: </b>{job.start}</li>
-				<li><b>Stop: </b>{job.stop}</li>
+				<div><b>Lat: </b>{job.lat}</div>
+				<div><b>Lon: </b>{job.lon}</div>
+				<div><b>Alt: </b>{job.alt}</div>
+				<div><b>Start: </b>{job.start}</div>
+				<div><b>Stop: </b>{job.stop}</div>
 			</InfoPanelWithList>
 		</div>
 	);
@@ -113,20 +118,24 @@ const RunningAndFinished = props => {
 	return(
 		<div className="panel-body">
 			<InfoPanelWithList title="Job parameters">
-				<li style={{marginBottom: 10}}>{status.exitValue === 0
-					? <span>
-						Calculation finished, view results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a>
-					</span>
+				{status.exitValue === 0
+					? <div style={{marginBottom: 10}}>
+						<div>Calculation started {job.jobStart} and finished {job.jobStop}</div>
+						<div>
+							View results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a>
+						</div>
+					</div>
 					: null
-				}</li>
-				<li><b>Lat: </b>{job.lat}</li>
-				<li><b>Lon: </b>{job.lon}</li>
-				<li><b>Alt: </b>{job.alt}</li>
-				<li><b>Start: </b>{job.start}</li>
-				<li><b>Stop: </b>{job.stop}</li>
-				<li><b>Number of cores: </b>{props.par}</li>
-				<li><b>Execution node: </b>{jinfo.executionNode}</li>
+				}
+				<div><b>Lat: </b>{job.lat}</div>
+				<div><b>Lon: </b>{job.lon}</div>
+				<div><b>Alt: </b>{job.alt}</div>
+				<div><b>Start: </b>{job.start}</div>
+				<div><b>Stop: </b>{job.stop}</div>
+				<div><b>Number of cores: </b>{props.par}</div>
+				<div><b>Execution node: </b>{jinfo.executionNode}</div>
 			</InfoPanelWithList>
+
 			<OutputStrings title="Standard output" stylecontext="success" strings={status.output}/>
 			<OutputStrings title="Errors" stylecontext="danger" strings={status.errors}/>
 			<OutputStrings title="STILT logs (merged, last 200 lines only)" stylecontext="info" strings={status.logs}/>
@@ -155,7 +164,7 @@ export const InfoPanelWithList = props => <div className="panel panel-info">
 		<h3 className="panel-title">{props.title}</h3>
 	</div>
 	<div className="panel-body">
-		<ul className="list-unstyled">{props.children}</ul>
+		<div>{props.children}</div>
 	</div>
 </div>;
 

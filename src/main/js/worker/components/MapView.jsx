@@ -184,7 +184,7 @@ export default class MapView extends Component {
 
 						<button style={buttonStyle}
 								className="btn btn-primary cp-pointer"
-								disabled={!props.workerData.isJobDefComplete || !props.userId}
+								disabled={!props.workerData.isJobDefComplete || !props.currUser.email}
 								onClick={props.startJob}>Dispatch STILT job</button>
 
 					</div>

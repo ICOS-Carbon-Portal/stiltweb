@@ -15,6 +15,7 @@ export default class DashboardView extends Component {
 			<JobInfoList
 				title="Job queue"
 				jobs={ds.queue}
+				currUser={props.currUser}
 				toggleYesNoView={props.toggleYesNoView}
 				cancelJob={props.cancelJob}
 				yesNoViewVisible={props.yesNoViewVisible}
@@ -22,6 +23,7 @@ export default class DashboardView extends Component {
 			<JobInfoList
 				title="Running computations"
 				jobs={ds.running}
+				currUser={props.currUser}
 				toggleYesNoView={props.toggleYesNoView}
 				cancelJob={props.cancelJob}
 				yesNoViewVisible={props.yesNoViewVisible}
@@ -43,6 +45,7 @@ const JobInfoList = props => props.jobs.length
 	? <InfoPanelWithList title={props.title}>{
 				props.jobs.map((jinfo, i) => {
 					return <JobInfoView
+						currUser={props.currUser}
 						toggleYesNoView={props.toggleYesNoView}
 						yesNoViewVisible={props.yesNoViewVisible}
 						cancelJob={props.cancelJob}

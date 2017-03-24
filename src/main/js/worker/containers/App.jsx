@@ -28,7 +28,7 @@ class App extends Component {
 
 	render() {
 		const props = this.props;
-		const subtitle = props.currentView == MAP_VIEW ? "Job starter" : "Dashboard"
+		const subtitle = props.currentView == MAP_VIEW ? "Job starter" : "Dashboard";
 
 		return <div>
 			<Toaster.AnimatedToasters
@@ -41,8 +41,8 @@ class App extends Component {
 
 			<div className="page-header">
 				<div className="pull-right">{
-					props.userId && props.userId.length
-						? <span>{"Logged in as " + props.userId}</span>
+					props.currUser && props.currUser.email
+						? <span>{"Logged in as " + props.currUser.email}</span>
 						: <a href={"https://cpauth.icos-cp.eu/login/?targetUrl=" + window.location.toString()}>Log in</a>
 				}</div>
 					<h1>STILT calculation service <small>{subtitle}</small></h1>
@@ -54,7 +54,7 @@ class App extends Component {
 						toastWarning={this.toastWarning.bind(this)}
 						toastError={this.toastError.bind(this)}
 						{...props}/>
-					: <DashboardView {...copyprops(props, ['dashboardState', 'showMap', 'toggleYesNoView', 'yesNoViewVisible', 'cancelJob', 'cancelQueue'])} />
+					: <DashboardView {...copyprops(props, ['dashboardState', 'showMap', 'currUser', 'toggleYesNoView', 'yesNoViewVisible', 'cancelJob', 'cancelQueue'])} />
 			}
 
 		</div>;
