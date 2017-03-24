@@ -46,6 +46,6 @@ export function getStationInfo(){
 export function getWhoIam(){
 	return fetch('/whoami', {credentials: 'include'})
 		.then(checkStatus)
-		.then(resp => resp.text());
+		.then(resp => resp.json());
 }
 

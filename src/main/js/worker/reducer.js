@@ -13,7 +13,7 @@ export default function(state, action){
 			return update({toasterData: new Toaster.ToasterData(Toaster.TOAST_ERROR, action.error.message.split('\n')[0])});
 
 		case FETCHED_INIT_INFO:
-			return update({workerData: state.workerData.withStations(action.stations), currUser: JSON.parse(action.currUser)});
+			return update({workerData: state.workerData.withStations(action.stations), currUser: action.currUser});
 
 		case STATION_SELECTED:
 			return update({workerData: state.workerData.withSelectedStation(action.selectedStation, true)});

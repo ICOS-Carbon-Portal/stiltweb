@@ -50,7 +50,7 @@ export default class JobInfoView extends Component {
 				<div className="panel-heading" onClick={this.handleClick.bind(this)} style={{cursor: "pointer"}}>
 					{allowCancel
 						? <button className="btn btn-primary" onClick={this.handleCancelClick.bind(this)}>
-							<span className="glyphicon glyphicon-remove-sign" style={{marginRight: 10, top: 3, fontSize:'130%'}}></span>
+							<span className="glyphicon glyphicon-remove-sign" style={{marginRight: 10, top: 3, fontSize:'130%'}} />
 							Cancel job
 						</button>
 						: null
@@ -85,12 +85,13 @@ const StatusLabel = props => {
 
 const HeaderInfo = props => {
 	const job = props.job;
+	const params = <span>
+		<b>lat:</b> {job.lat}, <b>lon:</b> {job.lon}, <b>alt:</b> {job.alt}, <b>start:</b> {job.start}, <b>stop:</b> {job.stop}
+	</span>;
 
 	return <span>
 		<span><b>Site id: <i>{job.siteId}</i></b></span>
-		<span>{` - Submitted ${job.jobStart} by ${job.userId}
-			(lat: ${job.lat}, lon: ${job.lon}, alt: ${job.alt}, start: ${job.start}, stop: ${job.stop})`}
-		</span>
+		<span> - Submitted {job.jobStart} by {job.userId} ({params})</span>
 	</span>;
 };
 
@@ -118,14 +119,20 @@ const RunningAndFinished = props => {
 	return(
 		<div className="panel-body">
 			<InfoPanelWithList title="Job parameters">
-				{status.exitValue === 0
-					? <div style={{marginBottom: 10}}>
-						<div>Calculation started {job.jobStart} and finished {job.jobStop}</div>
-						<div>
-							View results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a>
+				{Number.isInteger(status.exitValue)
+					? status.exitValue === 0
+						? <div style={{marginBottom: 10}}>
+							<div>Calculation started {job.jobStart} and finished {job.jobStop}</div>
+							<div>
+								View results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a>
+							</div>
 						</div>
+						: <div style={{marginBottom: 10}}>
+							<div>Calculation started {job.jobStart} and failed {job.jobStop}</div>
+						</div>
+					: <div style={{marginBottom: 10}}>
+						Calculation started {job.jobStart}
 					</div>
-					: null
 				}
 				<div><b>Lat: </b>{job.lat}</div>
 				<div><b>Lon: </b>{job.lon}</div>
