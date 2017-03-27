@@ -32,6 +32,7 @@ class WorkReceptionist extends Actor{
 
 		case job: Job =>
 			queue.enqueue(job)
+			job.add_logbook_entry("enqueued")
 			//if all workmasters are busy inform the clients about the queue increase:
 			if(!dispatchJob()) notifySubscribers()
 
@@ -85,6 +86,7 @@ class WorkReceptionist extends Actor{
 	private def dispatchJob(): Boolean = (
 		for(job <- queue.headOption; node <- pickNodeForJob(nodes, job)) yield {
 			queue.dequeue()
+			job.add_logbook_entry("dequeued")
 			node ! job
 		}
 	).isDefined

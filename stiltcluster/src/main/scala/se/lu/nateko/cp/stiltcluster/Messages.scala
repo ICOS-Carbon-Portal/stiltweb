@@ -1,7 +1,9 @@
 package se.lu.nateko.cp.stiltcluster
 
 import java.time.LocalDate
+import java.time.Instant
 import scala.collection.immutable.Seq
+import scala.collection.mutable.ListBuffer
 
 case object Hi
 
@@ -23,6 +25,8 @@ object JobStatus{
 
 case class JobCanceled(id: String)
 
+case class LogEntry(what: String, when: String)
+
 case class Job(
 	siteId: String,
 	lat: Double,
@@ -30,9 +34,15 @@ case class Job(
 	alt: Int,
 	start: LocalDate,
 	stop: LocalDate,
-	userId: String
+	userId: String,
+
+	logbook: ListBuffer[LogEntry]
 ){
 	def id = "job_" + this.hashCode()
+
+	def add_logbook_entry(what: String): Unit = {
+		logbook += LogEntry(what, java.time.Instant.now.toString)
+	}
 }
 
 case class JobRun(job: Job, parallelism: Int)

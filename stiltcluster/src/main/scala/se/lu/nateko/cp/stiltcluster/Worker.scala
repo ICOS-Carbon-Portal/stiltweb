@@ -96,6 +96,7 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 			if(status != oldStatus){
 				master ! status
 				if(status.exitValue.isDefined) {
+					stiltRun.job.add_logbook_entry("done")
 					log.info("FINISHED JOB RUN " + stiltRun)
 					resetWorker()
 				}
@@ -103,6 +104,7 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 
 		case CancelJob(id) =>
 			if(id == stiltRun.job.id){
+				stiltRun.job.add_logbook_entry("canceled")
 				log.info(s"Worker cancelling job ${id}")
 				stiltProc.destroyForcibly()
 				logsProc.destroyForcibly()

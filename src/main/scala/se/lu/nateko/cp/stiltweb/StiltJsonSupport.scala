@@ -6,11 +6,15 @@ import akka.actor.Address
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
 import se.lu.nateko.cp.stiltcluster.DashboardInfo
+import se.lu.nateko.cp.stiltcluster.LogEntry
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.JobInfo
 import se.lu.nateko.cp.stiltcluster.JobRun
 import se.lu.nateko.cp.stiltcluster.JobStatus
-import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, RootJsonFormat}
+import scala.collection.mutable.ListBuffer
+import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, RootJsonFormat,JsArray,deserializationError}
+import spray.json._
+
 
 object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -35,7 +39,16 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 		)
 	}
 
-	private val jobDefaultFormat = jsonFormat7(Job)
+	implicit val LogEntryFormat = jsonFormat2(LogEntry)
+	private val jobDefaultFormat = jsonFormat8(Job)
+
+	implicit def listBufferFormat[T :JsonFormat] = new RootJsonFormat[ListBuffer[T]] {
+		def write(listBuffer: ListBuffer[T]) = JsArray(listBuffer.map(_.toJson).toVector)
+		def read(value: JsValue): ListBuffer[T] = value match {
+			case JsArray(elements) => elements.map(_.convertTo[T])(collection.breakOut)
+			case x => deserializationError("Expected ListBuffer as JsArray, but got " + x)
+		}
+	}
 
 	implicit object JobFormat extends RootJsonFormat[Job]{
 		def write(job: Job) = {
