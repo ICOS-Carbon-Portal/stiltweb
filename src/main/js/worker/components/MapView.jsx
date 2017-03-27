@@ -60,16 +60,16 @@ export default class MapView extends Component {
 			: props.workerData.selectedStation;
 
 		const labelStyle = {display: 'block', clear: 'both'};
-		const buttonStyle = {display: 'block', clear: 'both', marginTop: 40};
 		const verticalMargin = {marginBottom: 20};
 		const ds = this.props.dashboardState;
 		const calStyle = {position:'absolute', left: -5, display:'inline', zIndex: 9, boxShadow: '7px 7px 5px #888'};
 		const startCalStyle = this.state.startCalVisible ? calStyle : {display:'none'};
 		const stopCalStyle = this.state.stopCalVisible ? calStyle : {display:'none'};
 
-		// console.log({props, formData, form: props.workerData._workerFormData, selSt: props.workerData._selectedStation,
-		// 	hasErrors: props.workerData.hasErrors, errors, isJobDefComplete: props.workerData.isJobDefComplete, jobDef: props.workerData.jobDef
-		// });
+		console.log({props, formData, form: props.workerData._workerFormData, selSt: props.workerData._selectedStation,
+			hasErrors: props.workerData.hasErrors, errors, isJobDefComplete: props.workerData.isJobDefComplete,
+			jobDef: props.workerData.jobDef, ds
+		});
 
 		return <div className="row">
 
@@ -182,7 +182,7 @@ export default class MapView extends Component {
 							onClick={this.toggleCalendar.bind(this, 'stopCalVisible')}
 						/>
 
-						<button style={buttonStyle}
+						<button style={{display: 'block', clear: 'both', marginTop: 40}}
 								className="btn btn-primary cp-pointer"
 								disabled={!props.workerData.isJobDefComplete || !props.currUser.email}
 								onClick={props.startJob}>Dispatch STILT job</button>
@@ -196,14 +196,18 @@ export default class MapView extends Component {
 
 				<div className="panel panel-default">
 					<div className="panel-body">
-						{ ds.queue.length || ds.done.length || ds.running.length
-							? <div>
-								<Job title="Job queue" jobs={ds.queue}/>
-								<Job title="Running computations" jobs={ds.running} />
-								<Job title="Finished computations" jobs={ds.done} />
-								<button style={buttonStyle} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
-							</div>
-							: <div>No jobs have been submitted</div>
+						{ ds.queue === undefined && ds.running === undefined && ds.done === undefined
+							? null
+							: ds.queue.length || ds.done.length || ds.running.length
+								? <div>
+									<button style={{display: 'block', clear: 'both', marginBottom: 40}}
+											className="btn btn-primary cp-pointer"
+											onClick={props.showDashboard}>Show details</button>
+									<Job title="Job queue" jobs={ds.queue}/>
+									<Job title="Running computations" jobs={ds.running} />
+									<Job title="Finished computations" jobs={ds.done} />
+								</div>
+								: <div>No jobs have been submitted</div>
 						}
 					</div>
 				</div>

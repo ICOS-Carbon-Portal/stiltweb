@@ -31,7 +31,7 @@ export default class JobInfoView extends Component {
 		const allowCancel = !!props.cancelJob && !!props.toggleYesNoView
 			&& (props.currUser.email === job.userId || props.currUser.isAdmin);
 
-		// console.log({props, job, status, jobId, allowCancel});
+		console.log({props, job, status, jobId, allowCancel});
 
 		return <div>
 			{allowCancel
@@ -100,7 +100,7 @@ const Queue = props => {
 
 	return(
 		<div className="panel-body">
-			<InfoPanelWithList title="Job parameters">
+			<InfoPanelWithList title="Job definition">
 				<div><b>Lat: </b>{job.lat}</div>
 				<div><b>Lon: </b>{job.lon}</div>
 				<div><b>Alt: </b>{job.alt}</div>
@@ -118,7 +118,7 @@ const RunningAndFinished = props => {
 
 	return(
 		<div className="panel-body">
-			<InfoPanelWithList title="Job parameters">
+			<InfoPanelWithList title="Summary of job">
 				{Number.isInteger(status.exitValue)
 					? status.exitValue === 0
 						? <div style={{marginBottom: 10}}>
@@ -159,7 +159,7 @@ const OutputStrings = props => {
 			<div className="panel-heading">
 				<h3 className="panel-title">{props.title}</h3>
 			</div>
-			<div className="panel-body">
+			<div className="panel-body" style={{overflow: 'auto', maxHeight: 300}}>
 			{
 				strings.map((s, i) => <p key={"s_" + i}>{s}</p>)
 			}
@@ -177,29 +177,28 @@ export const InfoPanelWithList = props => <div className="panel panel-info">
 	</div>
 </div>;
 
-	function getRuntime(start, stop){
-		start = new Date("2017-01-01 23:00");
-		stop = new Date("2017-01-03 00:50:20");
+function getRuntime(start, stop){
+	// start = new Date("2017-01-01 23:00");
+	// stop = new Date("2017-01-03 00:50:20");
 
-		if (!(start && stop)) return <span>Not defined</span>;
+	if (!(start && stop)) return <span>Not defined</span>;
 
-		start.setMinutes(start.getMinutes() - start.getTimezoneOffset());
-		stop.setMinutes(stop.getMinutes() - stop.getTimezoneOffset());
+	start.setMinutes(start.getMinutes() - start.getTimezoneOffset());
+	stop.setMinutes(stop.getMinutes() - stop.getTimezoneOffset());
 
-		const msPerDay = 24 * 60 * 60 * 1000;
-		const msRuntime = stop.getTime() - start.getTime();
-		const runtime = new Date(msRuntime);
+	const msPerDay = 24 * 60 * 60 * 1000;
+	const msRuntime = stop.getTime() - start.getTime();
+	const runtime = new Date(msRuntime);
 
-		const days = Math.floor(msRuntime / msPerDay);
-		const hours = runtime.getUTCHours();
-		const minutes = runtime.getUTCMinutes();
-		const seconds = runtime.getUTCSeconds();
+	const days = Math.floor(msRuntime / msPerDay);
+	const hours = runtime.getUTCHours();
+	const minutes = runtime.getUTCMinutes();
+	const seconds = runtime.getUTCSeconds();
 
-		return <span>
-			{days > 1 ? days + " day, " : days + " day, "}
-			{hours > 1 ? hours + " hours, " : hours + " hour, "}
-			{minutes > 1 ? minutes + " minutes and " : minutes + " minute and "}
-			{seconds > 1 ? seconds + " seconds" : seconds + " second"}
-		</span>;
-	}
-
+	return <span>
+		{days > 1 ? days + " day, " : days + " day, "}
+		{hours > 1 ? hours + " hours, " : hours + " hour, "}
+		{minutes > 1 ? minutes + " minutes and " : minutes + " minute and "}
+		{seconds > 1 ? seconds + " seconds" : seconds + " second"}
+	</span>;
+}
