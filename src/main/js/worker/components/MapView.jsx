@@ -21,6 +21,14 @@ export default class MapView extends Component {
 			startCalVisible: false,
 			stopCalVisible: false
 		};
+		this.displayLoginInfo = true;
+	}
+
+	componentWillUpdate(nextProps){
+		if (nextProps.currUser && !nextProps.currUser.email && this.displayLoginInfo){
+			this.displayLoginInfo = false;
+			nextProps.toastInfo("You have to be logged in to start a new job");
+		}
 	}
 
 	getJobdefUpdater(prop){
@@ -68,7 +76,8 @@ export default class MapView extends Component {
 		const stopCalStyle = this.state.stopCalVisible ? calStyle : {display:'none'};
 
 		// console.log({props, formData, form: props.workerData._workerFormData, selSt: props.workerData._selectedStation,
-		// 	hasErrors: props.workerData.hasErrors, errors, isJobDefComplete: props.workerData.isJobDefComplete, jobDef: props.workerData.jobDef
+		// 	hasErrors: props.workerData.hasErrors, errors, isJobDefComplete: props.workerData.isJobDefComplete,
+		// 	jobDef: props.workerData.jobDef, ds
 		// });
 
 		return <div className="row">

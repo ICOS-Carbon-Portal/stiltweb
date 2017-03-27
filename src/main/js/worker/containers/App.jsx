@@ -18,6 +18,10 @@ class App extends Component {
 		if(toasterData) this.setState({toasterData});
 	}
 
+	toastInfo(mess){
+		this.setState({toasterData: new Toaster.ToasterData(Toaster.TOAST_INFO, mess)});
+	}
+
 	toastWarning(mess){
 		this.setState({toasterData: new Toaster.ToasterData(Toaster.TOAST_WARNING, mess)});
 	}
@@ -51,6 +55,7 @@ class App extends Component {
 			{
 				props.currentView == MAP_VIEW
 					? <MapView
+						toastInfo={this.toastInfo.bind(this)}
 						toastWarning={this.toastWarning.bind(this)}
 						toastError={this.toastError.bind(this)}
 						{...props}/>
