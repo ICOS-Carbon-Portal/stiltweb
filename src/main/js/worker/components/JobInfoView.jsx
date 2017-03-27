@@ -29,7 +29,7 @@ export default class JobInfoView extends Component {
 		const allowCancel = !!props.cancelJob && !!props.toggleYesNoView
 			&& (props.currUser.email === job.userId || props.currUser.isAdmin);
 
-		// console.log({props, job, status, jobId, allowCancel});
+		console.log({props, job, status, jobId, allowCancel});
 
 		return <div>
 			{allowCancel
