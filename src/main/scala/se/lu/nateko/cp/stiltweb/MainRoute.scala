@@ -112,7 +112,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			user{userId =>
 				complete((StatusCodes.OK, WhoamiResult(userId.email)))
 			} ~
-			complete((StatusCodes.OK, ""))
+			complete((StatusCodes.OK, WhoamiResult("")))
 		}
 	}
 
