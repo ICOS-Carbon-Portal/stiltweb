@@ -91,7 +91,7 @@ const HeaderInfo = props => {
 
 	return <span>
 		<span><b>Site id: <i>{job.siteId}</i></b></span>
-		<span> - Submitted {job.jobStart} by {job.userId} ({params})</span>
+		<span> - Submitted {job.jobSubmitted} by {job.userId} ({params})</span>
 	</span>;
 };
 
@@ -123,12 +123,14 @@ const RunningAndFinished = props => {
 					? status.exitValue === 0
 						? <div style={{marginBottom: 10}}>
 							<div>Calculation started {job.jobStart} and finished {job.jobStop}</div>
+							<div><b>Runtime:</b> {getRuntime(job.jobStart, job.jobStop)}</div>
 							<div>
 								View results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a>
 							</div>
 						</div>
 						: <div style={{marginBottom: 10}}>
 							<div>Calculation started {job.jobStart} and failed {job.jobStop}</div>
+							<div><b>Runtime:</b> {getRuntime(job.jobStart, job.jobStop)}</div>
 						</div>
 					: <div style={{marginBottom: 10}}>
 						Calculation started {job.jobStart}
@@ -174,4 +176,30 @@ export const InfoPanelWithList = props => <div className="panel panel-info">
 		<div>{props.children}</div>
 	</div>
 </div>;
+
+	function getRuntime(start, stop){
+		start = new Date("2017-01-01 23:00");
+		stop = new Date("2017-01-03 00:50:20");
+
+		if (!(start && stop)) return <span>Not defined</span>;
+
+		start.setMinutes(start.getMinutes() - start.getTimezoneOffset());
+		stop.setMinutes(stop.getMinutes() - stop.getTimezoneOffset());
+
+		const msPerDay = 24 * 60 * 60 * 1000;
+		const msRuntime = stop.getTime() - start.getTime();
+		const runtime = new Date(msRuntime);
+
+		const days = Math.floor(msRuntime / msPerDay);
+		const hours = runtime.getUTCHours();
+		const minutes = runtime.getUTCMinutes();
+		const seconds = runtime.getUTCSeconds();
+
+		return <span>
+			{days > 1 ? days + " day, " : days + " day, "}
+			{hours > 1 ? hours + " hours, " : hours + " hour, "}
+			{minutes > 1 ? minutes + " minutes and " : minutes + " minute and "}
+			{seconds > 1 ? seconds + " seconds" : seconds + " second"}
+		</span>;
+	}
 
