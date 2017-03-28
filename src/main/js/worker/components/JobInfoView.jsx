@@ -91,7 +91,7 @@ const HeaderInfo = props => {
 
 	return <span>
 		<span><b>Site id: <i>{job.siteId}</i></b></span>
-		<span> - Submitted {job.jobSubmitted} by {job.userId} ({params})</span>
+		<span> - Submitted {job.logbook.enqueued} by {job.userId} ({params})</span>
 	</span>;
 };
 
@@ -122,18 +122,18 @@ const RunningAndFinished = props => {
 				{Number.isInteger(status.exitValue)
 					? status.exitValue === 0
 						? <div style={{marginBottom: 10}}>
-							<div>Calculation started {job.jobStart} and finished {job.jobStop}</div>
-							<div><b>Runtime:</b> {getRuntime(job.jobStart, job.jobStop)}</div>
+							<div>Calculation started {job.logbook.start} and finished {job.logbook.stop}</div>
+							<div><b>Runtime:</b> {getRuntime(job.logbook.start, job.logbook.stop)}</div>
 							<div>
 								View results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a>
 							</div>
 						</div>
 						: <div style={{marginBottom: 10}}>
-							<div>Calculation started {job.jobStart} and failed {job.jobStop}</div>
-							<div><b>Runtime:</b> {getRuntime(job.jobStart, job.jobStop)}</div>
+							<div>Calculation started {job.logbook.start} and failed {job.logbook.stop}</div>
+							<div><b>Runtime:</b> {getRuntime(job.logbook.start, job.logbook.start)}</div>
 						</div>
 					: <div style={{marginBottom: 10}}>
-						Calculation started {job.jobStart}
+						Calculation started {job.logbook.start}
 					</div>
 				}
 				<div><b>Lat: </b>{job.lat}</div>
