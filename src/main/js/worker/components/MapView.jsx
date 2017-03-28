@@ -75,9 +75,9 @@ export default class MapView extends Component {
 		const startCalStyle = this.state.startCalVisible ? calStyle : {display:'none'};
 		const stopCalStyle = this.state.stopCalVisible ? calStyle : {display:'none'};
 
-		// console.log({props, formData, form: props.workerData._workerFormData, selSt: props.workerData._selectedStation,
+		// console.log({props, formData, form: props.workerData._workerFormData, selSt: props.workerData.selectedStation,
 		// 	hasErrors: props.workerData.hasErrors, errors, isJobDefComplete: props.workerData.isJobDefComplete,
-		// 	jobDef: props.workerData.jobDef, ds
+		// 	jobDef: props.workerData.jobDef, ds, disabledDates: props.workerData.selectedStation.disabledDates
 		// });
 
 		return <div className="row">
@@ -131,6 +131,7 @@ export default class MapView extends Component {
 						min={new Date('2000-01-01')}
 						max={new Date()}
 						maxDate={new Date()}
+						disabledDates={props.workerData.selectedStation.disabledDates}
 					/>
 				</div>
 
@@ -148,6 +149,7 @@ export default class MapView extends Component {
 						min={new Date('2000-01-01')}
 						max={new Date()}
 						maxDate={new Date()}
+						disabledDates={props.workerData.selectedStation.disabledDates}
 					/>
 				</div>
 

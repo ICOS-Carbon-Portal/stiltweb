@@ -1,14 +1,15 @@
 export default class StationInfo {
-	constructor(lat, lon, alt, siteId, name) {
+	constructor(lat, lon, alt, siteId, name, disabledDates) {
 		this._lat = lat || undefined,
 		this._lon = lon || undefined,
 		this._alt = alt || undefined,
 		this._siteId = siteId || '',
-		this._name = name || ''
+		this._name = name || '',
+		this._disabledDates = disabledDates || []
 	}
 
 	withSelectedStation(selSt){
-		return new StationInfo(selSt.lat, selSt.lon, selSt.alt, selSt.siteId, selSt.name);
+		return new StationInfo(selSt.lat, selSt.lon, selSt.alt, selSt.siteId, selSt.name, selSt.disabledDates);
 	}
 
 	withLat(lat){
@@ -46,5 +47,9 @@ export default class StationInfo {
 
 	get name(){
 		return this._name;
+	}
+
+	get disabledDates(){
+		return this._disabledDates;
 	}
 }
