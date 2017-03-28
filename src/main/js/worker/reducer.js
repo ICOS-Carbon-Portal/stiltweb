@@ -24,8 +24,8 @@ export default function(state, action){
 			if (workerData.isFormAndExistingStationDifferent) {
 				const msg = 'You have entered the site code for an existing station. Press "Load data" to use its parameters.';
 				return update({workerData}, {toasterData: new Toaster.ToasterData(Toaster.TOAST_INFO, msg)});
-			} else if (workerData.isJobDefComplete && !state.userId){
-				const msg = 'You have to log in before dispatching a new STILT job.';
+			} else if (workerData.isJobDefComplete && !state.currUser.email){
+				const msg = 'You have to log in before submitting a new STILT job.';
 				return update({workerData}, {toasterData: new Toaster.ToasterData(Toaster.TOAST_INFO, msg)});
 			} else {
 				return update({workerData});
