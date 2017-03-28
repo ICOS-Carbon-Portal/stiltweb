@@ -194,14 +194,14 @@ export default class MapView extends Component {
 						<button style={buttonStyle}
 								className="btn btn-primary cp-pointer"
 								disabled={!props.workerData.isJobDefComplete || !props.currUser.email}
-								onClick={props.startJob}>Dispatch STILT job</button>
+								onClick={props.startJob}>Submit STILT job</button>
 
 					</div>
 				</div>
 			</div>
 
 			<div className="col-md-2" style={{minWidth: 310}}>
-				<h4>Dispatched STILT jobs</h4>
+				<h4>Submitted STILT jobs</h4>
 
 				<div className="panel panel-default">
 					<div className="panel-body">
@@ -299,8 +299,8 @@ function toInt(str){
 	if (str.length == 0) return str;
 
 	const res = parseInt(str);
-	if(!isNumber(res)) throw new Error("This is not a number")
-	else if(res.toString() != str || res <= -1) throw new Error("The number is not a non-negative integer")
+	if(!isNumber(res)) throw new Error("This is not a number");
+	else if(res.toString() != str || res <= -1) throw new Error("The number is not a non-negative integer");
 	else return res;
 }
 
