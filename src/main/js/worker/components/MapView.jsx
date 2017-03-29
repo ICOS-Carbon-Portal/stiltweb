@@ -25,7 +25,7 @@ export default class MapView extends Component {
 	}
 
 	componentWillUpdate(nextProps){
-		if (nextProps.currUser && !nextProps.currUser.email && this.displayLoginInfo){
+		if (this.displayLoginInfo && nextProps.currUser && !nextProps.currUser.email){
 			this.displayLoginInfo = false;
 			nextProps.toastInfo("You have to be logged in to start a new job");
 		}
@@ -70,7 +70,7 @@ export default class MapView extends Component {
 		const labelStyle = {display: 'block', clear: 'both'};
 		const buttonStyle = {display: 'block', clear: 'both', marginTop: 40};
 		const verticalMargin = {marginBottom: 20};
-		const ds = this.props.dashboardState;
+		const ds = props.dashboardState;
 		const calStyle = {position:'absolute', left: -5, display:'inline', zIndex: 9, boxShadow: '7px 7px 5px #888'};
 		const startCalStyle = this.state.startCalVisible ? calStyle : {display:'none'};
 		const stopCalStyle = this.state.stopCalVisible ? calStyle : {display:'none'};
@@ -270,7 +270,15 @@ To: ${job.stop}`
 		}
 	}
 
-	return <h4><span title={lbl.title} className={"cp-help " + lbl.cls}>{lbl.txt}</span></h4>;
+	return <h4>
+		<span title={lbl.title} className={"cp-help " + lbl.cls}>
+			{myJob
+				? <span className="badge alert-warning" style={{ marginRight: 5}}>My job</span>
+				: null
+			}
+			{lbl.txt}
+		</span>
+	</h4>;
 };
 
 function toLat(str){
