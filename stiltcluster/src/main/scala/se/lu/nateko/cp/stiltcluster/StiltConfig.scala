@@ -6,7 +6,7 @@ import java.io.File
 
 case class StiltEnv(debugRun: Option[String],
 					debugLog: Option[String],
-					mainFolder: File,
+					mainDirectory: File,
 					launchScript: String,
 					containerName: String,
 					logSizeLimit: Int)
@@ -38,7 +38,7 @@ object ConfigLoader {
 		StiltEnv(
 			debugRun = debugRun,
 			debugLog = debugLog,
-			mainFolder = new File(conf.getString("mainFolder")),
+			mainDirectory = new File(conf.getString("mainDirectory")),
 			launchScript = conf.getString("launchScript"),
 			containerName = conf.getString("containerName"),
 			logSizeLimit = conf.getInt("logSizeLimit")

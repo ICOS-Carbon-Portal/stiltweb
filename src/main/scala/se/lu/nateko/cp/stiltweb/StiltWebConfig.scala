@@ -17,8 +17,8 @@ case class NetCdfConfig(
 case class StiltWebConfig(
 	admins: Seq[String],
 	auth: PublicAuthConfig,
-	mainFolder: String,
-	jobsOutputFolder: String,
+	mainDirectory: String,
+	jobsOutputDirectory: String,
 	netcdf: NetCdfConfig,
 	stations: Seq[Seq[String]]
 )

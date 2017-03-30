@@ -16,18 +16,18 @@ import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
 class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) {
 	import StiltResultFetcher._
 
-	val mainFolder = jobId match{
-		case None => config.mainFolder
-		case Some(job) => config.jobsOutputFolder + "/" + job
+	val mainDirectory = jobId match{
+		case None => config.mainDirectory
+		case Some(job) => config.jobsOutputDirectory + "/" + job
 	}
 
-    private def listSubdirectories(parent: String, child: String): Array[File] = {
-        new File(parent, child).listFiles() match {
-            // listFiles() will return null (!) if the directory doesn't exist.
-            case null  => Array.empty[File]
-            case files => files.filter(_.isDirectory)
-        }
-    }
+	private def listSubdirectories(parent: String, child: String): Array[File] = {
+		new File(parent, child).listFiles() match {
+			// listFiles() will return null (!) if the directory doesn't exist.
+			case null  => Array.empty[File]
+			case files => files.filter(_.isDirectory)
+		}
+	}
 
 	def resFileName(year: Int): String = resFileGlob.replace("????", year.toString)
 
@@ -42,11 +42,11 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 
 		val stiltToYears: Map[String, Seq[Int]] = getStationYears
 
-        val stationFpFolders = listSubdirectories(mainFolder, footPrintsFolder)
+		val stationFpDirectories = listSubdirectories(mainDirectory, footPrintsDirectory)
 
-		stationFpFolders.map{folder =>
-			val stiltId = folder.getName
-			val (lat, lon, alt) = latLonAlt(folder)
+		stationFpDirectories.map{directory =>
+			val stiltId = directory.getName
+			val (lat, lon, alt) = latLonAlt(directory)
 			val years = stiltToYears.get(stiltId).getOrElse(Nil)
 			StiltStationInfo(stiltId, lat, lon, alt, years, stiltToIcos.get(stiltId), stiltToWdcgg.get(stiltId))
 		}
@@ -58,13 +58,13 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 			case resFilePattern(dddd) => dddd.toInt
 		}
 
-        val stationFolders = listSubdirectories(mainFolder, resFolder)
+		val stationDirectories = listSubdirectories(mainDirectory, resDirectory)
 
-		stationFolders.map(stFold => (stFold.getName, stationYears(stFold))).toMap
+		stationDirectories.map(stFold => (stFold.getName, stationYears(stFold))).toMap
 	}
 
-	private def latLonAlt(footPrintsFolder: File): (Double, Double, Int) = {
-		val fpFileNames = listFileNames(footPrintsFolder.toPath, "foot*.nc", Some(5))
+	private def latLonAlt(footPrintsDirectory: File): (Double, Double, Int) = {
+		val fpFileNames = listFileNames(footPrintsDirectory.toPath, "foot*.nc", Some(5))
 
 		val latLonAlts = fpFileNames.collect{
 			case fp @ fpnameRegex(latStr, latSignStr, lonStr, lonSignStr, altStr) =>
@@ -82,17 +82,17 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 		}
 
 		latLonAlts.headOption.getOrElse(throw new Exception(
-			s"Could not find a parseable footprint file in folder ${footPrintsFolder.getAbsolutePath}")
+			s"Could not find a parseable footprint file in directory ${footPrintsDirectory.getAbsolutePath}")
 		)
 	}
 
 	def getFootprintFiles(stationId: String, year: Int): Seq[String] = {
-		val stationPath = Paths.get(mainFolder, footPrintsFolder, stationId)
+		val stationPath = Paths.get(mainDirectory, footPrintsDirectory, stationId)
 		listFileNames(stationPath, "foot" + year + "*.nc")
 	}
 
 	def getStiltResultJson(stationId: String, year: Int, columns: Seq[String]): Source[ByteString, NotUsed] = {
-		val resultsPath = Paths.get(mainFolder, resFolder, stationId, resFileName(year))
+		val resultsPath = Paths.get(mainDirectory, resDirectory, stationId, resFileName(year))
 		val src = IoSource.fromFile(resultsPath.toFile)
 		NumericScv.getJsonSource(src, columns)
 	}
@@ -101,8 +101,8 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 		val factory = {
 			import config.netcdf._
 			import scala.collection.JavaConversions._
-			val footprintsFolder = Paths.get(mainFolder, footPrintsFolder, stationId).toString + File.separator
-			new ViewServiceFactoryImpl(footprintsFolder, dateVars, latitudeVars, longitudeVars, elevationVars)
+			val footprintsDirectories = Paths.get(mainDirectory, footPrintsDirectory, stationId).toString + File.separator
+			new ViewServiceFactoryImpl(footprintsDirectories, dateVars, latitudeVars, longitudeVars, elevationVars)
 		}
 		val service = factory.getNetCdfViewService(filename)
 		val date = service.getAvailableDates()(0)
@@ -114,8 +114,8 @@ object StiltResultFetcher{
 
 	val resFileGlob = "stiltresults????.csv"
 	val resFilePattern = resFileGlob.replace("????", "(\\d{4})").r
-	val resFolder = "Results"
-	val footPrintsFolder = "Footprints"
+	val resDirectory = "Results"
+	val footPrintsDirectory = "Footprints"
 	val fpnameRegex = """^foot\d{4}x\d\dx\d\dx\d\dx(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+).+$""".r
 
 	def listFileNames(dir: Path, fileGlob: String, limit: Option[Int] = None): Seq[String] = {

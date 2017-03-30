@@ -142,10 +142,10 @@ object Worker{
 	private val Tick = "Tick"
 
 	private def removeJobDirectories(env: StiltEnv, jobId: String ): Try[Unit] = {
-		val logsFolder = s"${env.mainFolder}/${jobId}"
-		val outputFolder = s"${env.mainFolder}/Output/${jobId}"
+		val logsDirector = s"${env.mainDirectory}/${jobId}"
+		val outputDirectory = s"${env.mainDirectory}/Output/${jobId}"
 		val cmd = Seq("docker", "exec", env.containerName, "/bin/bash", "-c",
-					  s"rm -rf '${logsFolder}' '${outputFolder}'")
+					  s"rm -rf '${logsDirector}' '${outputDirectory}'")
 
 		Try{
 			val proc = new ProcessBuilder(cmd: _*).start()
@@ -161,7 +161,7 @@ object Worker{
 					val errMsg = new String(errBytes, "UTF-8")
 					Failure(new Exception(s"Exit code was $exitCode, the stderr was\n$errMsg"))
 				}
-			} else Failure(new Exception(s"Folder removal timed out"))
+			} else Failure(new Exception(s"Directory removal timed out"))
 		}.flatten
 	}
 
@@ -178,7 +178,7 @@ object Worker{
 		//docker exec stilt_stilt_1 /bin/bash -c \
 		// '/opt/STILT_modelling/start.stilt.sh HTM 56.10 13.42 150 20120615 20120616 testrun01 6'
 		val job = run.job
-		val script = new File(env.mainFolder, env.launchScript).getAbsolutePath
+		val script = new File(env.mainDirectory, env.launchScript).getAbsolutePath
 
 		Seq(
 			"docker", "exec", env.containerName, "/bin/bash", "-c",
@@ -200,7 +200,7 @@ object Worker{
 
 		Seq(
 			"docker", "exec", env.containerName, "/bin/bash", "-c",
-			s"sleep 1 && cd ${env.mainFolder} && tail $logList"
+			s"sleep 1 && cd ${env.mainDirectory} && tail $logList"
 		)
 	}
 
