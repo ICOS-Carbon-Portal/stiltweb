@@ -24,9 +24,7 @@ src/main/resources/bundle.js
 .cache
 
 #Front end specific
-/src/main/resources/www/stilt.js
-/src/main/resources/www/worker.js
-/src/main/resources/www/viewer.js
+src/main/resources/www/
 
 nohup.out
 /outText.txt
@@ -39,3 +37,4 @@ nohup.out
 /stiltcluster/bin/
 /debug_script.sh
 /fake_log_output.sh
+/fakejob.txt
