@@ -22,7 +22,7 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 
 	val workers = Map.empty[String, ActorRef]
 	val runs = Map.empty[String, JobRun]
-	val status = Map.empty[String, JobStatus]
+	val status = Map.empty[String, ExecutionStatus]
 
 	private val devnull = context.system.actorOf(Props.empty)
 
@@ -55,7 +55,7 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 			val id = run.job.id
 			workers += ((id, worker))
 			runs += ((id, run))
-			status += ((id, JobStatus.init(id)))
+			status += ((id, ExecutionStatus.init(id)))
 			worker ! run
 			receptionist ! myStatus
 		}
@@ -70,11 +70,11 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 				status -= id
 			}
 
-		case js: JobStatus =>
-			status += ((js.id, js))
-			if(js.exitValue.isDefined){
+		case es: ExecutionStatus =>
+			status += ((es.id, es))
+			if(es.exitValue.isDefined){
 				sender() ! PoisonPill
-				workers -= js.id
+				workers -= es.id
 			}
 			receptionist ! myStatus
 

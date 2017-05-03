@@ -9,7 +9,10 @@ case object StopAllWork
 
 case class CancelJob(id: String)
 
-case class JobStatus(
+
+/** Tracks the status of a Stilt process that is currently executing (i.e as
+  * a Unix program) . */
+case class ExecutionStatus(
 	id: String,
 	exitValue: Option[Int],
 	output: Seq[String],
@@ -17,12 +20,13 @@ case class JobStatus(
 	errors: Seq[String]
 )
 
-object JobStatus{
-	def init(id: String) = JobStatus(id, None, Nil, Nil, Nil)
+object ExecutionStatus{
+	def init(id: String) = ExecutionStatus(id, None, Nil, Nil, Nil)
 }
 
 case class JobCanceled(id: String)
 
+/** The description of a Stilt simulation to be run. */
 case class Job(
 	siteId: String,
 	lat: Double,
@@ -37,7 +41,7 @@ case class Job(
 
 case class JobRun(job: Job, parallelism: Int)
 
-case class WorkMasterStatus(work: Seq[(JobRun, JobStatus)], freeCores: Int){
+case class WorkMasterStatus(work: Seq[(JobRun, ExecutionStatus)], freeCores: Int){
 	def isRunning(job: Job): Boolean = work.exists{
 		case (JobRun(running, _), _) => running == job
 	}

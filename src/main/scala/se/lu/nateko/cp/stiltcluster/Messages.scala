@@ -5,7 +5,7 @@ import scala.collection.immutable.Seq
 
 case object Subscribe
 
-case class JobInfo(run: JobRun, status: JobStatus, executionNode: Address){
+case class JobInfo(run: JobRun, status: ExecutionStatus, executionNode: Address){
 	def finished = status.exitValue.isDefined
 	def id = status.id
 }

@@ -21,7 +21,7 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 	private var logsProc: ProcessRunner = null
 	private var stiltRun: JobRun = null
 
-	private var status = JobStatus.init(null)
+	private var status = ExecutionStatus.init(null)
 	private var pulse: Cancellable = null
 
 	private val log = context.system.log
@@ -75,7 +75,7 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 					log.warning("FAILED STARTING JOB RUN " + stiltRun)
 					log.warning("... " + err.getMessage)
 
-					status = JobStatus(
+					status = ExecutionStatus(
 						id = run.job.id,
 						exitValue = Some(1),
 						output = Nil,
@@ -118,7 +118,7 @@ class Worker(conf: StiltEnv, master: ActorRef) extends Actor{
 	}
 
 	private def updateStatus(): Unit = if(status.exitValue.isEmpty){
-		status = JobStatus(
+		status = ExecutionStatus(
 			id = stiltRun.job.id,
 			exitValue = stiltProc.exitValue(),
 			output = stiltProc.outputLines(),
