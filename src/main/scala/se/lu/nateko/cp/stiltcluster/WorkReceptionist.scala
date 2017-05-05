@@ -92,8 +92,8 @@ class WorkReceptionist extends Actor{
 	private def getDashboardInfo = DashboardInfo(
 		running = nodes.flatMap{
 			case (node, WorkMasterStatus(work, _)) =>
-				work.collect{
-					case (run, status) if status.exitValue.isEmpty => JobInfo(run, status, node.path.address)
+				work.collect{ case (job, status) if status.exitValue.isEmpty =>
+					JobInfo(job, status, node.path.address)
 				}
 		}.toVector,
 		done = done.toVector,
@@ -102,7 +102,7 @@ class WorkReceptionist extends Actor{
 
 	private def findNodeByJob(jobId: String): Option[ActorRef] = nodes.keys.find{
 		node => nodes(node).work.exists{
-			case (jobRun, _) => jobRun.job.id == jobId
+			case (job, _) => job.id == jobId
 		}
 	}
 

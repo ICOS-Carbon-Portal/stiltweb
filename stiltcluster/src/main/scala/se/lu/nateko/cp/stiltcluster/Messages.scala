@@ -41,9 +41,9 @@ case class Job(
 
 case class JobRun(job: Job, parallelism: Int)
 
-case class WorkMasterStatus(work: Seq[(JobRun, ExecutionStatus)], freeCores: Int){
-	def isRunning(job: Job): Boolean = work.exists{
-		case (JobRun(running, _), _) => running == job
+case class WorkMasterStatus(work: Seq[(Job, ExecutionStatus)], freeCores: Int){
+	def isRunning(query: Job): Boolean = work.exists{
+		case (job, status) => job == query && ! status.exitValue.isDefined
 	}
 }
 
