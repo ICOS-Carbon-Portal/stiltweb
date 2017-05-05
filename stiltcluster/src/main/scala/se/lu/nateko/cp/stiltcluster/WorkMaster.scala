@@ -18,7 +18,6 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 
 	private val log = context.system.log
 	val cluster = Cluster(context.system)
-	val coresPoolSize = Runtime.getRuntime.availableProcessors - reservedCores
 
 	val workers = Map.empty[String, ActorRef]
 	val runs = Map.empty[String, JobRun]
@@ -110,16 +109,13 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 			if(workers.isEmpty) context stop self
 	}
 
-	private def myStatus = WorkMasterStatus(
-		work = runs.keys.map{id => (runs(id), status(id))}.toVector,
-		freeCores = freeCores
-	)
+	private def myStatus: WorkMasterStatus =
+		WorkMasterStatus(running.values.map { wip => (wip.job, wip.status) }.toList, freeCores)
 
 	private def freeCores: Int = {
-		val occupied = runs.values.collect{
-			case run if status.get(run.job.id).flatMap(_.exitValue).isEmpty => run.parallelism
-		}.sum
-		Math.max(coresPoolSize - occupied, 0)
+		val max  = Runtime.getRuntime.availableProcessors - reservedCores
+		val used = running.values.collect{case w if ! w.status.exitValue.isDefined => w.parallelism }.sum
+		Math.max(max - used, 0)
 	}
 
 	private def preferredParallelism: Int = Math.ceil(freeCores.toDouble / 2).toInt
