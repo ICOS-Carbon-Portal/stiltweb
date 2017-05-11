@@ -1,4 +1,3 @@
-
 cancelable in Global := true
 
 lazy val commonSettings = Seq(
@@ -74,18 +73,28 @@ lazy val stiltweb = (project in file("."))
 
 			val args: Seq[String] = sbt.Def.spaceDelimited().parsed
 
-			val check = args.toList match{
+			/* FIXME: It's confusing that you can do one of the following:
+					  1: a test deployment to production - "deploy"
+					  2: a real deployment to production - "deploy to production"
+					  3: a real deloyment to test        - "deploy to test"
+
+			   Give this some thought and come up with something more coherent.
+			   'check' is the '--check' argument to ansible
+			   'relInvPath' is the relative path to the ansible inventory file
+			 */
+			val (check, relInvPath) = args.toList match{
 				case "to" :: "production" :: Nil =>
 					log.info("Performing a REAL deployment to production")
-					""
+					("", "../infrastructure/devops/production.inventory")
+				case "to" :: "test" :: Nil =>
+					("", "../infrastructure/devops/test.inventory")
 				case _ =>
 					log.warn("Performing a TEST deployment, use 'deploy to production' for a real one")
-					"--check"
+					("--check", "../infrastructure/devops/production.inventory")
 			}
 			frontendThenAssembly.value
 			val ymlPath = new java.io.File("../infrastructure/devops/stilt.yml").getCanonicalPath
-			val inventoryPath = new java.io.File("../infrastructure/devops/production.inventory").getCanonicalPath
-			sbt.Process(s"""ansible-playbook $check -i $inventoryPath $ymlPath""").run(true).exitValue()
+			val inventoryPath = new java.io.File(relInvPath).getCanonicalPath
+			sbt.Process(s"""ansible-playbook -t deploy $check -i $inventoryPath $ymlPath""").run(true).exitValue()
 		}
 	)
-
