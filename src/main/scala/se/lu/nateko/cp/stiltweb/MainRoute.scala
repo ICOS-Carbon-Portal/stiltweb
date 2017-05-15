@@ -115,7 +115,8 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		} ~
 		path("whoami"){
 			user{userId =>
-				complete((StatusCodes.OK, WhoamiResult(userId.email)))
+				complete((StatusCodes.OK,
+						  WhoamiResult(userId.email, config.admins.exists(_ == userId.email))))
 			} ~
 			complete((StatusCodes.OK, WhoamiResult("")))
 		}
