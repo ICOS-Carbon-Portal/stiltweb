@@ -30,6 +30,9 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			path("stationinfo") {
 				complete(service.getStationInfos)
 			} ~
+			path("availablemonths") {
+				complete(service.availableInputMonths)
+			} ~
 			redirectToTrailingSlashIfMissing(StatusCodes.Found){
 				pathSingleSlash {
 					complete(views.html.ViewerPage())

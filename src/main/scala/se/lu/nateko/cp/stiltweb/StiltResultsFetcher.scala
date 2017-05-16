@@ -108,6 +108,33 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 		val date = service.getAvailableDates()(0)
 		service.getRaster(date, "foot", null)
 	}
+
+	/** List the months for which available meteorology input data is available.
+	  *
+	  * To start the actual STILT simulations we need input data. That data is
+	  * in the form of meteorology data and resides on local disk, in the
+	  * directory named by the `metDataDir' config value. This method is called
+	  * (through the JSON API) by the web frontend to restrict the calendar used
+	  * to select date ranges for jobs.
+	  *
+	  * The directory on disk will have files looking like this:
+	  *   /mnt/additional_disk/WORKER/Input/Metdata/Europe2/ECmetF.12010100.IN
+	  *   /mnt/additional_disk/WORKER/Input/Metdata/Europe2/ECmetF.12110100.arl
+	  *   /mnt/additional_disk/WORKER/Input/Metdata/Europe2/ECmetF.12030100.arl
+	  *   /mnt/additional_disk/WORKER/Input/Metdata/Europe2/ECmetF.12040100.IN
+	  *   /mnt/additional_disk/WORKER/Input/Metdata/Europe2/ECmetF.12090100.arl
+	  *
+	  * The .arl files contain the meteorology data. Given the above list of files we return
+	  *   Seq("2012-01", "2012-11", "2012-03", "2012-04", "2012-09")
+	  */
+	def availableInputMonths(): Seq[String] = {
+		val pat = "\\w+\\.(\\d\\d)(\\d\\d)0100\\.arl".r
+		val lst = listFileNames(Paths.get(config.metDataDirectory), "*.arl")
+		lst.sorted.collect	{
+			// "ECmetF.12090100.arl" => (12, 09) => "2012-09"
+			case pat(year, month) => s"20${year}-${month}"
+		}
+	}
 }
 
 object StiltResultFetcher{
