@@ -41,9 +41,7 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 		}.toMap
 
 		val stiltToYears: Map[String, Seq[Int]] = getStationYears
-
 		val stationFpDirectories = listSubdirectories(mainDirectory, footPrintsDirectory)
-
 		stationFpDirectories.map{directory =>
 			val stiltId = directory.getName
 			val (lat, lon, alt) = latLonAlt(directory)

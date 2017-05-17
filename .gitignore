@@ -1,5 +1,4 @@
-local.conf
-/application.conf
+/local.conf
 *.class
 *.log
 

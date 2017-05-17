@@ -198,9 +198,9 @@ export default class MapView extends Component {
 					<div className="panel-body">
 						{ ds.queue.length || ds.done.length || ds.running.length
 							? <div>
-								<Job title="Job queue" jobs={ds.queue}/>
-								<Job title="Running computations" jobs={ds.running} />
-								<Job title="Finished computations" jobs={ds.done} />
+								<JobList title="Job queue" isQueue={true} jobs={ds.queue}/>
+								<JobList title="Running computations" jobs={ds.running} />
+								<JobList title="Finished computations" jobs={ds.done} />
 								<button style={buttonStyle} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
 							</div>
 							: <div>No jobs have been submitted</div>
@@ -213,15 +213,16 @@ export default class MapView extends Component {
 	}
 }
 
-const Job = props => props.jobs.length
+const JobList = props => props.jobs.length
 	? <div className="panel panel-info">
 		<div className="panel-heading">
 			<h3 className="panel-title">{props.title}</h3>
 		</div>
 		<div className="panel-body">{
-			props.jobs.map((job, i) => {
-				const key = job.run ? job.run.job.siteId + '_' + i : job.siteId + '_' + i;
-				return <JobLabel type={props.type} job={job} key={key} />
+			props.jobs.map(job => {
+				return props.isQueue
+					? <JobLabel job={job} key={job.id} />
+					: <JobLabel job={job.job} status={job.status} key={job.job.id} />;
 			})
 		}
 		</div>
@@ -229,21 +230,20 @@ const Job = props => props.jobs.length
 	: null;
 
 const JobLabel = props => {
-	const isQueue = !props.job.run;
-	const jobDef = isQueue ? props.job : props.job.run.job;
-	const status = props.job.status;
+	const job = props.job;
+	const status = props.status;
 	const lbl = {
-		txt: "Site '" + jobDef.siteId + "'",
+		txt: "Site '" + job.siteId + "'",
 		cls: "label label-default",
-		title: `Site Id: ${jobDef.siteId}
-Latitude: ${jobDef.lat}
-Longitude: ${jobDef.lon}
-Altitude: ${jobDef.alt}
-From: ${jobDef.start}
-To: ${jobDef.stop}`
+		title: `Site Id: ${job.siteId}
+Latitude: ${job.lat}
+Longitude: ${job.lon}
+Altitude: ${job.alt}
+From: ${job.start}
+To: ${job.stop}`
 	};
 
-	if (isQueue){
+	if (!status){
 		lbl.txt += " enqueued";
 	} else {
 		if (isNumber(status.exitValue)){
@@ -298,3 +298,4 @@ function toInt(str){
 function isNumber(n){
 	return !isNaN(parseFloat(n)) && isFinite(n);
 }
+

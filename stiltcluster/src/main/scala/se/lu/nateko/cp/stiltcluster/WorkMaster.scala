@@ -24,7 +24,7 @@ import akka.cluster.MemberStatus
   */
 class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 
-	case class WorkInProgress(worker: ActorRef, job: Job, parallelism: Int, status: ExecutionStatus)
+	import WorkMaster.WorkInProgress
 	private val running = scala.collection.mutable.Map.empty[String, WorkInProgress]
 
 	private val log = context.system.log
@@ -76,9 +76,15 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 		// The WorkReceptionist has received our status update and wants us to
 		// clear our knowledge of those jobs that are complete.
 		case Thanks(ids) =>
-			ids.foreach{ id => running.remove(id) match {
-							case None      => log.warning(s"WorkMaster - cannot delete nonexisting job ${id}")
-							case Some(wip) => require(wip.status.exitValue.isDefined) } }
+			ids.foreach{ id =>
+				running.remove(id) match {
+					case None      =>
+						log.warning(s"WorkMaster - cannot delete nonexisting job $id")
+					case Some(wip) =>
+						if(wip.status.exitValue.isEmpty)
+							log.warning(s"WorkMaster - removing incomplete job $id")
+				}
+			}
 
 		// One of our workers is updating us on its progress
 		case s: ExecutionStatus =>
@@ -90,8 +96,8 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 			// exited) then shut down the worker and inform the receptionist.
 			if(s.exitValue.isDefined){
 				sender() ! PoisonPill
-				receptionist ! myStatus
 			}
+			receptionist ! myStatus
 
 		case state: CurrentClusterState =>
 			state.members.filter(_.status == MemberStatus.Up) foreach register
@@ -150,6 +156,8 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 }
 
 object WorkMaster{
+
+	private case class WorkInProgress(worker: ActorRef, job: Job, parallelism: Int, status: ExecutionStatus)
 
 	def props(conf: StiltEnv) = Props(classOf[WorkMaster], conf, 0)
 	def props(conf: StiltEnv, reservedCores: Int) = Props(classOf[WorkMaster], conf, reservedCores)

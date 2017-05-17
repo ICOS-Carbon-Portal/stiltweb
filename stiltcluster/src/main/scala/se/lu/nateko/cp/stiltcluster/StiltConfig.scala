@@ -15,7 +15,7 @@ case class StiltEnv(debugRun: Option[String],
 object ConfigLoader {
 
 	def load(extraResource: Option[String] = None): Config = ConfigFactory
-		.parseFile(new File("application.conf"))
+		.parseFile(new File("local.conf"))
 		.withFallback(extraResource match {
 						  case Some(extra) => ConfigFactory.parseResources(extra)
 						  case None => ConfigFactory.empty()
