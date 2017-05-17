@@ -57,8 +57,8 @@ class WorkReceptionist extends Actor{
 
 			log.info(s"WorkReceptionist receiving workmaster status, freeCores = ${wms.freeCores}, work=${wms.work.map(_._1)}")
 			val completed = wms.work.collect{
-				case (run, status) if status.exitValue.isDefined =>
-					JobInfo(run, status, workMaster.path.address)
+				case (job, status) if status.exitValue.isDefined =>
+					JobInfo(job, status, workMaster.path.address)
 			}
 			done ++= completed
 
