@@ -31,9 +31,13 @@ class WorkReceptionist extends Actor{
 			subscribers -= sender()
 
 		case job: Job =>
+			log.info("WorkReceptionist receiving job")
 			queue.enqueue(job)
 			//if all workmasters are busy inform the clients about the queue increase:
-			if(!dispatchJob()) notifySubscribers()
+			if(!dispatchJob()) {
+				log.info("WorkReceptionist not dispatching job, all busy")
+				notifySubscribers()
+			}
 
 		case msg @ CancelJob(id) =>
 			findNodeByJob(id).foreach(_ ! msg)
@@ -51,6 +55,7 @@ class WorkReceptionist extends Actor{
 
 			nodes += ((workMaster, wms))
 
+			log.info(s"WorkReceptionist receiving workmaster status, freeCores = ${wms.freeCores}, work=${wms.work.map(_._1)}")
 			val completed = wms.work.collect{
 				case (run, status) if status.exitValue.isDefined =>
 					JobInfo(run, status, workMaster.path.address)
@@ -65,6 +70,7 @@ class WorkReceptionist extends Actor{
 			notifySubscribers()
 
 		case PleaseSendDashboardInfo =>
+			log.error("WorkReceptionist receiving request for dashboardinfo")
 			sender ! getDashboardInfo
 
 		case StopAllWork =>
@@ -78,6 +84,7 @@ class WorkReceptionist extends Actor{
 	}
 
 	private def notifySubscribers(): Unit = {
+		log.info("WorkReceptionist notifying subscribers")
 		val info = getDashboardInfo
 		subscribers.foreach(_ ! info)
 	}
@@ -92,8 +99,8 @@ class WorkReceptionist extends Actor{
 	private def getDashboardInfo = DashboardInfo(
 		running = nodes.flatMap{
 			case (node, WorkMasterStatus(work, _)) =>
-				work.collect{
-					case (run, status) if status.exitValue.isEmpty => JobInfo(run, status, node.path.address)
+				work.collect{ case (job, status) if status.exitValue.isEmpty =>
+					JobInfo(job, status, node.path.address)
 				}
 		}.toVector,
 		done = done.toVector,
@@ -102,7 +109,7 @@ class WorkReceptionist extends Actor{
 
 	private def findNodeByJob(jobId: String): Option[ActorRef] = nodes.keys.find{
 		node => nodes(node).work.exists{
-			case (jobRun, _) => jobRun.job.id == jobId
+			case (job, _) => job.id == jobId
 		}
 	}
 

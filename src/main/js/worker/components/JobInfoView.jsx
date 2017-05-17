@@ -23,11 +23,9 @@ export default class JobInfoView extends Component {
 	render() {
 		const props = this.props;
 		const jinfo = this.props.jobInfo;
-	
-		const par = jinfo.run ? jinfo.run.parallelism : undefined;
-		const job = jinfo.run ? jinfo.run.job : jinfo;
-		const status = jinfo.status || undefined;
-		const jobId = jinfo.status ? jinfo.status.id : jinfo.id;
+		const job = jinfo.job;
+		const status = jinfo.status;
+		const jobId = job.id;
 		const allowCancel = !!props.cancelJob && !!props.toggleYesNoView
 			&& (props.currUser.email === job.userId || props.currUser.isAdmin);
 
@@ -61,7 +59,7 @@ export default class JobInfoView extends Component {
 				{
 				this.state.expanded
 					? status
-						? <RunningAndFinished status={status} job={job} jinfo={jinfo} par={par} />
+						? <RunningAndFinished status={status} job={job} jinfo={jinfo} />
 						: <Queue job={job} />
 					: null
 				}
@@ -91,7 +89,7 @@ const HeaderInfo = props => {
 
 	return <span>
 		<span><b>Site id: <i>{job.siteId}</i></b></span>
-		<span> - Submitted {job.jobStart} by {job.userId} ({params})</span>
+		<span> - Submitted by {job.userId} ({params})</span>
 	</span>;
 };
 
@@ -139,7 +137,6 @@ const RunningAndFinished = props => {
 				<div><b>Alt: </b>{job.alt}</div>
 				<div><b>Start: </b>{job.start}</div>
 				<div><b>Stop: </b>{job.stop}</div>
-				<div><b>Number of cores: </b>{props.par}</div>
 				<div><b>Execution node: </b>{jinfo.executionNode}</div>
 			</InfoPanelWithList>
 

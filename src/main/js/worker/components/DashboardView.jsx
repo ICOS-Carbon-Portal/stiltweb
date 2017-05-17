@@ -43,14 +43,14 @@ export default class DashboardView extends Component {
 
 const JobInfoList = props => props.jobs.length
 	? <InfoPanelWithList title={props.title}>{
-				props.jobs.map((jinfo, i) => {
+				props.jobs.map(jinfo => {
 					return <JobInfoView
 						currUser={props.currUser}
 						toggleYesNoView={props.toggleYesNoView}
 						yesNoViewVisible={props.yesNoViewVisible}
 						cancelJob={props.cancelJob}
 						jobInfo={jinfo}
-						key={jinfo.run ? jinfo.run.job.siteId + '_' + i : jinfo.siteId + '_' + i}
+						key={jinfo.job.id}
 					/>;
 				})
 		}</InfoPanelWithList>
