@@ -22,7 +22,7 @@ export default class JobInfoView extends Component {
 
 	render() {
 		const props = this.props;
-		const jinfo = this.props.jobInfo;
+		const jinfo = props.jobInfo;
 		const job = jinfo.job;
 		const status = jinfo.status;
 		const jobId = job.id;
@@ -104,6 +104,7 @@ const Queue = props => {
 				<div><b>Alt: </b>{job.alt}</div>
 				<div><b>Start: </b>{job.start}</div>
 				<div><b>Stop: </b>{job.stop}</div>
+				<div><b>In queue since: </b>{job.timeEnqueued}</div>
 			</InfoPanelWithList>
 		</div>
 	);
@@ -120,16 +121,16 @@ const RunningAndFinished = props => {
 				{Number.isInteger(status.exitValue)
 					? status.exitValue === 0
 						? <div style={{marginBottom: 10}}>
-							<div>Calculation started {job.jobStart} and finished {job.jobStop}</div>
+							<div>Calculation started {job.timeStarted} and finished {job.timeStopped}</div>
 							<div>
 								View results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a>
 							</div>
 						</div>
 						: <div style={{marginBottom: 10}}>
-							<div>Calculation started {job.jobStart} and failed {job.jobStop}</div>
+							<div>Calculation started {job.timeStarted} and failed {job.timeStopped}</div>
 						</div>
 					: <div style={{marginBottom: 10}}>
-						Calculation started {job.jobStart}
+						Calculation started {job.timeStarted}
 					</div>
 				}
 				<div><b>Lat: </b>{job.lat}</div>
@@ -138,6 +139,7 @@ const RunningAndFinished = props => {
 				<div><b>Start: </b>{job.start}</div>
 				<div><b>Stop: </b>{job.stop}</div>
 				<div><b>Execution node: </b>{jinfo.executionNode}</div>
+				<div><b>Was put in the queue at: </b>{job.timeEnqueued}</div>
 			</InfoPanelWithList>
 
 			<OutputStrings title="Standard output" stylecontext="success" strings={status.output}/>

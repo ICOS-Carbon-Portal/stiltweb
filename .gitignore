@@ -34,5 +34,6 @@ nohup.out
 \#*\#
 
 .idea
+/.cache-tests
 /bin/
 /stiltcluster/bin/
