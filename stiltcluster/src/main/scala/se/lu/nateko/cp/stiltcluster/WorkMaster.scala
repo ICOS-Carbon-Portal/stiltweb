@@ -53,7 +53,7 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 				log.error(s"WorkMaster already has a job running with id ${job.id}")
 			} else {
 				val wip = WorkInProgress(context.actorOf(Worker.props(conf, self)),
-										 job, preferredParallelism,
+										 job.copySetStarted, preferredParallelism,
 										 ExecutionStatus.init(job.id))
 
 				running(job.id) = wip
@@ -88,13 +88,13 @@ class WorkMaster(conf: StiltEnv, reservedCores: Int) extends Actor{
 
 		// One of our workers is updating us on its progress
 		case s: ExecutionStatus =>
-			// Look up our WorkInProgress - it must exist.
-			val wip = running(s.id)
 			// Update its status field with current status
-			running(s.id) = wip.copy(status=s)
+			running(s.id) = running(s.id).copy(status=s)
 			// If the process has exited (i.e, the actual stilt unix process has
 			// exited) then shut down the worker and inform the receptionist.
 			if(s.exitValue.isDefined){
+				val old = running(s.id)
+				running(s.id) = old.copy(job=old.job.copySetStopped)
 				sender() ! PoisonPill
 			}
 			receptionist ! myStatus

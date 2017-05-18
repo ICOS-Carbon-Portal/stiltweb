@@ -32,7 +32,7 @@ class WorkReceptionist extends Actor{
 
 		case job: Job =>
 			log.info("WorkReceptionist receiving job")
-			queue.enqueue(job)
+			queue.enqueue(job.copySetEnqueued)
 			//if all workmasters are busy inform the clients about the queue increase:
 			if(!dispatchJob()) {
 				log.info("WorkReceptionist not dispatching job, all busy")

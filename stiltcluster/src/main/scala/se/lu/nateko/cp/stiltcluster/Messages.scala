@@ -1,6 +1,6 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.time.LocalDate
+import java.time.{ Instant, LocalDate }
 import scala.collection.immutable.Seq
 
 case object Hi
@@ -34,9 +34,21 @@ case class Job(
 	alt: Int,
 	start: LocalDate,
 	stop: LocalDate,
-	userId: String
+	userId: String,
+	timeEnqueued: Option[Instant] = None,
+	timeStarted: Option[Instant] = None,
+	timeStopped: Option[Instant] = None
 ){
 	def id = "job_" + this.hashCode()
+
+	def copySetEnqueued =
+		this.copy(timeEnqueued=Some(Instant.now()))
+
+	def copySetStarted =
+		this.copy(timeStarted=(Some(Instant.now())))
+
+	def copySetStopped =
+		this.copy(timeStopped=Some(Instant.now()))
 }
 
 case class WorkMasterStatus(work: Seq[(Job, ExecutionStatus)], freeCores: Int){

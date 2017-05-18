@@ -1,6 +1,6 @@
 package se.lu.nateko.cp.stiltweb
 
-import java.time.LocalDate
+import java.time.{ Instant, LocalDate }
 
 import akka.actor.Address
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -9,7 +9,8 @@ import se.lu.nateko.cp.stiltcluster.DashboardInfo
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.JobInfo
 import se.lu.nateko.cp.stiltcluster.ExecutionStatus
-import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, RootJsonFormat}
+import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue,
+					JsonFormat, RootJsonFormat, JsObject }
 
 object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -34,7 +35,16 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 		)
 	}
 
-	private val jobDefaultFormat = jsonFormat7(Job)
+
+	implicit object InstantFormat extends JsonFormat[Instant]{
+		def write(i: Instant) = JsString(i.toString)
+		// We never want to read the time{Enqueued,Started,Finished} fields from JSON
+		def read(value: JsValue) = throw new DeserializationException(
+			"JSON-parsing of Instant is not needed/accepted."
+		)
+	}
+
+	private val jobDefaultFormat = jsonFormat10(Job)
 
 	implicit object JobFormat extends RootJsonFormat[Job]{
 		def write(job: Job) = {
