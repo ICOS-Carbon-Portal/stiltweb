@@ -128,10 +128,10 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 	def availableInputMonths(): Seq[String] = {
 		val pat = "\\w+\\.(\\d\\d)(\\d\\d)0100\\.arl".r
 		val lst = listFileNames(Paths.get(config.metDataDirectory), "*.arl")
-		lst.sorted.collect	{
+		lst.collect	{
 			// "ECmetF.12090100.arl" => (12, 09) => "2012-09"
 			case pat(year, month) => s"20${year}-${month}"
-		}
+		}.sorted
 	}
 }
 
