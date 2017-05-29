@@ -131,7 +131,7 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 		lst.collect	{
 			// "ECmetF.12090100.arl" => (12, 09) => "2012-09"
 			case pat(year, month) => s"20${year}-${month}"
-		}.sorted
+		}.toSet.toSeq.sorted
 	}
 }
 
