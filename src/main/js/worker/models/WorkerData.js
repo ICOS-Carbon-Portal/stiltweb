@@ -137,7 +137,6 @@ export default class WorkerData{
 	}
 
 	withSelectedStation(selectedStation, isSourceMapClick){
-		console.log({selectedStation});
 		const siteId = isSourceMapClick
 			? this.isFormSiteIdExisting(this._workerFormData.siteId)
 				? ''

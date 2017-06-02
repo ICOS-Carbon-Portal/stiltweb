@@ -23,7 +23,9 @@ export default class MapView extends Component {
 		};
 
 		this.displayLoginInfo = true;
-		document.body.addEventListener('click', this.onClick.bind(this));
+
+		this.bound_onClick = this.onClick.bind(this);
+		document.body.addEventListener('click', this.bound_onClick);
 	}
 
 	onClick(e){
@@ -75,7 +77,7 @@ export default class MapView extends Component {
 	}
 
 	componentWillUnmount(){
-		document.body.detachEvent('click', this.onClick.bind(this));
+		document.body.removeEventListener('click', this.bound_onClick);
 	}
 
 	render() {
@@ -244,9 +246,9 @@ export default class MapView extends Component {
 					<div className="panel-body">
 						{ ds.queue && (ds.queue.length || ds.done.length || ds.running.length)
 							? <div>
-								<JobList title="Job queue" isQueue={true} jobs={ds.queue}/>
-								<JobList title="Running computations" jobs={ds.running} />
-								<JobList title="Finished computations" jobs={ds.done} />
+								<JobList title="Job queue" isQueue={true} user={props.currUser} jobs={ds.queue}/>
+								<JobList title="Running computations" user={props.currUser} jobs={ds.running} />
+								<JobList title="Finished computations" user={props.currUser} jobs={ds.done} />
 								<button style={buttonStyle} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
 							</div>
 							: <div>No jobs have been submitted</div>
@@ -267,8 +269,8 @@ const JobList = props => props.jobs.length
 		<div className="panel-body">{
 			props.jobs.map(job => {
 				return props.isQueue
-					? <JobLabel job={job} key={job.id} />
-					: <JobLabel job={job.job} status={job.status} key={job.job.id} />;
+					? <JobLabel user={props.user} job={job} key={job.id} />
+					: <JobLabel user={props.user} job={job.job} status={job.status} key={job.job.id} />;
 			})
 		}
 		</div>
@@ -276,6 +278,7 @@ const JobList = props => props.jobs.length
 	: null;
 
 const JobLabel = props => {
+	console.log({props});
 	const job = props.job;
 	const status = props.status;
 	const lbl = {
@@ -305,10 +308,12 @@ To: ${job.stop}`
 		}
 	}
 
+	const myJob = props.user.email === job.userId;
+
 	return <h4>
-		<span title={lbl.title} className={"cp-help " + lbl.cls}>
+		<span title={lbl.title} className={"cp-help " + lbl.cls} style={{verticalAlign: 'middle'}}>
 			{myJob
-				? <span className="badge alert-warning" style={{ marginRight: 5}}>My job</span>
+				? <span className="glyphicon glyphicon-asterisk" style={{ top: 2, marginRight: 5}}></span>
 				: null
 			}
 			{lbl.txt}
