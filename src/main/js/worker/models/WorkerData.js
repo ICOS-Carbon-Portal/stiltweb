@@ -39,48 +39,11 @@ export default class WorkerData{
 				lat: s.lat,
 				lon: s.lon,
 				alt: s.alt,
-				name: s.name,
-				disabledDates: this.getDisabledDates(s.disabledDates)
+				name: s.name
 			};
 		});
 
 		return new WorkerData(stationsFormatted, this._workerFormData, this._selectedStation,this._errors);
-	}
-
-	getDisabledDates(disabledDates){
-		if (!disabledDates) return [];
-		//TODO: Remove this test
-		// disabledDates = [
-		// 	{
-		// 		start: "2017-03-25",
-		// 		stop: "2017-03-27"
-		// 	},
-		// 	{
-		// 		start: "2017-10-28",
-		// 		stop: "2017-10-30"
-		// 	},
-		// 	{
-		// 		start: "2017-11-28",
-		// 		stop: "2017-11-30"
-		// 	}
-		// ];
-
-		const dd = [];
-
-		disabledDates.forEach(disabledDate => {
-			const start = new Date(disabledDate.start);
-			const stop = new Date(disabledDate.stop);
-			start.setMinutes(start.getMinutes() - start.getTimezoneOffset());
-			const d = new Date(disabledDate.start);
-			d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-			dd.push(start);
-
-			while (d.getTime() < stop.getTime()){
-				dd.push(new Date(d.setDate(d.getDate() + 1)));
-			}
-		});
-
-		return dd;
 	}
 
 	resetAndAddNewStation(station){

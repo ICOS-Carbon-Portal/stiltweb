@@ -1,6 +1,7 @@
 import {ERROR, FETCHED_INIT_INFO, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, DATES_UPDATED, USE_EXISTING_STATION, STARTED_JOB} from './actions';
-import {MAP_VIEW, DASHBOARD_VIEW, TOGGLE_YESNO} from './actions';
+import {MAP_VIEW, DASHBOARD_VIEW, TOGGLE_YESNO, FETCHED_MONTHS} from './actions';
 
+import AvailableMonths from './models/AvailableMonths';
 import {copyprops, deepUpdate} from 'icos-cp-utils';
 import * as Toaster from 'icos-cp-toaster';
 
@@ -14,6 +15,9 @@ export default function(state, action){
 
 		case FETCHED_INIT_INFO:
 			return update({workerData: state.workerData.withStations(action.stations), currUser: action.currUser});
+
+		case FETCHED_MONTHS:
+			return update({availableMonths: new AvailableMonths(action.availableMonths)});
 
 		case STATION_SELECTED:
 			return update({workerData: state.workerData.withSelectedStation(action.selectedStation, true)});

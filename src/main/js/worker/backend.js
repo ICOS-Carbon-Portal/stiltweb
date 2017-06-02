@@ -43,6 +43,11 @@ export function getStationInfo(){
 		);
 }
 
+export function getAvailableMonths(){
+	return getJson('/viewer/availablemonths')
+		.then(availableMonths => availableMonths);
+}
+
 export function getWhoIam(){
 	return fetch('/whoami', {credentials: 'include'})
 		.then(checkStatus)

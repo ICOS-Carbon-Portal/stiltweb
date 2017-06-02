@@ -18,10 +18,24 @@ export default class MapView extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			startCalVisible: false,
-			stopCalVisible: false
+			startCalVisible: undefined,
+			stopCalVisible: undefined
 		};
+
 		this.displayLoginInfo = true;
+		document.body.addEventListener('click', this.onClick.bind(this));
+	}
+
+	onClick(e){
+		const activeElement = e.target;
+		const hideCal = !this.startCalDiv.contains(activeElement)
+			&& !this.stopCalDiv.contains(activeElement)
+			&& activeElement !== this.startCalInput
+			&& activeElement !== this.stopCalInput;
+
+		if (hideCal) {
+			this.setState({startCalVisible: false, stopCalVisible: false});
+		}
 	}
 
 	componentWillUpdate(nextProps){
@@ -48,14 +62,20 @@ export default class MapView extends Component {
 
 	onStartDateSelected(date){
 		const dates = new DatesValidation(date, this.props.workerData.formData.stop);
-		setTimeout(() => this.toggleCalendar('startCalVisible'), 1);
+		// setTimeout(() => this.toggleCalendar('startCalVisible'), 1);
+		this.toggleCalendar('startCalVisible');
 		this.props.updateDates(dates);
 	}
 
 	onStopDateSelected(date){
 		const dates = new DatesValidation(this.props.workerData.formData.start, date);
-		setTimeout(() => this.toggleCalendar('stopCalVisible'), 1);
+		// setTimeout(() => this.toggleCalendar('stopCalVisible'), 1);
+		this.toggleCalendar('stopCalVisible');
 		this.props.updateDates(dates);
+	}
+
+	componentWillUnmount(){
+		document.body.detachEvent('click', this.onClick.bind(this));
 	}
 
 	render() {
@@ -71,9 +91,14 @@ export default class MapView extends Component {
 		const buttonStyle = {display: 'block', clear: 'both', marginTop: 40};
 		const verticalMargin = {marginBottom: 20};
 		const ds = props.dashboardState;
-		const calStyle = {position:'absolute', left: -5, display:'inline', zIndex: 9, boxShadow: '7px 7px 5px #888'};
-		const startCalStyle = this.state.startCalVisible ? calStyle : {display:'none'};
-		const stopCalStyle = this.state.stopCalVisible ? calStyle : {display:'none'};
+		const calStyle = {position:'absolute', left: -5, display:'block', zIndex: 9, boxShadow: '7px 7px 5px #888'};
+		// The calendar must have the style set on first load. Otherwise it is shown empty
+		const startCalStyle = this.state.startCalVisible === undefined
+			? {visibility: 'hidden', position:'absolute', left: -5, display:'block', zIndex: 9}
+			: this.state.startCalVisible ? calStyle : {display:'none'};
+		const stopCalStyle = this.state.stopCalVisible === undefined
+			? {visibility: 'hidden', position:'absolute', left: -5, display:'block', zIndex: 9}
+			: this.state.stopCalVisible ? calStyle : {display:'none'};
 
 		// console.log({props, formData, form: props.workerData._workerFormData, selSt: props.workerData.selectedStation,
 		// 	hasErrors: props.workerData.hasErrors, errors, isJobDefComplete: props.workerData.isJobDefComplete,
@@ -117,41 +142,49 @@ export default class MapView extends Component {
 			<div className="col-md-2" style={{minWidth: 310}}>
 				<h4>Create new STILT footprint</h4>
 
-				<div style={startCalStyle}>
-					<InfiniteCalendar
-						locale={{
-							weekStartsOn: 1
-						}}
-						displayOptions={{
-							shouldHeaderAnimate: false
-						}}
-						width={320}
-						height={420}
-						onSelect={this.onStartDateSelected.bind(this)}
-						min={new Date('2000-01-01')}
-						max={new Date()}
-						maxDate={new Date()}
-						disabledDates={props.workerData.selectedStation.disabledDates}
-					/>
-				</div>
+				<div ref={(div) => {this.startCalDiv = div;}} style={startCalStyle}>{
+					props.availableMonths
+						? <InfiniteCalendar
+							locale={{
+								weekStartsOn: 1
+							}}
+							displayOptions={{
+								shouldHeaderAnimate: false,
+								showTodayHelper: false
+							}}
+							width={320}
+							height={420}
+							onSelect={this.onStartDateSelected.bind(this)}
+							min={props.availableMonths.min}
+							minDate={props.availableMonths.min}
+							max={props.availableMonths.max}
+							maxDate={props.availableMonths.max}
+							disabledDates={props.availableMonths.disabledDates}
+						/>
+						: null
+				}</div>
 
-				<div style={stopCalStyle}>
-					<InfiniteCalendar
-						locale={{
-							weekStartsOn: 1
-						}}
-						displayOptions={{
-							shouldHeaderAnimate: false
-						}}
-						width={320}
-						height={420}
-						onSelect={this.onStopDateSelected.bind(this)}
-						min={new Date('2000-01-01')}
-						max={new Date()}
-						maxDate={new Date()}
-						disabledDates={props.workerData.selectedStation.disabledDates}
-					/>
-				</div>
+				<div ref={(div) => {this.stopCalDiv = div;}} style={stopCalStyle}>{
+					props.availableMonths
+						? <InfiniteCalendar
+							locale={{
+								weekStartsOn: 1
+							}}
+							displayOptions={{
+								shouldHeaderAnimate: false,
+								showTodayHelper: false
+							}}
+							width={320}
+							height={420}
+							onSelect={this.onStopDateSelected.bind(this)}
+							min={props.availableMonths.min}
+							minDate={props.availableMonths.min}
+							max={props.availableMonths.max}
+							maxDate={props.availableMonths.max}
+							disabledDates={props.availableMonths.disabledDates}
+						/>
+						: null
+				}</div>
 
 				<div className="panel panel-default">
 					<div className="panel-body">
@@ -177,6 +210,7 @@ export default class MapView extends Component {
 
 						<label style={labelStyle}>Start date (YYYY-MM-DD)</label>
 						<TextInput
+							ref={(TextInput) => {this.startCalInput = TextInput;}}
 							style={verticalMargin}
 							maxLength="10"
 							value={formData.start}
@@ -186,6 +220,7 @@ export default class MapView extends Component {
 
 						<label style={labelStyle}>End date (YYYY-MM-DD)</label>
 						<TextInput
+							ref={(TextInput) => {this.stopCalInput = TextInput;}}
 							style={verticalMargin}
 							maxLength="10"
 							value={formData.stop}
@@ -207,7 +242,7 @@ export default class MapView extends Component {
 
 				<div className="panel panel-default">
 					<div className="panel-body">
-						{ ds.queue.length || ds.done.length || ds.running.length
+						{ ds.queue && (ds.queue.length || ds.done.length || ds.running.length)
 							? <div>
 								<JobList title="Job queue" isQueue={true} jobs={ds.queue}/>
 								<JobList title="Running computations" jobs={ds.running} />

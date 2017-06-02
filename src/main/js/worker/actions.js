@@ -1,6 +1,7 @@
-import {getStationInfo, getWhoIam, makeDashboardWebsocketConnection, enqueueJob, deleteJob} from './backend';
+import {getStationInfo, getWhoIam, makeDashboardWebsocketConnection, enqueueJob, deleteJob, getAvailableMonths} from './backend';
 
 export const FETCHED_INIT_INFO = 'FETCHED_INIT_INFO';
+export const FETCHED_MONTHS = 'FETCHED_MONTHS';
 export const GOT_DASHBOARD_STATE = 'GOT_DASHBOARD_STATE';
 export const STATION_SELECTED = 'STATION_SELECTED';
 export const JOBDEF_UPDATED = 'JOBDEF_UPDATED';
@@ -30,14 +31,14 @@ export const fetchInitialInfo = dispatch => {
 			initInfo => dispatch(Object.assign({type: FETCHED_INIT_INFO}, initInfo)),
 			err => dispatch(failWithError(err))
 		);
-}
+};
 
 export const establishWsCommunication = dispatch => makeDashboardWebsocketConnection(eventData => {
 	dispatch({
 		type: GOT_DASHBOARD_STATE,
 		dashboardState: eventData
 	});
-})
+});
 
 export function stationSelected(selectedStation){
 	return {
@@ -77,7 +78,7 @@ export const cancelJob = jobId => dispatch => {
 		() => dispatch({type: TOGGLE_YESNO}),
 		err => dispatch(failWithError(err))
 	);
-}
+};
 
 export const startJob = (dispatch, getState) => {
 	const state = getState();
@@ -86,5 +87,14 @@ export const startJob = (dispatch, getState) => {
 		() => dispatch({type: STARTED_JOB}),
 		err => dispatch(failWithError(err))
 	);
-}
+};
 
+export const fetchAvailableMonths = dispatch => {
+	getAvailableMonths().then(
+		(availableMonths) => dispatch({
+			type: FETCHED_MONTHS,
+			availableMonths
+		}),
+		err => dispatch(failWithError(err))
+	);
+};
