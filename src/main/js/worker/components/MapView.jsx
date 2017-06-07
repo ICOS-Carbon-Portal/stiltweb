@@ -22,8 +22,6 @@ export default class MapView extends Component {
 			stopCalVisible: undefined
 		};
 
-		this.displayLoginInfo = true;
-
 		this.bound_onClick = this.onClick.bind(this);
 		document.body.addEventListener('click', this.bound_onClick);
 	}
@@ -37,13 +35,6 @@ export default class MapView extends Component {
 
 		if (hideCal) {
 			this.setState({startCalVisible: false, stopCalVisible: false});
-		}
-	}
-
-	componentWillUpdate(nextProps){
-		if (this.displayLoginInfo && nextProps.currUser && !nextProps.currUser.email){
-			this.displayLoginInfo = false;
-			nextProps.toastInfo("You have to be logged in to start a new job");
 		}
 	}
 

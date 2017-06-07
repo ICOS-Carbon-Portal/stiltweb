@@ -11,11 +11,17 @@ class App extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {};
+		this.displayLoginInfo = true;
 	}
 
 	componentWillReceiveProps(nextProps){
 		const toasterData = nextProps.toasterData;
 		if(toasterData) this.setState({toasterData});
+
+		if (this.displayLoginInfo && nextProps.currUser && !nextProps.currUser.email){
+			this.displayLoginInfo = false;
+			this.toastInfo("You have to be logged in to start a new job");
+		}
 	}
 
 	toastInfo(mess){
