@@ -29,7 +29,7 @@ export default class JobInfoView extends Component {
 		const allowCancel = !!props.cancelJob && !!props.toggleYesNoView
 			&& (props.currUser.email === job.userId || props.currUser.isAdmin);
 
-		// console.log({props, job, status, jobId, allowCancel});
+		console.log({props, job, status, jobId, allowCancel});
 
 		return <div>
 			{allowCancel
@@ -89,7 +89,7 @@ const HeaderInfo = props => {
 
 	return <span>
 		<span><b>Site id: <i>{job.siteId}</i></b></span>
-		<span> - Submitted {job.jobSubmitted} by {job.userId} ({params})</span>
+		<span> - Submitted {toISO(job.timeEnqueued)} by {job.userId} ({params})</span>
 	</span>;
 };
 
@@ -99,12 +99,13 @@ const Queue = props => {
 	return(
 		<div className="panel-body">
 			<InfoPanelWithList title="Job definition">
+				<div><b>Site id: </b>{job.siteId}</div>
 				<div><b>Lat: </b>{job.lat}</div>
 				<div><b>Lon: </b>{job.lon}</div>
 				<div><b>Alt: </b>{job.alt}</div>
 				<div><b>Start: </b>{job.start}</div>
 				<div><b>Stop: </b>{job.stop}</div>
-				<div><b>In queue since: </b>{job.timeEnqueued}</div>
+				<div><b>Was put in the queue at: </b>{toISO(job.timeEnqueued)}</div>
 			</InfoPanelWithList>
 		</div>
 	);
@@ -121,25 +122,34 @@ const RunningAndFinished = props => {
 				{Number.isInteger(status.exitValue)
 					? status.exitValue === 0
 						? <div style={{marginBottom: 10}}>
-							<div>Calculation started {job.timeStarted} and finished {job.timeStopped}</div>
+							<div>Calculation started {toISO(job.timeStarted)} and finished {toISO(job.timeStopped)}</div>
 							<div>
 								View results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a>
 							</div>
 						</div>
 						: <div style={{marginBottom: 10}}>
-							<div>Calculation started {job.timeStarted} and failed {job.timeStopped}</div>
+							<div>Calculation started {toISO(job.timeStarted)} and failed {toISO(job.timeStopped)}</div>
 						</div>
 					: <div style={{marginBottom: 10}}>
-						Calculation started {job.timeStarted}
+						Calculation started {toISO(job.timeStarted)}
 					</div>
 				}
+				<div><b>Site id: </b>{job.siteId}</div>
 				<div><b>Lat: </b>{job.lat}</div>
 				<div><b>Lon: </b>{job.lon}</div>
 				<div><b>Alt: </b>{job.alt}</div>
 				<div><b>Start: </b>{job.start}</div>
 				<div><b>Stop: </b>{job.stop}</div>
 				<div><b>Execution node: </b>{jinfo.executionNode}</div>
-				<div><b>Was put in the queue at: </b>{job.timeEnqueued}</div>
+				<div><b>Was put in the queue at: </b>{toISO(job.timeEnqueued)}</div>
+				<div><b>Started at: </b>{toISO(job.timeStarted)}</div>
+				{job.timeStopped
+					? <div>
+						<div><b>Ended at: </b>{toISO(job.timeStopped)}</div>
+						<div><b>Total runtime: </b>{getRuntime(job.timeStarted, job.timeStopped)}</div>
+					</div>
+					: null
+				}
 			</InfoPanelWithList>
 
 			<OutputStrings title="Standard output" stylecontext="success" strings={status.output}/>
@@ -174,9 +184,18 @@ export const InfoPanelWithList = props => <div className="panel panel-info">
 	</div>
 </div>;
 
-function getRuntime(start, stop){
-	// start = new Date("2017-01-01 23:00");
-	// stop = new Date("2017-01-03 00:50:20");
+const toISO = dateStr => {
+	if (!dateStr) return "Unknown";
+
+	const ts = new Date(dateStr);
+	return ts.toISOString().slice(0, 10) + " " + ts.toLocaleTimeString();
+};
+
+const getRuntime = (startStr, stopStr) => {
+	if (!(startStr || stopStr)) return "Unknown";
+
+	const start = new Date(startStr);
+	const stop = new Date(stopStr);
 
 	if (!(start && stop)) return <span>Not defined</span>;
 
@@ -193,9 +212,9 @@ function getRuntime(start, stop){
 	const seconds = runtime.getUTCSeconds();
 
 	return <span>
-		{days > 1 ? days + " day, " : days + " day, "}
+		{days > 1 ? days + " days, " : days + " day, "}
 		{hours > 1 ? hours + " hours, " : hours + " hour, "}
 		{minutes > 1 ? minutes + " minutes and " : minutes + " minute and "}
 		{seconds > 1 ? seconds + " seconds" : seconds + " second"}
 	</span>;
-}
+};

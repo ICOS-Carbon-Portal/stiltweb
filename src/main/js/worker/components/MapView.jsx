@@ -278,7 +278,6 @@ const JobList = props => props.jobs.length
 	: null;
 
 const JobLabel = props => {
-	console.log({props});
 	const job = props.job;
 	const status = props.status;
 	const lbl = {
@@ -308,12 +307,12 @@ To: ${job.stop}`
 		}
 	}
 
-	const myJob = props.user.email === job.userId;
+	const myJob = props.user ? props.user.email === job.userId : undefined;
 
 	return <h4>
 		<span title={lbl.title} className={"cp-help " + lbl.cls} style={{verticalAlign: 'middle'}}>
 			{myJob
-				? <span className="glyphicon glyphicon-asterisk" style={{ top: 2, marginRight: 5}}></span>
+				? <span className="glyphicon glyphicon-star" style={{ top: 2, marginRight: 5}}></span>
 				: null
 			}
 			{lbl.txt}
