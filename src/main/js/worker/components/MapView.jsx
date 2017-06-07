@@ -237,10 +237,10 @@ export default class MapView extends Component {
 					<div className="panel-body">
 						{ ds.queue && (ds.queue.length || ds.done.length || ds.running.length)
 							? <div>
+								<button style={{display: 'block', clear: 'both', marginBottom: 20}} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
 								<JobList title="Job queue" isQueue={true} user={props.currUser} jobs={ds.queue}/>
 								<JobList title="Running computations" user={props.currUser} jobs={ds.running} />
 								<JobList title="Finished computations" user={props.currUser} jobs={ds.done} />
-								<button style={buttonStyle} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
 							</div>
 							: <div>No jobs have been submitted</div>
 						}
