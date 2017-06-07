@@ -64,7 +64,16 @@ export default class LMap extends Component{
 		this.buildMarkers(nextProps.stations, nextProps.action, nextProps.selectedStation);
 		this.panMap(nextProps.selectedStation, this.app.markers, map);
 
-		if (!map.getZoom() && nextProps.stations.length > 0) LCommon.setView(map, nextProps.stations);
+		if (!map.getZoom()) {
+			if (nextProps.stations.length > 0){
+				LCommon.setView(map, nextProps.stations);
+			} else if (nextProps.geoBoundary){
+				const bdry = nextProps.geoBoundary;
+				map.fitBounds([[bdry.latMin, bdry.lonMin], [bdry.latMax, bdry.lonMax]]);
+			} else {
+				map.setView([55, 10], 3);
+			}
+		}
 
 		this.updateClickMarker(map, nextProps.selectedStation);
 		this.addMask(nextProps.geoBoundary);
@@ -72,8 +81,10 @@ export default class LMap extends Component{
 
 	panMap(selectedStation, markers, map){
 		if (!map.getZoom()
+			|| selectedStation === null
 			|| selectedStation.lat === undefined
 			|| selectedStation.lon === undefined
+			|| markers.getLayers().length === 0
 			|| this.app.isOutside) return;
 
 		const mapBounds = map.getBounds();
@@ -240,7 +251,7 @@ function isTooClose(markers, clickedPosLatlng){
 	markers.eachLayer(marker => {
 		if (marker.getLatLng().distanceTo(clickedPosLatlng) < warningRadius(clickedPosLatlng.lat)){
 			proximityFail = true;
-			return;
+
 		}
 	});
 
