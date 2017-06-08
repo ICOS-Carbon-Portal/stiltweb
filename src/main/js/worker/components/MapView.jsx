@@ -28,7 +28,8 @@ export default class MapView extends Component {
 
 	onClick(e){
 		const activeElement = e.target;
-		const hideCal = !this.startCalDiv.contains(activeElement)
+		const hideCal = !this.mapDiv.contains(activeElement)
+			&& !this.startCalDiv.contains(activeElement)
 			&& !this.stopCalDiv.contains(activeElement)
 			&& activeElement !== this.startCalInput
 			&& activeElement !== this.stopCalInput;
@@ -117,7 +118,7 @@ export default class MapView extends Component {
 							/>
 						</div>
 
-						<div style={{width: '100%', height: 600}}>
+						<div ref={(div) => {this.mapDiv = div;}} style={{width: '100%', height: 600}}>
 							<StationsMap
 								workerMode={true}
 								stations={props.workerData.stations}
