@@ -40,7 +40,7 @@ touch /mnt/additional_disk/WORKER/Input/Metdata/Europe2/ECmetF.12120100.arl
 touch /mnt/additional_disk/WORKER/Input/Metdata/Europe2/ECmetF.12120100.IN
 	 */
 
-	test("Test availablemonths") {
+	ignore("Test availablemonths") {
 		val srf = new StiltResultsFetcher(config)
 		val cor = Vector("2011-12", "2012-01", "2012-02", "2012-03", "2012-04",
 						 "2012-05", "2012-06", "2012-07", "2012-08", "2012-09",

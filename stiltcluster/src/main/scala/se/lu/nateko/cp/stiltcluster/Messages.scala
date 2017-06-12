@@ -39,7 +39,7 @@ case class Job(
 	timeStarted: Option[Instant] = None,
 	timeStopped: Option[Instant] = None
 ){
-	def id = "job_" + this.hashCode()
+	def id = "job_" + this.copy(timeEnqueued = None, timeStarted = None, timeStopped = None).hashCode()
 
 	def copySetEnqueued =
 		this.copy(timeEnqueued=Some(Instant.now()))
