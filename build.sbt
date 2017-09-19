@@ -2,7 +2,7 @@ cancelable in Global := true
 
 lazy val commonSettings = Seq(
 	organization := "se.lu.nateko.cp",
-	scalaVersion := "2.11.11",
+	scalaVersion := "2.12.3",
 	scalacOptions ++= Seq(
 		"-unchecked",
 		"-deprecation",
@@ -14,8 +14,8 @@ lazy val commonSettings = Seq(
 	)
 )
 
-val akkaVersion = "2.4.16"
-val akkaHttpVersion = "10.0.6"
+val akkaVersion = "2.4.20"
+val akkaHttpVersion = "10.0.10"
 
 
 lazy val buildFrontend = taskKey[Unit]("Builds the front end projects")
