@@ -15,7 +15,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 	def viewerRoute(service: StiltResultsFetcher): Route = {
 		get {
 			path("footprint") {
-				parameters("stationId", "footprint") { (stationId, filename) =>
+				parameters(("stationId", "footprint")) { (stationId, filename) =>
 					complete(service.getFootprintRaster(stationId, filename))
 				}
 			} ~
@@ -23,7 +23,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				getFromResource("www/viewer.js")
 			} ~
 			path("listfootprints") {
-				parameters("stationId", "year".as[Int]) { (stationId, year) =>
+				parameters(("stationId", "year".as[Int])) { (stationId, year) =>
 					complete(service.getFootprintFiles(stationId, year))
 				}
 			} ~

@@ -10,6 +10,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.server.RouteResult.route2HandlerFlow
 import akka.stream.ActorMaterializer
+import scala.util.{ Failure, Success }
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 
 object Main extends App {
@@ -36,12 +37,13 @@ object Main extends App {
 
 	Http()
 		.bindAndHandle(route, "127.0.0.1", 9010)
-		.onSuccess{
-			case binding =>
+		.onComplete{
+			case Failure(error)   => error.printStackTrace()
+			case Success(binding) =>
 				sys.addShutdownHook{
-					val ctxt =  scala.concurrent.ExecutionContext.Implicits.global
+					val ctxt = scala.concurrent.ExecutionContext.Implicits.global
 					val doneFuture = binding.unbind().flatMap{
-						_ => system.terminate().zip(cluster.shutdown()(ctxt))
+						_ => system.terminate().zip(cluster.shutdown())
 					}(ctxt)
 					Await.result(doneFuture, 3 seconds)
 				}

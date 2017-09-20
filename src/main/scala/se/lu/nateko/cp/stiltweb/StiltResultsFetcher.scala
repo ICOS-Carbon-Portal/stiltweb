@@ -3,8 +3,8 @@ package se.lu.nateko.cp.stiltweb
 import java.nio.file.Paths
 import java.io.File
 import java.nio.file.Files
-import scala.collection.JavaConversions._
 import java.nio.file.Path
+import scala.collection.JavaConverters._
 import akka.stream.scaladsl.Source
 import scala.io.{Source => IoSource}
 import akka.util.ByteString
@@ -98,9 +98,8 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 	def getFootprintRaster(stationId: String, filename: String): Raster = {
 		val factory = {
 			import config.netcdf._
-			import scala.collection.JavaConversions._
 			val footprintsDirectories = Paths.get(mainDirectory, footPrintsDirectory, stationId).toString + File.separator
-			new ViewServiceFactoryImpl(footprintsDirectories, dateVars, latitudeVars, longitudeVars, elevationVars)
+			new ViewServiceFactoryImpl(footprintsDirectories, dateVars.asJava, latitudeVars.asJava, longitudeVars.asJava, elevationVars.asJava)
 		}
 		val service = factory.getNetCdfViewService(filename)
 		val date = service.getAvailableDates()(0)
@@ -146,7 +145,7 @@ object StiltResultFetcher{
 	def listFileNames(dir: Path, fileGlob: String, limit: Option[Int] = None): Seq[String] = {
 		val dirStream = Files.newDirectoryStream(dir, fileGlob)
 		try{
-			val fnameIter = dirStream.iterator().map(_.getFileName.toString)
+			val fnameIter = dirStream.iterator().asScala.map(_.getFileName.toString)
 			(limit match{
 				case None => fnameIter
 				case Some(lim) => fnameIter.take(lim)

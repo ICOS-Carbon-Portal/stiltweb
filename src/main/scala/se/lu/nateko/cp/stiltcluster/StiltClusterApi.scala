@@ -14,7 +14,6 @@ import akka.http.scaladsl.model.ws.Message
 import akka.util.Timeout
 
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import se.lu.nateko.cp.stiltweb.StiltJsonSupport
@@ -39,10 +38,10 @@ class StiltClusterApi {
 		}
 	}
 
-	def shutdown()(implicit ctxt: ExecutionContext) = terminate(PoisonPill)
-	def shutdownHard()(implicit ctxt: ExecutionContext) = terminate(StopAllWork)
+	def shutdown()() = terminate(PoisonPill)
+	def shutdownHard()() = terminate(StopAllWork)
 
-	private def terminate(msg: Any)(implicit ctxt: ExecutionContext): Future[Terminated] = {
+	private def terminate(msg: Any): Future[Terminated] = {
 		gracefulStop(receptionist, 3 seconds, msg)
 			.recover{case _ => false}
 			.flatMap(_ => system.terminate())
