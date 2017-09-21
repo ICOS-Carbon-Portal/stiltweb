@@ -5,6 +5,7 @@
   "description": "Frontend to Carbon Portal STILT Service",
   "main": "gulpfile.js",
   "scripts": {
+    "publish": "gulp publish",
     "viewer": "gulp viewer",
     "worker": "gulp worker",
     "gulp": "gulp"

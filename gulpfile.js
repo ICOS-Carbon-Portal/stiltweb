@@ -11,7 +11,8 @@ var babelify = require('babelify');
 var babel = require('gulp-babel');
 var preprocessify = require('preprocessify');
 
-['viewer', 'worker'].forEach(function(project){
+var projects = ['viewer', 'worker'];
+projects.forEach(function(project){
 
 	var projSrc = 'src/main/js/' + project;
 	var jstarget = 'target/es5js/' + project;
@@ -81,3 +82,7 @@ var preprocessify = require('preprocessify');
 
 	gulp.task('publish' + project, ['apply-prod-environment', 'clean' + project], compileJs);
 });
+
+
+gulp.task('publish', projects.map(function(e) { return "publish" + e; }));
+gulp.task('default', ['publish']);
