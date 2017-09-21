@@ -41,7 +41,7 @@ npmPublish := Process("npm run publish").!
 
 lazy val stiltweb = (project in file("."))
 	.dependsOn(stiltcluster)
-	.enablePlugins(SbtTwirl)
+	.enablePlugins(SbtTwirl,IcosCpSbtDeployPlugin)
 	.settings(commonSettings: _*)
 	.settings(
 		name := "stiltweb",
@@ -54,9 +54,10 @@ lazy val stiltweb = (project in file("."))
 			"org.scalatest"      %% "scalatest"                          % "3.0.1"            % "test"
 		),
 
+		cpDeployTarget := "stiltweb",
+		cpDeployPlaybook := "stilt.yml",
+		cpDeployBuildInfoPackage := "se.lu.nateko.cp.stiltweb",
 
-		deploy := {
-			val log = streams.value.log
 		// Override the "assembly" command so that we always run "npm publish"
 		// first - thus generating javascript files - before we package the
 		// "fat" jarfile used for deployment.
@@ -68,30 +69,4 @@ lazy val stiltweb = (project in file("."))
 			Def.task(original.value)
 		}).value
 
-			val args: Seq[String] = sbt.Def.spaceDelimited().parsed
-
-			/* FIXME: It's confusing that you can do one of the following:
-					  1: a test deployment to production - "deploy"
-					  2: a real deployment to production - "deploy to production"
-					  3: a real deloyment to test        - "deploy to test"
-
-			   Give this some thought and come up with something more coherent.
-			   'check' is the '--check' argument to ansible
-			   'relInvPath' is the relative path to the ansible inventory file
-			 */
-			val (check, relInvPath) = args.toList match{
-				case "to" :: "production" :: Nil =>
-					log.info("Performing a REAL deployment to production")
-					("", "../infrastructure/devops/production.inventory")
-				case "to" :: "test" :: Nil =>
-					("", "../infrastructure/devops/test.inventory")
-				case _ =>
-					log.warn("Performing a TEST deployment, use 'deploy to production' for a real one")
-					("--check", "../infrastructure/devops/production.inventory")
-			}
-			frontendThenAssembly.value
-			val ymlPath = new java.io.File("../infrastructure/devops/stilt.yml").getCanonicalPath
-			val inventoryPath = new java.io.File(relInvPath).getCanonicalPath
-			sbt.Process(s"""ansible-playbook -t deploy $check -i $inventoryPath $ymlPath""").run(true).exitValue()
-		}
 	)
