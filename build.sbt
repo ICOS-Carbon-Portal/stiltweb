@@ -36,12 +36,8 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 		connectInput in run := true
 	)
 
-
-def runNpmTask(command: String, log: ProcessLogger): Unit = {
-	val lines = sbt.Process(command).lines
-	lines.foreach(l => log.info(l))
-	if(lines.size > 15) sys.error(s"Error running '$command'")
-}
+val npmPublish = taskKey[Unit]("runs 'npm publish'")
+npmPublish := Process("npm run publish").!
 
 lazy val stiltweb = (project in file("."))
 	.dependsOn(stiltcluster)
@@ -57,19 +53,20 @@ lazy val stiltweb = (project in file("."))
 			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.0-SNAPSHOT",
 			"org.scalatest"      %% "scalatest"                          % "3.0.1"            % "test"
 		),
-		buildFrontend := {
-			val log = streams.value.log
-			runNpmTask("npm run gulp publishworker", log)
-			runNpmTask("npm run gulp publishviewer", log)
-		},
 
-		frontendThenAssembly := {
-			(assembly in stiltcluster).value
-			Def.sequential(buildFrontend, assembly).value
-		},
 
 		deploy := {
 			val log = streams.value.log
+		// Override the "assembly" command so that we always run "npm publish"
+		// first - thus generating javascript files - before we package the
+		// "fat" jarfile used for deployment.
+		assembly := (Def.taskDyn{
+			val original = assembly.taskValue
+			// Referencing the task's 'value' field will trigger the npm command
+			npmPublish.value
+			// Then just return the original "assembly command"
+			Def.task(original.value)
+		}).value
 
 			val args: Seq[String] = sbt.Def.spaceDelimited().parsed
 
