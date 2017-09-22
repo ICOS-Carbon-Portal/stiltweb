@@ -116,6 +116,9 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		pathEndOrSingleSlash{
 			redirect("/viewer/", StatusCodes.Found)
 		} ~
+		path("buildInfo"){
+			complete(BuildInfo.toString)
+		} ~
 		path("whoami"){
 			user{userId =>
 				complete((StatusCodes.OK,
