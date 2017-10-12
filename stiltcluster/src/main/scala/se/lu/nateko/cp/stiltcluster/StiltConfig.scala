@@ -2,14 +2,24 @@ package se.lu.nateko.cp.stiltcluster
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import java.io.File
+import java.io.{ File }
 
 case class StiltEnv(debugRun: Option[String],
 					debugLog: Option[String],
 					mainDirectory: File,
 					launchScript: String,
 					containerName: String,
-					logSizeLimit: Int)
+					logSizeLimit: Int,
+					archiveDirectory: File) {
+
+	if (! archiveDirectory.isDirectory())
+		throw new Exception(s"'archiveDirectory' must be a directory, but '${archiveDirectory}' isn't")
+
+	if (! archiveDirectory.canWrite())
+		throw new Exception(s"Must have write permissions for ${archiveDirectory} ('archiveDirectory')")
+
+}
+
 
 
 object ConfigLoader {
@@ -41,7 +51,8 @@ object ConfigLoader {
 			mainDirectory = new File(conf.getString("mainDirectory")),
 			launchScript = conf.getString("launchScript"),
 			containerName = conf.getString("containerName"),
-			logSizeLimit = conf.getInt("logSizeLimit")
+			logSizeLimit = conf.getInt("logSizeLimit"),
+			archiveDirectory = new File(conf.getString("archiveDirectory"))
 		)
 	}
 }

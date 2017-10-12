@@ -30,6 +30,7 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 		version := "0.1.0",
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka"    %% "akka-cluster"     % akkaVersion,
+			"com.typesafe.akka"    %% "akka-cluster-tools" % akkaVersion,
 			"com.typesafe.akka"    %% "akka-slf4j"       % akkaVersion
 		),
 		fork in run := true,

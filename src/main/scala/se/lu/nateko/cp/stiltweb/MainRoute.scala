@@ -67,17 +67,17 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			} ~
 			path("worker.js"){
 				getFromResource("www/worker.js")
-			} ~
-			path("wsdashboardinfo"){
-				handleWebSocketMessages(cluster.websocketsFlow)
 			}
+			// path("wsdashboardinfo"){
+			//	handleWebSocketMessages(cluster.websocketsFlow)
+			// }
 		} ~
 		post{
 			path("enqueuejob"){
 				user{userId =>
 					entity(as[Job]){job =>
 						if(job.userId == userId.email){
-							cluster.addJob(job)
+							cluster.enqueueJob(job)
 							complete(StatusCodes.OK)
 						}else{
 							complete((StatusCodes.Forbidden, "Wrong user id in the job definition!"))

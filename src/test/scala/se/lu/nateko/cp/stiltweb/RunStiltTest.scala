@@ -6,7 +6,7 @@ import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltweb.RunStilt
 
 class RunStiltTest extends FunSuite {
-	val job = Job("", 0, 0, 0,
+	val job = Job("HTM", 56.10, 13.42, 150,
 				  LocalDate.of(2012, 1, 1),
 				  LocalDate.of(2012, 1, 2),
 				  "user")
@@ -19,7 +19,7 @@ class RunStiltTest extends FunSuite {
 	}
 
 	test("Check building of stilt calcslots command") {
-		assert(RunStilt.job_to_calcslots_cmd(job) ==
+		assert(RunStilt.build_calcslots_cmd(job) ==
 				   "stilt calcslots 2012010100 2012010200")
 	}
 
@@ -36,4 +36,13 @@ class RunStiltTest extends FunSuite {
 												  "2012010118", "2012010121",
 												  "2012010200"))
 	}
+
+	test("Build run command") {
+		assert(RunStilt.build_run_cmd(job, "2012010100") ==
+				   "stilt run HTM 56.1 13.42 150 2012010100 2012010100")
+	}
+
+	// test("Test run command") {
+	//	println(RunStilt.cmd_run(job, "2012010100"))
+	// }
 }

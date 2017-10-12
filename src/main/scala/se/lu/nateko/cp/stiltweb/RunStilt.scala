@@ -11,14 +11,19 @@ object RunStilt {
 	// digits being the hour in three hour offsets (00, 03, 06 etc)
 	val slot_date_fmt = DateTimeFormatter.ofPattern("yyyyMMdd")
 
-	def date_to_slot(date:LocalDate, slot:String = "00"): String = {
-		s"${date.format(slot_date_fmt)}${slot}"
+	def date_to_slot(date:LocalDate, hour:String = "00"): String = {
+		s"${date.format(slot_date_fmt)}${hour}"
 	}
 
-	def job_to_calcslots_cmd(job:Job, cmd:String = "stilt"): String = {
+	def build_calcslots_cmd(job:Job): String = {
 		// Example: "stilt calcslots 2012010100 2012010309"
 		s"stilt calcslots ${date_to_slot(job.start)} ${date_to_slot(job.stop)}"
 	}
+
+	def build_run_cmd(job: Job, slot: String): String = {
+		s"stilt run ${job.siteId} ${job.lat.toString} ${job.lon.toString} ${job.alt} $slot $slot"
+	}
+
 
 	def run_cmd(cmd: String): Seq[String] = {
 		// Run the command return a sequence of the nonempty lines of stdout
@@ -26,22 +31,11 @@ object RunStilt {
 	}
 
 	def cmd_calcslots(job: Job): Seq[String] = {
-		run_cmd(job_to_calcslots_cmd(job))
+		run_cmd(build_calcslots_cmd(job))
 	}
 
-	// def job_to_run_cmd(job:Job, cmd:String = "stilt"): String = {
-	//	val start = date_to_slot(job.start)
-	//	val stop = date_to_slot(job.stop)
-
-	//	/* Example:
-	//	 * stilt calcslots HTM 56.10 13.42 150 2012061500 2012061500
-	//	 */
-	//	val args = s"$job.siteId $job.lat.toString $job.lon.toString $start $stop"
-	//	"stilt calcslots " + args
-	// }
-
-	// def run_calcslots_cmd(cmd: String): Seq[String] = {
-
-	// }
+	def cmd_run(job: Job, slot: String): String = {
+		run_cmd(build_run_cmd(job, slot))(0)
+	}
 
 }

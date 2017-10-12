@@ -8,7 +8,6 @@ import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
 import se.lu.nateko.cp.stiltcluster.DashboardInfo
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.JobInfo
-import se.lu.nateko.cp.stiltcluster.ExecutionStatus
 import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue,
 					JsonFormat, RootJsonFormat, JsObject }
 
@@ -54,7 +53,6 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 		def read(value: JsValue) = jobDefaultFormat.read(value)
 	}
 
-	implicit val jobStatusFormat = jsonFormat5(ExecutionStatus.apply)
 	implicit val jobInfoFormat = jsonFormat3(JobInfo)
 	implicit val dashboardInfoFormat = jsonFormat3(DashboardInfo)
 }

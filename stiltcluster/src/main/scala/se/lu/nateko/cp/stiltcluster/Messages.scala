@@ -5,24 +5,7 @@ import scala.collection.immutable.Seq
 
 case object Hi
 
-case object StopAllWork
-
 case class CancelJob(id: String)
-
-
-/** Tracks the status of a Stilt process that is currently executing (i.e as
-  * a Unix program) . */
-case class ExecutionStatus(
-	id: String,
-	exitValue: Option[Int],
-	output: Seq[String],
-	logs: Seq[String],
-	errors: Seq[String]
-)
-
-object ExecutionStatus{
-	def init(id: String) = ExecutionStatus(id, None, Nil, Nil, Nil)
-}
 
 case class JobCanceled(id: String)
 
@@ -51,11 +34,10 @@ case class Job(
 		this.copy(timeStopped=Some(Instant.now()))
 }
 
-case class WorkMasterStatus(work: Seq[(Job, ExecutionStatus)], freeCores: Int){
-	def isRunning(query: Job): Boolean = work.exists{
-		case (job, status) => job == query && ! status.exitValue.isDefined
-	}
-}
-
-
+case class CalculateSlot(job: Job, slot: String)
+case class SimulationComplete(job: Job, slot: String, outputDir: String)
+case class WorkMasterStatus(nCpusFree: Int)
 case class Thanks(ids: Seq[String])
+case class Slot(ob: Job, id: String)
+//case class SlotCalculated(job: Job, dir: String, slot: String, blob: Array[Byte])
+case class SlotCalculated(job: Job, slot: String)
