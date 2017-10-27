@@ -140,6 +140,7 @@ object StiltResultFetcher{
 	val resFilePattern = resFileGlob.replace("????", "(\\d{4})").r
 	val resDirectory = "Results"
 	val footPrintsDirectory = "Footprints"
+	// ex: "foot2012x12x09x00x46.55Nx007.98Ex00720_aggreg.nc"
 	val fpnameRegex = """^foot\d{4}x\d\dx\d\dx\d\dx(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+).+$""".r
 
 	def listFileNames(dir: Path, fileGlob: String, limit: Option[Int] = None): Seq[String] = {

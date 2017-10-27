@@ -1,7 +1,7 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.time.{ Instant, LocalDate }
 import scala.collection.immutable.Seq
+import scala.collection.mutable.Map
 
 case object Hi
 
@@ -9,35 +9,32 @@ case class CancelJob(id: String)
 
 case class JobCanceled(id: String)
 
-/** The description of a Stilt simulation to be run. */
-case class Job(
-	siteId: String,
-	lat: Double,
-	lon: Double,
-	alt: Int,
-	start: LocalDate,
-	stop: LocalDate,
-	userId: String,
-	timeEnqueued: Option[Instant] = None,
-	timeStarted: Option[Instant] = None,
-	timeStopped: Option[Instant] = None
-){
-	def id = "job_" + this.copy(timeEnqueued = None, timeStarted = None, timeStopped = None).hashCode()
+case class StiltSlot(lat: Double, lon: Double, alt: Int, slot: String) {
+	// ex: "2012010309"
+	private val slotRE = """(\d{4})(\d{2})(\d{2})(\d{2})""".r
 
-	def copySetEnqueued =
-		this.copy(timeEnqueued=Some(Instant.now()))
+	val slotRE(year, month, day, hour) = slot
 
-	def copySetStarted =
-		this.copy(timeStarted=(Some(Instant.now())))
-
-	def copySetStopped =
-		this.copy(timeStopped=Some(Instant.now()))
 }
 
-case class CalculateSlot(job: Job, slot: String)
-case class SimulationComplete(job: Job, slot: String, outputDir: String)
+
+trait StiltSlotResult {
+	val slot: StiltSlot
+
+	def iterator: Iterator[(String, Array[Byte])]
+}
+
+
+class StiltSlotResultMap (val slot: StiltSlot) extends StiltSlotResult {
+
+	private val files = Map[String, Array[Byte]]()
+
+	def iterator = files.iterator
+
+	def addFile(path: String, data: Array[Byte]) = files.update(path, data)
+}
+
+case class CalculateSlot(slot: StiltSlot)
+case class SlotCalculated(slot: StiltSlot)
 case class WorkMasterStatus(nCpusFree: Int)
 case class Thanks(ids: Seq[String])
-case class Slot(ob: Job, id: String)
-//case class SlotCalculated(job: Job, dir: String, slot: String, blob: Array[Byte])
-case class SlotCalculated(job: Job, slot: String)

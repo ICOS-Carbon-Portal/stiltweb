@@ -8,14 +8,14 @@ import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
 import se.lu.nateko.cp.stiltrun.RunStilt
 
 
-trait ReceptionistTracker extends Actor {
+trait Tracker extends Actor {
 
 	val cluster = Cluster(context.system)
 
 	override def preStart(): Unit = cluster.subscribe(self, classOf[MemberUp])
 	override def postStop(): Unit = cluster.unsubscribe(self)
 
-	def trackReceptionist: Receive = {
+	def trackPeer: Receive = {
 		case state: CurrentClusterState =>
 			state.members.filter(_.status == MemberStatus.Up) foreach register
 		case MemberUp(m) => register(m)
@@ -23,43 +23,50 @@ trait ReceptionistTracker extends Actor {
 
 	def register(member: Member): Unit =
 		if (member.hasRole("frontend")) {
-			newReceptionist(context.actorSelection(
-				RootActorPath(member.address) / "user" / "receptionist"))
+			newPeerFound(context.actorSelection(
+				RootActorPath(member.address) / "user" / "slotproducer"))
 		}
 
-	def newReceptionist(receptionist: ActorSelection): Unit
+	def newPeerFound(as: ActorSelection): Unit
 }
 
 
-
-class WorkMaster(nCores: Int) extends Actor with ActorLogging with ReceptionistTracker {
+class WorkMaster(nCores: Int) extends Actor with ActorLogging with Tracker {
 
 	private var freeCores = nCores
 
-	def receive = slotCalculation orElse trackReceptionist
+	def receive = slotCalculation orElse trackPeer
+
+	log.info("WorkMaster starting up")
 
 	def slotCalculation: Receive = {
-		case CalculateSlot(job: Job, slot: String) =>
+		case CalculateSlot(slot: StiltSlot) =>
+			log.info("Received CalculateSlot")
 			if (freeCores <= 0) {
 				sender() ! myStatus
 			} else {
-				startStilt(job, slot)
+				log.info("Starting Stilt")
+				startStilt(slot)
 			}
 	}
 
-
-	def newReceptionist(r: ActorSelection) = r ! myStatus
+	def newPeerFound(sp: ActorSelection) = {
+		log.info("New slotproducer detected, sending greeting")
+		sp ! myStatus
+	}
 
 	private def myStatus = WorkMasterStatus(freeCores)
 
-	private def startStilt(job: Job, slot: String) = {
+	private def startStilt(slot: StiltSlot) = {
 		import scala.concurrent.ExecutionContext.Implicits.global
 		freeCores -= 1
 		val orgSender = sender()
 		Future {
-			log.info(s"Starting stilt calculation of $job / $slot")
-			val _ = RunStilt.cmd_run(job, slot)
-			orgSender ! SlotCalculated(job, slot)
+			log.info(s"Starting stilt calculation of $slot")
+			val _ = RunStilt.cmd_run(slot)
+//			val r = new StiltSlotResultMap(slot)
+			log.info(s"Stilt simulation finished")
+			orgSender ! SlotCalculated(slot)
 			orgSender ! myStatus
 			freeCores += 1
 		}

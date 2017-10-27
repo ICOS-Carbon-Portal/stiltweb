@@ -1,36 +1,43 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.{ Actor, ActorLogging }
-import scala.collection.mutable.Queue
+import akka.actor.{Actor, ActorLogging}
 
 
-class JobMonitor(job: Job) extends Actor with ActorLogging {
+class JobMonitor(jdir: JobDir) extends Actor with ActorLogging {
 
 	val slotCalculator = context.actorSelection("/user/slotcalculator")
 	val slotProducer = context.actorSelection("/user/slotproducer")
-	val jobArchiver = context.actorSelection("/user/jobarchiver")
 
-	slotCalculator ! CalculateSlots(job)
-
-	def receive = {
-		case SlotsCalculated(job, slots) =>
-			log.info(s"received slots")
-			slotProducer ! JobMonitorRegistering
-			context become working(Queue(slots: _*))
+	if (jdir.slots.isEmpty) {
+		slotCalculator ! CalculateSlotList(jdir.job)
+	} else {
+		log.info(s"Slots already present")
+		checkPresentSlots
 	}
 
-	def working(slots: Queue[String]): Receive = {
-		case SendSlotRequest =>
-			log.info("SendSlotRequest")
-			if (slots.isEmpty) {
-				jobArchiver ! JobFinished(job)
-				context.stop(self)
-				log.info("JobMonitor all done")
+	def receive = {
+		case SlotListCalculated(slots) =>
+			log.info(s"Received slots")
+			jdir.saveSlotList(slots)
+			checkPresentSlots
+	}
+
+	def checkPresentSlots() = {
+		val remaining = jdir.findMissingSlots
+		slotProducer ! RequestManySlots(remaining)
+		context become working(remaining)
+	}
+
+	def working(outstanding: Seq[StiltSlot]): Receive = {
+		case SlotAvailable(slot) =>
+			val (remaining, removed) = outstanding.partition(slot.equals(_))
+			if (removed.isEmpty) {
+				log.error(s"Received slot I'm not waiting for ${slot.slot}")
 			} else {
-				sender() ! SlotRequest(job, slots.dequeue())
+				log.info(s"Received now slot, ${slot.slot}")
+				jdir.linkSlot(slot)
 			}
-		case SlotAvailable(job, slot, data) =>
-			log.info(s"Slot available at ${data}")
+			context become working(remaining)
 	}
 
 }

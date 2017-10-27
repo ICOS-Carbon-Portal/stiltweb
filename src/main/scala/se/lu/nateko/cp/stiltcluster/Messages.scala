@@ -1,25 +1,69 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.nio.file.Path
+import java.io.File
+import java.time.{Instant, LocalDate}
 
 
-case object Subscribe
+/** The description of a Stilt simulation to be run. */
+case class Job(
+	siteId: String,
+	lat: Double,
+	lon: Double,
+	alt: Int,
+	start: LocalDate,
+	stop: LocalDate,
+	userId: String,
+	timeEnqueued: Option[Instant] = None,
+	timeStarted: Option[Instant] = None,
+	timeStopped: Option[Instant] = None
+){
+	def id = "job_" + this.copy(timeEnqueued = None, timeStarted = None, timeStopped = None).hashCode()
+
+	def copySetEnqueued =
+		this.copy(timeEnqueued=Some(Instant.now()))
+
+	def copySetStarted =
+		this.copy(timeStarted=(Some(Instant.now())))
+
+	def copySetStopped =
+		this.copy(timeStopped=Some(Instant.now()))
+
+	def getSlot(desc: String) = new StiltSlot(lat, lon, alt, desc)
+
+}
+
+
+class LocallyAvailableSlot(
+	lat: Double,
+	lon: Double,
+	alt: Int,
+	slot: String,
+	val file: File) extends StiltSlot(lat, lon, alt, slot) {
+
+	def equals(o: StiltSlot) = {
+		lat == o.lat && lon == o.lon && alt == o.alt && slot == o.slot
+	}
+}
+
 
 case class PersistJob(job: Job)
-case class BeginJob(job: Job, dir: String)
+case class BeginJob(jdir: JobDir)
 
-case class CalculateSlots(job: Job)
-case class SlotsCalculated(job: Job, slots: Seq[String])
+case class CalculateSlotList(job: Job)
+case class SlotListCalculated(slots: Seq[StiltSlot])
 
+case class RequestManySlots(slots: Seq[StiltSlot])
+case class RequestSingleSlot(slot: StiltSlot)
+case class SlotAvailable(slot: LocallyAvailableSlot)
+case class SlotUnAvailable(slot: StiltSlot)
+
+case object Subscribe
 case object JobMonitorRegistering
 case object SendSlotRequest
 case object AllDone
 
-case class JobFinished(job: Job)
-case class SlotRequest(job: Job, slot: String)
-case class SlotAvailable(job: Job, slot: String, data: Path)
-case class SlotUnAvailable(job: Job, slot: String)
-case class LinkAvailableSlots(job: Job, dir: String, slots: Seq[String])
+case class JobFinished(jdir: JobDir)
+
 
 case class JobInfo(job: Job, nSlots: Int, nSlotsFinished: Int) {
 	def id = job.id

@@ -10,7 +10,7 @@ class SlotProducer extends Actor with ActorLogging {
 	val slotArchive = context.actorSelection("/user/slotarchive")
 	val workmasters = Map[ActorRef, Int]()
 	val monitors = Set[ActorRef]()
-	val window = Queue[(ActorRef,Job,String)]()
+	val window = Queue[(ActorRef, StiltSlot)]()
 
 	def receive = {
 		case WorkMasterStatus(freeCores) =>
@@ -29,25 +29,30 @@ class SlotProducer extends Actor with ActorLogging {
 				log.info("JobMonitor terminated")
 				monitors.remove(dead)
 			}
+			tick
 
 		case JobMonitorRegistering =>
 			if (! monitors.contains(sender)) {
 				log.info(s"New JobMonitor ${sender.path}")
+				monitors.add(sender)
 				context.watch(sender)
 			}
+			tick
 
-		case SlotRequest(job, slot) =>
-			log.info("Received slot request")
-			window.enqueue((sender, job, slot))
+		case RequestManySlots(slots) =>
+			log.info(s"Received ${slots.length} slot requests")
+			// window.enqueue((sender, slot))
+			tick
 
 		case msg: SlotCalculated =>
 			log.info("Slot calculated")
 			slotArchive ! msg
+			tick
 
-		case msg @ SlotAvailable(job, slot, _) =>
+		case msg @ SlotAvailable(slot) =>
 			log.info("SlotAvailable")
-			window.dequeueAll { case (who, job, slot) =>
-				if (job == job && slot == slot) {
+			window.dequeueAll { case (who, slot) =>
+				if (slot == slot) {
 					who ! msg
 					true
 				} else {
@@ -57,20 +62,28 @@ class SlotProducer extends Actor with ActorLogging {
 			tick
 	}
 
-	def tick = {
-		for ((wm, free) <- workmasters) {
-			for (i <- 1.to(free)) {
-				if (window.size > 0) {
-					val (_, job, slot) = window.dequeue()
-					wm ! CalculateSlot(job, slot)
-					workmasters.update(wm, free-i)
-				}
-			}
+	def tick() = {
+	//	log.info(s"tick - ${workmasters.size} workmasters. windowsize ${window.size}")
+	//	for ((wm, free) <- workmasters) {
+	//		log.info(s"Iterating workmaster ${wm}, ${free} cpus free")
+	//		for (i <- 1.to(free)) {
+	//			if (window.size > 0) {
+	//				val (_, job, slot) = window.dequeue()
+	//				log.info("Sending CalculateSlot")
+	//				wm ! CalculateSlot(slot)
+	//				workmasters.update(wm, free-i)
+	//			}
+	//		}
 
-		}
-		for (_ <- 1.to(windowMax - window.size)) {
-			log.info("Sending SendSlotRequest")
-			monitors.head ! SendSlotRequest
-		}
+	//	}
+	//	for (_ <- 1.to(windowMax - window.size)) {
+	//		if(! monitors.isEmpty) {
+	//			log.info("Sending SendSlotRequest")
+	//			monitors.head ! SendSlotRequest
+	//		} else {
+	//			log.info("No monitors")
+	//		}
+	//	}
 	}
+
 }
