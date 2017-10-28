@@ -1,12 +1,11 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.ActorSystem
-import akka.actor.Props
+import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+
+import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.Future
 
 
 class StiltClusterApi {
@@ -17,11 +16,11 @@ class StiltClusterApi {
 	private val receptionist = system.actorOf(
 		Props[WorkReceptionist], name = "receptionist")
 
-	val archiveDir = ConfigLoader.loadStiltEnv.archiveDirectory
+	val stateDir = ConfigLoader.loadStiltEnv.stateDir
+	system.actorOf(Props(new SlotArchiver(stateDir)), name="slotarchiver")
 	system.actorOf(Props[SlotCalculator], name="slotcalculator")
-	system.actorOf(Props(new JobArchiver(archiveDir)), name="jobarchiver")
-	system.actorOf(Props(new SlotArchiver(archiveDir)), name="slotarchiver")
 	system.actorOf(Props[SlotProducer], name="slotproducer")
+	system.actorOf(Props(new JobArchiver(stateDir)), name="jobarchiver")
 
 	import system.dispatcher
 

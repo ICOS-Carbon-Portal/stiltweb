@@ -1,16 +1,18 @@
 package se.lu.nateko.cp.stiltcluster
 
-import scala.collection.mutable.{Map, Queue, Set}
+import scala.collection.mutable.{Map, Queue}
+
 import akka.actor.{Actor, ActorLogging, ActorRef, Terminated}
 
 class SlotProducer extends Actor with ActorLogging {
 
-	val windowMax = 1
+	val slotArchiver = context.actorSelection("/user/slotarchiver")
 
-	val slotArchive = context.actorSelection("/user/slotarchive")
+	val windowMax = 1
 	val workmasters = Map[ActorRef, Int]()
-	val monitors = Set[ActorRef]()
-	val window = Queue[(ActorRef, StiltSlot)]()
+	val requests = Map[StiltSlot, Seq[ActorRef]]()
+	val slots = Queue[StiltSlot]()
+//	val tick = system.scheduler.schedule
 
 	def receive = {
 		case WorkMasterStatus(freeCores) =>
@@ -19,71 +21,50 @@ class SlotProducer extends Actor with ActorLogging {
 				context.watch(sender)
 			}
 			workmasters.update(sender, freeCores)
-			tick
+			maybeSend
 
 		case Terminated(dead) =>
 			if (workmasters.contains(dead)) {
 				log.info(s"WorkMaster ${sender.path} terminated")
 				workmasters.remove(dead)
-			} else {
-				log.info("JobMonitor terminated")
-				monitors.remove(dead)
 			}
-			tick
-
-		case JobMonitorRegistering =>
-			if (! monitors.contains(sender)) {
-				log.info(s"New JobMonitor ${sender.path}")
-				monitors.add(sender)
-				context.watch(sender)
-			}
-			tick
 
 		case RequestManySlots(slots) =>
 			log.info(s"Received ${slots.length} slot requests")
-			// window.enqueue((sender, slot))
-			tick
+			for (slot <- slots) {
+				requests.update(slot, requests.getOrElse(slot, List()) :+ sender())
+				log.info("Sending single slot request to slotarchiver")
+				slotArchiver ! RequestSingleSlot(slot)
+			}
 
-		case msg: SlotCalculated =>
-			log.info("Slot calculated")
-			slotArchive ! msg
-			tick
+		case msg: SlotCalculated => {
+			log.info("Got SlotCalculated, sending to slot archive")
+			slotArchiver ! msg
+		}
 
 		case msg @ SlotAvailable(slot) =>
-			log.info("SlotAvailable")
-			window.dequeueAll { case (who, slot) =>
-				if (slot == slot) {
-					who ! msg
-					true
-				} else {
-					false
+			log.info("SlotAvailable(slot)")
+			requests.remove(slot) match {
+				case None => log.warning(s"SlotAvailable(${slot}) with no requests")
+				case Some(actors) => actors.foreach { _ ! msg }
+			}
+
+		case SlotUnAvailable(slot) =>
+			log.info("SlotUnavailable")
+			slots.enqueue(slot)
+			maybeSend
+
+	}
+
+	private def maybeSend() = {
+		for ((wm, freeCores) <- workmasters) {
+			for (_ <- 1 to freeCores) {
+				// FIXME: Set timeout
+				if (! slots.isEmpty) {
+					log.info("Sending slot to workmaster")
+					sender ! CalculateSlot(slots.dequeue)
 				}
 			}
-			tick
+		}
 	}
-
-	def tick() = {
-	//	log.info(s"tick - ${workmasters.size} workmasters. windowsize ${window.size}")
-	//	for ((wm, free) <- workmasters) {
-	//		log.info(s"Iterating workmaster ${wm}, ${free} cpus free")
-	//		for (i <- 1.to(free)) {
-	//			if (window.size > 0) {
-	//				val (_, job, slot) = window.dequeue()
-	//				log.info("Sending CalculateSlot")
-	//				wm ! CalculateSlot(slot)
-	//				workmasters.update(wm, free-i)
-	//			}
-	//		}
-
-	//	}
-	//	for (_ <- 1.to(windowMax - window.size)) {
-	//		if(! monitors.isEmpty) {
-	//			log.info("Sending SendSlotRequest")
-	//			monitors.head ! SendSlotRequest
-	//		} else {
-	//			log.info("No monitors")
-	//		}
-	//	}
-	}
-
 }

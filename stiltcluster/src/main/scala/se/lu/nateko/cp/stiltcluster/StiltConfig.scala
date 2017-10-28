@@ -10,13 +10,13 @@ case class StiltEnv(debugRun: Option[String],
 					launchScript: String,
 					containerName: String,
 					logSizeLimit: Int,
-					archiveDirectory: File) {
+					stateDir: File) {
 
-	if (! archiveDirectory.isDirectory())
-		throw new Exception(s"'archiveDirectory' must be a directory, but '${archiveDirectory}' isn't")
+	if (! stateDir.isDirectory())
+		throw new Exception(s"'stateDir' must be a directory, but '${stateDir}' isn't")
 
-	if (! archiveDirectory.canWrite())
-		throw new Exception(s"Must have write permissions for ${archiveDirectory} ('archiveDirectory')")
+	if (! stateDir.canWrite())
+		throw new Exception(s"Must have write permissions for ${stateDir} ('stateDir')")
 
 }
 
@@ -52,7 +52,7 @@ object ConfigLoader {
 			launchScript = conf.getString("launchScript"),
 			containerName = conf.getString("containerName"),
 			logSizeLimit = conf.getInt("logSizeLimit"),
-			archiveDirectory = new File(conf.getString("archiveDirectory"))
+			stateDir = new File(conf.getString("stateDirectory"))
 		)
 	}
 }

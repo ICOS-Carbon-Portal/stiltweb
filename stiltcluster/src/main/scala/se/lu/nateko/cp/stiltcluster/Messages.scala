@@ -1,6 +1,5 @@
 package se.lu.nateko.cp.stiltcluster
 
-import scala.collection.immutable.Seq
 import scala.collection.mutable.Map
 
 case object Hi
@@ -37,4 +36,3 @@ class StiltSlotResultMap (val slot: StiltSlot) extends StiltSlotResult {
 case class CalculateSlot(slot: StiltSlot)
 case class SlotCalculated(slot: StiltSlot)
 case class WorkMasterStatus(nCpusFree: Int)
-case class Thanks(ids: Seq[String])

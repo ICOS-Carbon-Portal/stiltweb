@@ -43,6 +43,7 @@ class WorkMaster(nCores: Int) extends Actor with ActorLogging with Tracker {
 		case CalculateSlot(slot: StiltSlot) =>
 			log.info("Received CalculateSlot")
 			if (freeCores <= 0) {
+				log.warning("Got CalculateSlot even though I'm busy")
 				sender() ! myStatus
 			} else {
 				log.info("Starting Stilt")
@@ -64,28 +65,11 @@ class WorkMaster(nCores: Int) extends Actor with ActorLogging with Tracker {
 		Future {
 			log.info(s"Starting stilt calculation of $slot")
 			val _ = RunStilt.cmd_run(slot)
-//			val r = new StiltSlotResultMap(slot)
+			// FIXME val r = new StiltSlotResultMap(slot)
 			log.info(s"Stilt simulation finished")
+			freeCores += 1
 			orgSender ! SlotCalculated(slot)
 			orgSender ! myStatus
-			freeCores += 1
 		}
 	}
-
-	// private def zipDir(job: Job, slot: String, dir: String) = {
-	//	val tmp = File.createTempFile("slot", "zip")
-	//	val cmd = s"zip -r --quiet ${tmp.getPath} ${dir}"
-
-	//	import scala.sys.process._
-	//	import scala.concurrent.ExecutionContext.Implicits.global
-	//	val orgSender = sender()
-
-	//	Future {
-	//		log.info(s"Executing ${cmd}")
-	//		cmd.!
-	//		val blob = Files.readAllBytes(Paths.get(tmp.toString))
-	//		log.info(s"Read ${blob.length} bytes of zip data")
-	//		orgSender !
-	//	}
-	// }
 }

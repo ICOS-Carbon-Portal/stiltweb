@@ -19,7 +19,7 @@ class JobDir(val job: Job, val dir: File) {
 	private var _slots:Option[Seq[StiltSlot]] = loadSlots
 	def slots = _slots
 
-	def loadSlots(): Option[Seq[StiltSlot]] = {
+	private def loadSlots(): Option[Seq[StiltSlot]] = {
 		if (slotsFile.exists) {
 			val json = scala.io.Source.fromFile(slotsFile).mkString.parseJson
 			Some(json.convertTo[Seq[String]].map { job.getSlot(_) })
@@ -38,35 +38,40 @@ class JobDir(val job: Job, val dir: File) {
 		Util.createEmptyFile(dir, "done")
 	}
 
-	def linkSlot(slot: LocallyAvailableSlot) = {
+	def linkSlot(slot: LocallyAvailableSlot): File = {
 		val link = new File(slotsDir, slot.slot)
 		Util.createSymbolicLink(link, slot.file)
+		link
 	}
 
 	def slotPresent(s: StiltSlot): Boolean = {
 		Util.fileExists(slotsDir, s.slot)
 	}
 
-	def findMissingSlots = {
+	def missingSlots = {
 		_slots.get.filterNot { slotPresent(_) }
 	}
 }
 
 
 
-class JobArchiver(archiveDirectory: File) extends Actor with ActorLogging {
+class JobArchiver(stateDirectory: File) extends Actor with ActorLogging {
 
 	val receptionist = context.actorSelection("/user/receptionist")
 
+	final val jobsDir = new File(stateDirectory, "jobs")
+	if (! jobsDir.isDirectory())
+		jobsDir.mkdir()
+
 	final val jobFileName = "job.json"
-	log.info(s"JobArchiver starting up in ${archiveDirectory}")
+	log.info(s"starting up in ${jobsDir}")
 
 	readOldJobsFromDisk
 
 	def receive = {
 		case PersistJob(job: Job) =>
 			log.info(s"Asked to create job $job")
-			val dir = new File(archiveDirectory, job.id)
+			val dir = new File(jobsDir, job.id)
 			if (dir.isDirectory) {
 				log.warning(s"$dir already existed, ignoring")
 			} else {
@@ -76,7 +81,7 @@ class JobArchiver(archiveDirectory: File) extends Actor with ActorLogging {
 					val f = new File(dir, jobFileName)
 					Util.writeFileAtomically(f, job.toJson.prettyPrint)
 					log.info(s"Wrote job file $f")
-					sender() ! new JobDir(job, dir)
+					sender() ! BeginJob(new JobDir(job, dir))
 				}
 			}
 
@@ -93,7 +98,7 @@ class JobArchiver(archiveDirectory: File) extends Actor with ActorLogging {
 		val jobNotDone = { f:File =>
 			! Util.fileExists(f, "done")
 		}
-		for(d <- archiveDirectory.listFiles.filter(isJobDir).filter(jobNotDone)) {
+		for(d <- jobsDir.listFiles.filter(isJobDir).filter(jobNotDone)) {
 			val file = new File(d, jobFileName)
 			val json = scala.io.Source.fromFile(file).mkString.parseJson
 			val job  = JobFormat.read(json)

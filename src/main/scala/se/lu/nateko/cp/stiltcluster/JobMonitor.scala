@@ -19,25 +19,33 @@ class JobMonitor(jdir: JobDir) extends Actor with ActorLogging {
 		case SlotListCalculated(slots) =>
 			log.info(s"Received slots")
 			jdir.saveSlotList(slots)
+			// FIXME - send update to browser about slot having been calculated
 			checkPresentSlots
 	}
 
 	def checkPresentSlots() = {
-		val remaining = jdir.findMissingSlots
+		val remaining = jdir.missingSlots
+		log.info(s"I have ${remaining.length} slots left.")
 		slotProducer ! RequestManySlots(remaining)
 		context become working(remaining)
 	}
 
 	def working(outstanding: Seq[StiltSlot]): Receive = {
 		case SlotAvailable(slot) =>
-			val (remaining, removed) = outstanding.partition(slot.equals(_))
+			val (removed, remaining) = outstanding.partition(slot.equals(_))
 			if (removed.isEmpty) {
 				log.error(s"Received slot I'm not waiting for ${slot.slot}")
 			} else {
-				log.info(s"Received now slot, ${slot.slot}")
-				jdir.linkSlot(slot)
+				val link = jdir.linkSlot(slot)
+				log.info(s"Received now slot, ${slot.slot}. Linked to ${link}")
 			}
-			context become working(remaining)
+			if (remaining.isEmpty) {
+				log.info(s"JobMonitor done, terminating")
+				jdir.markAsDone()
+				// FIXME
+				context stop self
+			} else {
+				context become working(remaining)
+			}
 	}
-
 }

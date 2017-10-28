@@ -8,7 +8,7 @@ class WorkReceptionist extends Actor with ActorLogging {
 
 	def receive = {
 		case job: Job =>
-			log.info("WorkReceptionist receiving job")
+			log.info("Receiving job")
 			jobArchiver ! PersistJob(job)
 
 		case BeginJob(jdir) =>
