@@ -42,10 +42,10 @@ class SlotProducer extends Actor with ActorLogging {
 			slotArchiver ! msg
 		}
 
-		case msg @ SlotAvailable(slot) =>
+		case msg @ SlotAvailable(local) =>
 			log.info("SlotAvailable(slot)")
-			requests.remove(slot) match {
-				case None => log.warning(s"SlotAvailable(${slot}) with no requests")
+			requests.remove(local.slot) match {
+				case None => log.warning(s"SlotAvailable(${local}) with no requests")
 				case Some(actors) => actors.foreach { _ ! msg }
 			}
 

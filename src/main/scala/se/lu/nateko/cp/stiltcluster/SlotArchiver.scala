@@ -34,13 +34,13 @@ class SlotArchiver(stateDir: File) extends Actor with ActorLogging {
 		val f = slotFile(slot)
 		// FIXME
 		f.createNewFile()
-		new LocallyAvailableSlot(slot.lat, slot.lon, slot.alt, slot.slot, f)
+		new LocallyAvailableSlot(slot, f)
 	}
 
 	private def loadSlot(slot: StiltSlot): Option[LocallyAvailableSlot] = {
 		val f = slotFile(slot)
 		if (f.exists())
-			Some(new LocallyAvailableSlot(slot.lat, slot.lon, slot.alt, slot.slot, f))
+			Some(new LocallyAvailableSlot(slot, f))
 		else
 			None
 	}

@@ -34,10 +34,10 @@ class JobMonitor(jdir: JobDir) extends Actor with ActorLogging {
 		case SlotAvailable(slot) =>
 			val (removed, remaining) = outstanding.partition(slot.equals(_))
 			if (removed.isEmpty) {
-				log.error(s"Received slot I'm not waiting for ${slot.slot}")
+				log.error(s"Received slot I'm not waiting for ${slot}")
 			} else {
 				val link = jdir.linkSlot(slot)
-				log.info(s"Received now slot, ${slot.slot}. Linked to ${link}")
+				log.info(s"Received now slot, ${slot}. Linked to ${link}")
 			}
 			if (remaining.isEmpty) {
 				log.info(s"JobMonitor done, terminating")

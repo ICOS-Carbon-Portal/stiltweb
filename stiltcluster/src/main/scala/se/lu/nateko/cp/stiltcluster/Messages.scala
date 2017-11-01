@@ -8,14 +8,6 @@ case class CancelJob(id: String)
 
 case class JobCanceled(id: String)
 
-case class StiltSlot(lat: Double, lon: Double, alt: Int, slot: String) {
-	// ex: "2012010309"
-	private val slotRE = """(\d{4})(\d{2})(\d{2})(\d{2})""".r
-
-	val slotRE(year, month, day, hour) = slot
-
-}
-
 
 trait StiltSlotResult {
 	val slot: StiltSlot

@@ -28,21 +28,23 @@ case class Job(
 	def copySetStopped =
 		this.copy(timeStopped=Some(Instant.now()))
 
-	def getSlot(desc: String) = new StiltSlot(lat, lon, alt, desc)
+	def getSlot(desc: String) = new StiltSlot(new StiltPosition(lat, lon, alt),
+											  StiltTime.fromString(desc))
 
 }
 
 
-class LocallyAvailableSlot(
-	lat: Double,
-	lon: Double,
-	alt: Int,
-	slot: String,
-	val file: File) extends StiltSlot(lat, lon, alt, slot) {
+class LocallyAvailableSlot(val slot: StiltSlot, val file: File) {
+
+	val lat = slot.lat
+	val lon = slot.lon
+	val alt = slot.alt
+	val hour = slot.hour
 
 	def equals(o: StiltSlot) = {
-		lat == o.lat && lon == o.lon && alt == o.alt && slot == o.slot
+		lat == o.lat && lon == o.lon && alt == o.alt && hour == o.hour
 	}
+
 }
 
 

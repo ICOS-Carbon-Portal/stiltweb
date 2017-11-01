@@ -39,7 +39,8 @@ class JobDir(val job: Job, val dir: File) {
 	}
 
 	def linkSlot(slot: LocallyAvailableSlot): File = {
-		val link = new File(slotsDir, slot.slot)
+		// FIXME
+		val link = new File(slotsDir, "slot")
 		Util.createSymbolicLink(link, slot.file)
 		link
 	}
