@@ -15,11 +15,12 @@ class SlotArchiver(stateDir: File) extends Actor with ActorLogging {
 	log.info(s"starting up in ${slotsDir}")
 
 	def receive = {
-		// FIXME - slot should be result
-		case SlotCalculated(slot) =>
-			log.info(s"Slot calculated ${slot.slot}")
-			val local = saveSlot(slot)
-			sender() ! SlotAvailable(local)
+		// // FIXME - slot should be result
+		// case SlotCalculated(slot) =>
+		//	// FIXME
+		//	log.info(s"Slot calculated ${slot.slot}")
+		//	val local = saveSlot(slot)
+		//	sender() ! SlotAvailable(local)
 
 		case RequestSingleSlot(slot) =>
 			log.info("Receiving single slot request")
@@ -29,13 +30,14 @@ class SlotArchiver(stateDir: File) extends Actor with ActorLogging {
 			}
 	}
 
-	private def saveSlot(slot: StiltSlot): LocallyAvailableSlot = {
-		slotDir(slot).mkdir()
-		val f = slotFile(slot)
-		// FIXME
-		f.createNewFile()
-		new LocallyAvailableSlot(slot, f)
-	}
+	// FIXME
+	// private def saveSlot(slot: StiltSlot): LocallyAvailableSlot = {
+	//	slotDir(slot).mkdir()
+	//	val f = slotFile(slot)
+	//	// FIXME
+	//	f.createNewFile()
+	//	new LocallyAvailableSlot(slot, f)
+	// }
 
 	private def loadSlot(slot: StiltSlot): Option[LocallyAvailableSlot] = {
 		val f = slotFile(slot)
@@ -50,7 +52,8 @@ class SlotArchiver(stateDir: File) extends Actor with ActorLogging {
 	}
 
 	private def slotFile(slot: StiltSlot): File = {
-		new File(slotDir(slot), slot.slot)
+		// FIXME
+		new File(slotDir(slot), "slot")
 	}
 
 }

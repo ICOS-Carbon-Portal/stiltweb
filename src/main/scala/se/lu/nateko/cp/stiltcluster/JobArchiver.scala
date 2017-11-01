@@ -29,9 +29,10 @@ class JobDir(val job: Job, val dir: File) {
 	}
 
 	def saveSlotList(slots: Seq[StiltSlot]): Unit = {
-		// Write only the slot-strings to file, i.e "2012010209" ...
-		Util.writeFileAtomically(slotsFile, slots.map { _.slot }.toJson.prettyPrint)
-		this._slots = Some(slots)
+		// FIXME
+		// // Write only the slot-strings to file, i.e "2012010209" ...
+		// Util.writeFileAtomically(slotsFile, slots.map { _.slot }.toJson.prettyPrint)
+		// this._slots = Some(slots)
 	}
 
 	def markAsDone() = {
@@ -46,7 +47,9 @@ class JobDir(val job: Job, val dir: File) {
 	}
 
 	def slotPresent(s: StiltSlot): Boolean = {
-		Util.fileExists(slotsDir, s.slot)
+		// FIXME
+		// Util.fileExists(slotsDir, s.slot)
+		true
 	}
 
 	def missingSlots = {

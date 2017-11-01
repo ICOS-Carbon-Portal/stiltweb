@@ -28,8 +28,8 @@ case class Job(
 	def copySetStopped =
 		this.copy(timeStopped=Some(Instant.now()))
 
-	def getSlot(desc: String) = new StiltSlot(new StiltPosition(lat, lon, alt),
-											  StiltTime.fromString(desc))
+	def getSlot(desc: String) = new StiltSlot(StiltTime.ofString(desc),
+											  new StiltPosition(lat, lon, alt))
 
 }
 
