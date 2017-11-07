@@ -1,49 +1,41 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.io.File
+import java.nio.file.{Files, Path}
 
 import akka.actor.{Actor, ActorLogging}
-import se.lu.nateko.cp.stiltweb.StiltJsonSupport._
 import spray.json._
 
 
-class JobDir(val job: Job, val dir: File) {
+class JobDir(val job: Job, val dir: Path) {
 
-	private val slotsFile = new File(dir, "slots.json")
-	private val slotsDir = new File(dir, "slots")
+	private val slotsFile = dir.resolve("slots.json")
+	private val slotsDir = dir.resolve("slots")
 
-	if (! slotsDir.isDirectory()) {
-		slotsDir.mkdir()
-	}
+	Util.ensureDirectory(slotsDir)
 
 	private var _slots:Option[Seq[StiltSlot]] = loadSlots
 	def slots = _slots
 
 	private def loadSlots(): Option[Seq[StiltSlot]] = {
-		if (slotsFile.exists) {
-			val json = scala.io.Source.fromFile(slotsFile).mkString.parseJson
-			Some(json.convertTo[Seq[String]].map { job.getSlot(_) })
+		if (Files.exists(slotsFile)) {
+			val json = scala.io.Source.fromFile(slotsFile.toFile).mkString.parseJson
+			Some(json.convertTo[Seq[StiltSlot]])
 		} else {
 			None
 		}
 	}
 
 	def saveSlotList(slots: Seq[StiltSlot]): Unit = {
-		// FIXME
-		// // Write only the slot-strings to file, i.e "2012010209" ...
-		// Util.writeFileAtomically(slotsFile, slots.map { _.slot }.toJson.prettyPrint)
-		// this._slots = Some(slots)
+		Util.writeFileAtomically(slotsFile, slots.map  { _.toJson.prettyPrint })
+		this._slots = Some(slots)
 	}
 
 	def markAsDone() = {
-		Util.createEmptyFile(dir, "done")
+		Util.createEmptyFile(dir.toFile, "done")
 	}
 
-	def linkSlot(slot: LocallyAvailableSlot): File = {
-		// FIXME
-		val link = new File(slotsDir, "slot")
-		Util.createSymbolicLink(link, slot.file)
-		link
+	def link(local: LocallyAvailableSlot) = {
+		local.link(this.dir)
 	}
 
 	def slotPresent(s: StiltSlot): Boolean = {
@@ -59,15 +51,14 @@ class JobDir(val job: Job, val dir: File) {
 
 
 
-class JobArchiver(stateDirectory: File) extends Actor with ActorLogging {
+class JobArchiver(stateDirectory: Path) extends Actor with ActorLogging {
 
 	val receptionist = context.actorSelection("/user/receptionist")
 
-	final val jobsDir = new File(stateDirectory, "jobs")
-	if (! jobsDir.isDirectory())
-		jobsDir.mkdir()
+	final val jobsDir = stateDirectory.resolve("jobs")
+	Util.ensureDirectory(jobsDir)
 
-	final val jobFileName = "job.json"
+	final val jobFile = "job.json"
 	log.info(s"starting up in ${jobsDir}")
 
 	readOldJobsFromDisk
@@ -75,18 +66,15 @@ class JobArchiver(stateDirectory: File) extends Actor with ActorLogging {
 	def receive = {
 		case PersistJob(job: Job) =>
 			log.info(s"Asked to create job $job")
-			val dir = new File(jobsDir, job.id)
-			if (dir.isDirectory) {
+			val dir = jobsDir.resolve(job.id)
+			if (Files.isDirectory(dir)) {
 				log.warning(s"$dir already existed, ignoring")
 			} else {
-				if (! dir.mkdir()) {
-					log.error(s"Could not create $dir")
-				} else {
-					val f = new File(dir, jobFileName)
-					Util.writeFileAtomically(f, job.toJson.prettyPrint)
-					log.info(s"Wrote job file $f")
-					sender() ! BeginJob(new JobDir(job, dir))
-				}
+				Files.createDirectory(dir)
+				val f = dir.resolve(jobFile)
+				Util.writeFileAtomically(f.toFile, job.toJson.prettyPrint)
+				log.info(s"Wrote job file $f")
+				sender() ! BeginJob(new JobDir(job, dir))
 			}
 
 		case JobFinished(jdir: JobDir) => {
@@ -96,15 +84,15 @@ class JobArchiver(stateDirectory: File) extends Actor with ActorLogging {
 	}
 
 	private def readOldJobsFromDisk() = {
-		val isJobDir = { f:File =>
-			f.isDirectory() && f.getName.startsWith("job_")
+		val isJobDir = { f:Path =>
+			Files.isDirectory(f) && f.startsWith("job_")
 		}
-		val jobNotDone = { f:File =>
-			! Util.fileExists(f, "done")
+		val jobNotDone = { f:Path =>
+			! Util.fileExists(f.toFile, "done")
 		}
-		for(d <- jobsDir.listFiles.filter(isJobDir).filter(jobNotDone)) {
-			val file = new File(d, jobFileName)
-			val json = scala.io.Source.fromFile(file).mkString.parseJson
+		for(d <- Files.list(jobsDir).filter(isJobDir).filter(jobNotDone)) {
+			val file = d.resolve(jobFile)
+			val json = scala.io.Source.fromFile(file.toFile).mkString.parseJson
 			val job  = JobFormat.read(json)
 			val jdir = new JobDir(job, d)
 			log.info(s"Read old job '${job}' and sending it to receptionist")

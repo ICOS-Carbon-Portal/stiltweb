@@ -1,11 +1,19 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.io.{BufferedWriter, File, FileWriter}
-import java.nio.file.Files
+import java.io.{BufferedWriter, File, FileOutputStream, FileWriter}
+import java.nio.file.{ Files, Path }
 
 
 
 object Util {
+
+	def writeFileAtomically(f: File, data: Array[Byte]) = {
+		val t = new File(f.toString + ".tmp")
+		val o = new FileOutputStream(t)
+		o.write(data)
+		o.close
+		t.renameTo(f)
+	}
 
 	def writeFileAtomically(f: File, data: String) = {
 		val t = new File(f.toString + ".tmp")
@@ -26,6 +34,11 @@ object Util {
 
 	def createSymbolicLink(link: File, target: File) = {
 		Files.createSymbolicLink(link.toPath(), target.toPath())
+	}
+
+	def ensureDirectory(d: Path) = {
+		if (! Files.isDirectory(d))
+			Files.createDirectory(d)
 	}
 
 }

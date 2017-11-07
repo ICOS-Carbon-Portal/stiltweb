@@ -1,6 +1,5 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.io.File
 import java.time.{Instant, LocalDate}
 
 
@@ -30,20 +29,6 @@ case class Job(
 
 	def getSlot(desc: String) = new StiltSlot(StiltTime.ofString(desc),
 											  new StiltPosition(lat, lon, alt))
-
-}
-
-
-class LocallyAvailableSlot(val slot: StiltSlot, val file: File) {
-
-	val lat = slot.lat
-	val lon = slot.lon
-	val alt = slot.alt
-	val hour = slot.hour
-
-	def equals(o: StiltSlot) = {
-		lat == o.lat && lon == o.lon && alt == o.alt && hour == o.hour
-	}
 
 }
 

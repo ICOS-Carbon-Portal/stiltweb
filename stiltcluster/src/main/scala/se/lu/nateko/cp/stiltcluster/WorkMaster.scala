@@ -66,10 +66,10 @@ class WorkMaster(nCores: Int) extends Actor with ActorLogging with Tracker {
 			log.info(s"Starting stilt calculation of $slot")
 			val _ = RunStilt.cmd_run(slot)
 			// FIXME val r = new StiltSlotResultMap(slot)
-			log.info(s"Stilt simulation finished")
-			freeCores += 1
-			orgSender ! SlotCalculated(slot)
-			orgSender ! myStatus
+			// log.info(s"Stilt simulation finished")
+			// freeCores += 1
+			// orgSender ! SlotCalculated(slot)
+			// orgSender ! myStatus
 		}
 	}
 }

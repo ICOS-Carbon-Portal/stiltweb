@@ -43,7 +43,6 @@ case class StiltTime(year: Int, month: Int, day: Int, hour: Int) {
 	}
 }
 
-
 object StiltTime {
 	// The stilt software (both the original our our) is full of assumptions
 	// that a "slot" is three hours long.

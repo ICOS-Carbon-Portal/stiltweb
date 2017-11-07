@@ -26,5 +26,5 @@ class StiltSlotResultMap (val slot: StiltSlot) extends StiltSlotResult {
 }
 
 case class CalculateSlot(slot: StiltSlot)
-case class SlotCalculated(slot: StiltSlot)
+case class SlotCalculated(result: StiltResult)
 case class WorkMasterStatus(nCpusFree: Int)

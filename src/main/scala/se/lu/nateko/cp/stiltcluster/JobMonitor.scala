@@ -31,13 +31,13 @@ class JobMonitor(jdir: JobDir) extends Actor with ActorLogging {
 	}
 
 	def working(outstanding: Seq[StiltSlot]): Receive = {
-		case SlotAvailable(slot) =>
-			val (removed, remaining) = outstanding.partition(slot.equals(_))
+		case SlotAvailable(local) =>
+			val (removed, remaining) = outstanding.partition(local.equals(_))
 			if (removed.isEmpty) {
-				log.error(s"Received slot I'm not waiting for ${slot}")
+				log.error(s"Received slot I'm not waiting for ${local}")
 			} else {
-				val link = jdir.linkSlot(slot)
-				log.info(s"Received now slot, ${slot}. Linked to ${link}")
+				jdir.link(local)
+				log.info(s"Received now slot, ${local}")
 			}
 			if (remaining.isEmpty) {
 				log.info(s"JobMonitor done, terminating")
