@@ -2,7 +2,7 @@ cancelable in Global := true
 
 lazy val commonSettings = Seq(
 	organization := "se.lu.nateko.cp",
-	scalaVersion := "2.12.3",
+	scalaVersion := "2.12.4",
 	scalacOptions ++= Seq(
 		"-unchecked",
 		"-deprecation",
