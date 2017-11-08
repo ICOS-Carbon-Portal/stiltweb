@@ -58,7 +58,7 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 	implicit val jobInfoFormat = jsonFormat3(JobInfo)
 	implicit val dashboardInfoFormat = jsonFormat3(DashboardInfo)
 
-	implicit val stiltTimeFormat = jsonFormat4(StiltTime)
-	implicit val stiltPositionFormat = jsonFormat3(StiltPosition)
-	implicit val stiltSlotFormat = jsonFormat2(StiltSlot)
+	implicit val stiltTimeFormat = jsonFormat4(StiltTime.apply)
+	implicit val stiltPositionFormat = jsonFormat3(StiltPosition.apply)
+	implicit val stiltSlotFormat = jsonFormat2(StiltSlot.apply)
 }

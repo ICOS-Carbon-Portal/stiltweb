@@ -4,7 +4,7 @@ import java.nio.file.{Files, Path}
 
 import akka.actor.{Actor, ActorLogging}
 import spray.json._
-
+import se.lu.nateko.cp.stiltweb.StiltJsonSupport._
 
 class JobDir(val job: Job, val dir: Path) {
 
@@ -26,7 +26,7 @@ class JobDir(val job: Job, val dir: Path) {
 	}
 
 	def saveSlotList(slots: Seq[StiltSlot]): Unit = {
-		Util.writeFileAtomically(slotsFile, slots.map  { _.toJson.prettyPrint })
+		Util.writeFileAtomically(slotsFile.toFile, slots.toJson.prettyPrint)
 		this._slots = Some(slots)
 	}
 
@@ -84,13 +84,14 @@ class JobArchiver(stateDirectory: Path) extends Actor with ActorLogging {
 	}
 
 	private def readOldJobsFromDisk() = {
-		val isJobDir = { f:Path =>
-			Files.isDirectory(f) && f.startsWith("job_")
-		}
-		val jobNotDone = { f:Path =>
-			! Util.fileExists(f.toFile, "done")
-		}
-		for(d <- Files.list(jobsDir).filter(isJobDir).filter(jobNotDone)) {
+		import scala.collection.JavaConverters._
+
+		val isJobDir   = { f:Path => Files.isDirectory(f) && f.startsWith("job_") }
+		val jobNotDone = { f:Path => ! Util.fileExists(f.toFile, "done") }
+
+		// FIXME: Couldn't get this to work without the .iterator.asScala dance :(
+		val i = Files.list(jobsDir).iterator.asScala
+		for(d <- i.filter(isJobDir).filter(jobNotDone) ) {
 			val file = d.resolve(jobFile)
 			val json = scala.io.Source.fromFile(file.toFile).mkString.parseJson
 			val job  = JobFormat.read(json)
