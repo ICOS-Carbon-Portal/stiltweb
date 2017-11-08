@@ -19,6 +19,4 @@ object WorkMasterApp extends App {
 		Runtime.getRuntime.availableProcessors - reservedCores
 	}
 
-
-
 }

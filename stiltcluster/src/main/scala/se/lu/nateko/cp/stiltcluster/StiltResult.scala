@@ -27,7 +27,6 @@ RData/XXX/2012/.RData2012x12x01x00x56.10Nx013.42Ex00150
 Footprints/XXX/2012/foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
 Footprints/XXX/2012/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
 RData/XXX/2012/.RData2012x12x01x00x56.10Nx013.42Ex00150
-
  */
 
 package se.lu.nateko.cp.stiltcluster

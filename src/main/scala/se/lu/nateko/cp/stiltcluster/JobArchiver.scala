@@ -51,11 +51,11 @@ class JobDir(val job: Job, val dir: Path) {
 
 
 
-class JobArchiver(stateDirectory: Path) extends Actor with ActorLogging {
+class JobArchiver(dataDir: Path) extends Actor with ActorLogging {
 
 	val receptionist = context.actorSelection("/user/receptionist")
 
-	final val jobsDir = stateDirectory.resolve("jobs")
+	final val jobsDir = dataDir.resolve("jobs")
 	Util.ensureDirectory(jobsDir)
 
 	final val jobFile = "job.json"
@@ -86,6 +86,7 @@ class JobArchiver(stateDirectory: Path) extends Actor with ActorLogging {
 	private def readOldJobsFromDisk() = {
 		import scala.collection.JavaConverters._
 
+		log.info(s"Looking in ${jobsDir} for unfinishd jobs")
 		val isJobDir   = { f:Path => Files.isDirectory(f) && f.startsWith("job_") }
 		val jobNotDone = { f:Path => ! Util.fileExists(f.toFile, "done") }
 

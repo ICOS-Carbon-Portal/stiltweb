@@ -1,5 +1,6 @@
 package se.lu.nateko.cp.stiltcluster
 
+import java.nio.file.{ Files, Paths }
 import scala.concurrent.Future
 
 import akka.actor.{Actor, ActorLogging, ActorSelection, RootActorPath}
@@ -64,12 +65,14 @@ class WorkMaster(nCores: Int) extends Actor with ActorLogging with Tracker {
 		val orgSender = sender()
 		Future {
 			log.info(s"Starting stilt calculation of $slot")
-			val _ = RunStilt.cmd_run(slot)
-			// FIXME val r = new StiltSlotResultMap(slot)
-			// log.info(s"Stilt simulation finished")
-			// freeCores += 1
-			// orgSender ! SlotCalculated(slot)
-			// orgSender ! myStatus
+			val s = RunStilt.cmd_run(slot)
+			log.info(s"Stilt simulation finished ${s}")
+			val d = Paths.get(s)
+			assert(Files.isDirectory(d))
+			val r = StiltResult(slot, d)
+			freeCores += 1
+			orgSender ! SlotCalculated(r)
+			orgSender ! myStatus
 		}
 	}
 }
