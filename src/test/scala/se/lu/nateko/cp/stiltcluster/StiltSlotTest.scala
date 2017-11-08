@@ -52,4 +52,18 @@ class StiltSlotTest extends FunSuite {
 		val slt2 = StiltSlot.ofString(expected)
 		assert (slt2 == slt)
 	}
+
+	test("ofFilename") {
+		val s = "foot2012x12x08x18x46.55Nx007.98Ex00720_aggreg.nc"
+		val (prefix, slot, suffix) = StiltSlot.ofFilename(s)
+		assert(prefix == "foot")
+		assert(suffix == "_aggreg.nc")
+		assert(slot.year == 2012)
+		assert(slot.month == 12)
+		assert(slot.day == 8)
+		assert(slot.hour == 18)
+		assert(slot.lat == 46.55)
+		assert(slot.lon == 7.98)
+		assert(slot.alt == 720)
+	}
 }

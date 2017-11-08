@@ -83,9 +83,9 @@ object StiltSlot {
 
 	def ofFilename(s: String): (String, StiltSlot, String) = {
 		val mt = StiltTime.re.findFirstMatchIn(s).get
-		val mp = StiltPosition.re.findFirstMatchIn(s.substring(mt.end+1)).get
+		val mp = StiltPosition.re.findFirstMatchIn(s.substring(mt.end)).get
 		(s.substring(0, mt.start),
-		 StiltSlot.ofString(s.substring(mt.start, mp.end)),
-		 s.substring(mp.end))
+		 StiltSlot.ofString(s.substring(mt.start, mt.end+mp.end)),
+		 s.substring(mt.end+mp.end))
 	}
 }
