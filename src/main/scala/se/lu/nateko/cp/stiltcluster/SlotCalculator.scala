@@ -4,7 +4,6 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.actor.{Actor, ActorLogging}
 import scala.util.{ Failure, Success }
-import se.lu.nateko.cp.stiltrun.RunStilt
 
 class SlotCalculator extends Actor with ActorLogging {
 

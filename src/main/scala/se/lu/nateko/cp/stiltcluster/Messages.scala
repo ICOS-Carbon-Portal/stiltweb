@@ -26,11 +26,6 @@ case class Job(
 
 	def copySetStopped =
 		this.copy(timeStopped=Some(Instant.now()))
-
-	// Convert a string such as
-	def getSlot(desc: String) = new StiltSlot(StiltTime.ofString(desc),
-											  new StiltPosition(lat, lon, alt))
-
 }
 
 

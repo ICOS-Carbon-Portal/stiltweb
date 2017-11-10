@@ -6,7 +6,7 @@ import scala.concurrent.Future
 import akka.actor.{Actor, ActorLogging, ActorSelection, RootActorPath}
 import akka.cluster.{Cluster, Member, MemberStatus}
 import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
-import se.lu.nateko.cp.stiltrun.RunStilt
+import scala.util.{ Failure, Success }
 
 
 trait Tracker extends Actor {
@@ -47,13 +47,12 @@ class WorkMaster(nCores: Int) extends Actor with ActorLogging with Tracker {
 				log.warning("Got CalculateSlot even though I'm busy")
 				sender() ! myStatus
 			} else {
-				log.info("Starting Stilt")
 				startStilt(slot)
 			}
 	}
 
 	def newPeerFound(sp: ActorSelection) = {
-		log.info("New slotproducer detected, sending greeting")
+		log.info(s"New slotproducer detected, sending greeting (${freeCores} free cores)")
 		sp ! myStatus
 	}
 
@@ -69,10 +68,13 @@ class WorkMaster(nCores: Int) extends Actor with ActorLogging with Tracker {
 			log.info(s"Stilt simulation finished ${s}")
 			val d = Paths.get(s)
 			assert(Files.isDirectory(d))
-			val r = StiltResult(slot, d)
-			freeCores += 1
+			val r = StiltResult(slot, d.resolve("output"))
 			orgSender ! SlotCalculated(r)
+			freeCores += 1
 			orgSender ! myStatus
+		} onComplete {
+			case Failure(t) => { println("An error has occured: " + t); t.printStackTrace }
+			case Success(_) => { }
 		}
 	}
 }
