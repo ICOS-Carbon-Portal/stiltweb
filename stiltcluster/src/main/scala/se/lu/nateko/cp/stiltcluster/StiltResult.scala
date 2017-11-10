@@ -51,25 +51,6 @@ case class StiltResultFile (slot: StiltSlot,
 
 object StiltResultFile {
 
-	/* Read the - required - output files from a stilt simulation.
-
-	 A stilt simulation produces many output files, but we only need three
-	 specific files, one of each type. The stilt simulation software allows you
-	 to specify a "job id", the original purpose was to separate several jobs
-	 since stilt used a single giant output directory. Since stiltweb uses
-	 generated output directories, we always set job id to "XXX".
-	 */
-	def readOutputFiles(slot: StiltSlot,
-						dir: Path,
-						jobId:String = "XXX"): Seq[StiltResultFile] = {
-		import StiltResultFileType._
-		Seq(Foot, RDataFoot, RData).map { typ =>
-			val relPath = calcFileName(slot, typ, jobId)
-			val absPath = dir.resolve(relPath)
-			val data = Files.readAllBytes(absPath)
-			new StiltResultFile(slot, typ, data)
-		}
-	}
 
 	def calcFileName(slot: StiltSlot,
 					 typ: StiltResultFileType.Value,
@@ -93,7 +74,29 @@ case class StiltResult (val slot: StiltSlot, files: Seq[StiltResultFile])
 
 object StiltResult {
 
+	import StiltResultFileType._
+	val requiredFileTypes = Seq(Foot, RDataFoot, RData)
+
+	/* Read the - required - output files from a stilt simulation.
+
+	 A stilt simulation produces many output files, but we only need three
+	 specific files, one of each type. The stilt simulation software allows you
+	 to specify a "job id", the original purpose was to separate several jobs
+	 since stilt used a single giant output directory. Since stiltweb uses
+	 generated output directories, we always set job id to "XXX".
+	 */
+	def readOutputFiles(slot: StiltSlot,
+						dir: Path,
+						jobId:String = "XXX"): Seq[StiltResultFile] = {
+		requiredFileTypes.map { typ =>
+			val relPath = StiltResultFile.calcFileName(slot, typ, jobId)
+			val absPath = dir.resolve(relPath)
+			val data = Files.readAllBytes(absPath)
+			new StiltResultFile(slot, typ, data)
+		}
+	}
+
 	def apply(slot: StiltSlot, dir: Path): StiltResult = {
-		new StiltResult(slot, StiltResultFile.readOutputFiles(slot, dir))
+		new StiltResult(slot, readOutputFiles(slot, dir))
 	}
 }

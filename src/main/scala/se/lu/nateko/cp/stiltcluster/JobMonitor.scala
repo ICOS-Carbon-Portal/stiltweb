@@ -8,26 +8,33 @@ class JobMonitor(jdir: JobDir) extends Actor with ActorLogging {
 	val slotCalculator = context.actorSelection("/user/slotcalculator")
 	val slotProducer = context.actorSelection("/user/slotproducer")
 
-	if (jdir.slots.isEmpty) {
+	if (jdir.slots.isEmpty)
 		slotCalculator ! CalculateSlotList(jdir.job)
-	} else {
-		log.info(s"Slots already present")
-		checkPresentSlots
-	}
+	else
+		checkRemainingSlots(None)
 
 	def receive = {
 		case SlotListCalculated(slots) =>
-			log.info(s"Received slots")
+			log.info(s"Received a list ${slots.length} slots")
 			jdir.saveSlotList(slots)
+			log.info(s"Slots saved")
 			// FIXME - send update to browser about slot having been calculated
-			checkPresentSlots
+			checkRemainingSlots(Some(slots))
 	}
 
-	def checkPresentSlots() = {
+	def checkRemainingSlots(list: Option[Seq[StiltSlot]]) = {
 		val remaining = jdir.missingSlots
-		log.info(s"I have ${remaining.length} slots left.")
-		slotProducer ! RequestManySlots(remaining)
-		context become working(remaining)
+		log.info(s"${jdir.slots.get.length} slots in total. ${remaining.length} remaining")
+		maybeMoreWork(remaining)
+	}
+
+	def maybeMoreWork(remaining: Seq[StiltSlot]) = {
+		if (remaining.isEmpty) {
+			done
+		} else {
+			slotProducer ! RequestManySlots(remaining)
+			context become working(remaining)
+		}
 	}
 
 	def working(outstanding: Seq[StiltSlot]): Receive = {
@@ -39,13 +46,13 @@ class JobMonitor(jdir: JobDir) extends Actor with ActorLogging {
 				jdir.link(local)
 				log.info(s"Received now slot, ${local}")
 			}
-			if (remaining.isEmpty) {
-				log.info(s"JobMonitor done, terminating")
-				jdir.markAsDone()
-				// FIXME
-				context stop self
-			} else {
-				context become working(remaining)
-			}
+			maybeMoreWork(removed)
+	}
+
+	def done() = {
+		log.info(s"JobMonitor done, terminating")
+		jdir.markAsDone()
+		// FIXME
+		context stop self
 	}
 }

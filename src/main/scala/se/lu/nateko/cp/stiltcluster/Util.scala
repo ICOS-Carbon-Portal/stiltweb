@@ -36,9 +36,10 @@ object Util {
 		Files.createSymbolicLink(link.toPath(), target.toPath())
 	}
 
-	def ensureDirectory(d: Path) = {
+	def ensureDirectory(d: Path): Path = {
 		if (! Files.isDirectory(d))
 			Files.createDirectory(d)
+		d
 	}
 
 }

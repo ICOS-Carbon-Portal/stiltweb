@@ -39,9 +39,7 @@ class JobDir(val job: Job, val dir: Path) {
 	}
 
 	def slotPresent(s: StiltSlot): Boolean = {
-		// FIXME
-		// Util.fileExists(slotsDir, s.slot)
-		true
+		LocallyAvailableSlot.isLinked(dir, s)
 	}
 
 	def missingSlots = {
@@ -86,10 +84,13 @@ class JobArchiver(dataDir: Path) extends Actor with ActorLogging {
 	private def readOldJobsFromDisk() = {
 		import scala.collection.JavaConverters._
 
-		log.info(s"Looking in ${jobsDir} for unfinishd jobs")
-		val isJobDir   = { f:Path => Files.isDirectory(f) && f.startsWith("job_") }
+		log.info(s"Looking in ${jobsDir} for unfinished jobs")
+		val isJobDir   = { f:Path => Files.isDirectory(f) && Files.exists(f.resolve("job.json")) }
 		val jobNotDone = { f:Path => ! Util.fileExists(f.toFile, "done") }
 
+		for (d <- Files.list(jobsDir).iterator.asScala) {
+			log.info(s"JobArchiver looking at ${d} isJobDir=${isJobDir(d)} jobNotDone=${jobNotDone(d)}")
+		}
 		// FIXME: Couldn't get this to work without the .iterator.asScala dance :(
 		val i = Files.list(jobsDir).iterator.asScala
 		for(d <- i.filter(isJobDir).filter(jobNotDone) ) {

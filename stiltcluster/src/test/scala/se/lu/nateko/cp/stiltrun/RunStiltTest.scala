@@ -1,9 +1,9 @@
-package se.lu.nateko.cp.stiltweb.test
+package se.lu.nateko.cp.stiltrun.test
 
 import java.time.LocalDate
 import org.scalatest.FunSuite
 import se.lu.nateko.cp.stiltcluster.Job
-import se.lu.nateko.cp.stiltweb.RunStilt
+import se.lu.nateko.cp.stiltrun.RunStilt
 
 class RunStiltTest extends FunSuite {
 	val job = Job("HTM", 56.10, 13.42, 150,

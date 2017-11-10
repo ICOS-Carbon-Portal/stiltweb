@@ -47,7 +47,7 @@ object StiltTime {
 	// The stilt software (both the original our our) is full of assumptions
 	// that a "slot" is three hours long.
 	final val validHours = List("00", "03", "06", "09", "12", "15", "18", "21")
-	final val re = """(\d{4})x(\d{2})x(\d{2})x(\d{2})""".r
+	final val re = """(\d{4})x(\d{2})x(\d{2})x(\d{2})""".r // 2012x12x01x00
 
 	def ofString(slot: String): StiltTime = {
 		val re(year, month, day, hour) = slot
