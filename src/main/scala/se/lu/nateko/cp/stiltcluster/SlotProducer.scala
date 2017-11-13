@@ -1,6 +1,6 @@
 package se.lu.nateko.cp.stiltcluster
 
-import scala.collection.mutable.{Map, Set}
+import scala.collection.mutable.{Map, Set, Buffer}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -15,11 +15,9 @@ class SlotProducer extends Actor with ActorLogging {
 
 	val slotArchiver = context.actorSelection("/user/slotarchiver")
 
-	val windowMax = 1
 	val workmasters = Map[ActorRef, Int]()
 	val requests = Map[StiltSlot, Seq[ActorRef]]()
-	// FIXME: the mutable Queue isn't able to add to front !?
-	var waiting = scala.collection.immutable.Queue[StiltSlot]()
+	val waiting = Buffer.empty[StiltSlot]
 	val sent = Set[(Deadline, StiltSlot)]()
 
 	scheduleTick
@@ -60,7 +58,7 @@ class SlotProducer extends Actor with ActorLogging {
 
 		case SlotUnAvailable(slot) =>
 			log.info("SlotUnavailable")
-			waiting = waiting.enqueue(slot)
+			waiting.append(slot)
 
 		case Tick =>
 			log.info("Tick!")
@@ -79,7 +77,7 @@ class SlotProducer extends Actor with ActorLogging {
 		val overdue = sent.filter { case (deadline, slot) => deadline.isOverdue }
 		overdue.foreach { case elem @ (deadline, slot) =>
 			log.warning(s"Slot ${slot} is overdue, requeuing")
-			waiting = slot +: waiting
+			waiting.prepend(slot)
 			sent.remove(elem)
 		}
 	}
@@ -88,9 +86,12 @@ class SlotProducer extends Actor with ActorLogging {
 		try {
 			for ((wm, freeCores) <- workmasters) {
 				log.info(s"Considering workmaster ${wm} with ${freeCores} free cores")
-				for (_ <- 1 to freeCores) {
-					val (slot: StiltSlot, remaining) = waiting.dequeue
-					waiting = remaining
+				for (i <- freeCores-1 to 0 by -1) {
+					// Keep track of the number of available slot ourselves.
+					// This will get overwritten once the workmaster reports in
+					// again.
+					workmasters.update(wm, i)
+					val slot = waiting.remove(0)
 					val deadline = calcTimeout.fromNow
 					sent.add((deadline, slot))
 					wm ! CalculateSlot(slot)
@@ -98,7 +99,7 @@ class SlotProducer extends Actor with ActorLogging {
 				}
 			}
 		} catch {
-				case _: java.util.NoSuchElementException =>
+				case e: java.lang.IndexOutOfBoundsException =>
 					log.info("No slots waiting")
 		}
 }
