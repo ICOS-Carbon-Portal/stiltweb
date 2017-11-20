@@ -1,5 +1,11 @@
 cancelable in Global := true
 
+// By default sbt will exclude files starting with a dot when copying
+// resources. The following will remove that filter and make sbt copy all files
+// in "test/resources".
+excludeFilter in (Test, unmanagedResources) := ""
+
+
 lazy val commonSettings = Seq(
 	organization := "se.lu.nateko.cp",
 	scalaVersion := "2.12.4",

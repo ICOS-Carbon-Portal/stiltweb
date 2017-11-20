@@ -18,19 +18,15 @@ class StiltResultTest extends FunSuite {
 		assert(prefix == "./Footprints/XXX/2012/foot")
 		assert(suffix == "_aggreg.nc")
 
-		// FIXME: crap deluxe
-		// How does one use a sample directory structure containing files
-		// starting with a dot in a scala test?
-		//   + Paths.get("./sample") won't work since the test is run using
-		//     another pwd.
-		//   + getResource doesn't work since the resources first are copied and
-		//     then files starting with a dot are excluded (truly brilliant).
-		//
-		// Look into http://www.scala-sbt.org/1.x/docs/Howto-Customizing-Paths.html
-		// val p = Paths.get(getClass.getResource("/stilt-sample-run/output").getFile)
-
-		val p = Paths.get("/home/andre/icos/stiltweb/src/test/resources/stilt-sample-run/output")
+		val p = Paths.get(getClass.getResource("/stilt-sample-run/output").getFile)
 		assert(Files.exists(p))
+
+		val g = p.resolve("Footprints/XXX/2012/stiltresult2012x46.55Nx007.98Ex00720_1.csv")
+		assert(Files.exists(g))
+
+		val h = p.resolve("Footprints/XXX/2012/.RDatastiltresult2012x46.55Nx007.98Ex00720_1")
+		assert(Files.exists(h))
+
 		val r = StiltResult(slot, p)
 		assert(r.slot.year == 2012)
 		assert(r.slot.month == 12)
