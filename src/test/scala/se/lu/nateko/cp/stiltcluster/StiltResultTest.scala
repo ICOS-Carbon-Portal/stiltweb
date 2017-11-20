@@ -3,14 +3,10 @@ package se.lu.nateko.cp.stiltcluster.test
 import java.nio.file.{Files, Paths}
 
 import org.scalatest.FunSuite
-import se.lu.nateko.cp.stiltcluster.{StiltPosition, StiltResult, StiltSlot, StiltTime, StiltResultFileType}
+import se.lu.nateko.cp.stiltcluster.{StiltResult, StiltResultFileType, StiltSlot}
 
 
 class StiltResultTest extends FunSuite {
-	val tim = StiltTime(2012, 12, 1, 0)
-	val pos = StiltPosition(56.10, -13.42, 150)
-	val slt = StiltSlot(tim, pos)
-
 
 	test("Read output directory") {
 		val f = "./Footprints/XXX/2012/foot2012x12x08x18x46.55Nx007.98Ex00720_aggreg.nc"
@@ -48,6 +44,5 @@ class StiltResultTest extends FunSuite {
 		val rdatafoot = r.files.find(rf => rf.typ == StiltResultFileType.RDataFoot).get
 		assert(rdatafoot.data.length == 13327)
 		assert(rdatafoot.slot == r.slot)
-
 	}
 }
