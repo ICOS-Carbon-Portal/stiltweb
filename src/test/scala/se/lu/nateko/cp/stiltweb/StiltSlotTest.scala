@@ -1,4 +1,4 @@
-package se.lu.nateko.cp.stiltcluster.test
+package se.lu.nateko.cp.stiltweb
 
 import org.scalatest.FunSuite
 import se.lu.nateko.cp.stiltcluster.{StiltPosition, StiltTime, StiltSlot}

@@ -1,29 +1,35 @@
-package se.lu.nateko.cp.stiltcluster.test
+package se.lu.nateko.cp.stiltweb
 
 import java.nio.file.{Files, Paths}
 
 import org.scalatest.FunSuite
-import se.lu.nateko.cp.stiltcluster.{StiltResult, StiltResultFileType, StiltSlot}
+import se.lu.nateko.cp.stiltcluster.{StiltResult, StiltSlot, StiltResultFileType}
+
+
+object StiltResultTest {
+	val sampleFileName = "./Footprints/XXX/2012/foot2012x12x08x18x46.55Nx007.98Ex00720_aggreg.nc"
+	val (_prefix, sampleSlot, _suffix) = StiltSlot.ofFilename(sampleFileName)
+
+	assert(_prefix == "./Footprints/XXX/2012/foot")
+	assert(_suffix == "_aggreg.nc")
+
+	val sampleSlotDir = Paths.get(getClass.getResource("/stilt-sample-run/output").getFile)
+	assert(Files.exists(sampleSlotDir))
+}
 
 
 class StiltResultTest extends FunSuite {
 
+	import StiltResultTest.{sampleSlotDir, sampleSlot}
+
 	test("Read output directory") {
-		val f = "./Footprints/XXX/2012/foot2012x12x08x18x46.55Nx007.98Ex00720_aggreg.nc"
-		val (prefix, slot, suffix) = StiltSlot.ofFilename(f)
-		assert(prefix == "./Footprints/XXX/2012/foot")
-		assert(suffix == "_aggreg.nc")
-
-		val p = Paths.get(getClass.getResource("/stilt-sample-run/output").getFile)
-		assert(Files.exists(p))
-
-		val g = p.resolve("Footprints/XXX/2012/stiltresult2012x46.55Nx007.98Ex00720_1.csv")
+		val g = sampleSlotDir.resolve("Footprints/XXX/2012/stiltresult2012x46.55Nx007.98Ex00720_1.csv")
 		assert(Files.exists(g))
 
-		val h = p.resolve("Footprints/XXX/2012/.RDatastiltresult2012x46.55Nx007.98Ex00720_1")
+		val h = sampleSlotDir.resolve("Footprints/XXX/2012/.RDatastiltresult2012x46.55Nx007.98Ex00720_1")
 		assert(Files.exists(h))
 
-		val r = StiltResult(slot, p)
+		val r = StiltResult(sampleSlot, sampleSlotDir)
 		assert(r.slot.year == 2012)
 		assert(r.slot.month == 12)
 		assert(r.slot.day == 8)

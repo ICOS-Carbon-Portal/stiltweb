@@ -1,4 +1,4 @@
-package se.lu.nateko.cp.stiltweb.test
+package se.lu.nateko.cp.stiltweb
 
 import org.scalatest.FunSuite
 import se.lu.nateko.cp.stiltweb.{ConfigReader, StiltResultsFetcher}

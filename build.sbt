@@ -35,10 +35,11 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 		name := "stiltcluster",
 		version := "0.1.0",
 		libraryDependencies ++= Seq(
-			"com.typesafe.akka" %% "akka-cluster"     % akkaVersion,
-			"com.typesafe.akka" %% "akka-cluster-tools" % akkaVersion,
-			"com.typesafe.akka" %% "akka-slf4j"       % akkaVersion,
-			"org.scalatest"     %% "scalatest"                          % "3.0.1"            % "test"
+			"com.typesafe.akka" %% "akka-cluster"		 % akkaVersion,
+			"com.typesafe.akka" %% "akka-cluster-tools"	 % akkaVersion,
+			"com.typesafe.akka" %% "akka-slf4j"			 % akkaVersion,
+			"com.typesafe.akka" %% "akka-testkit"		 % akkaVersion,
+			"org.scalatest"     %% "scalatest"           % "3.0.1" % "test"
 		),
 		fork in run := true,
 		connectInput in run := true
@@ -59,6 +60,7 @@ lazy val stiltweb = (project in file("."))
 			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.5-SNAPSHOT",
 			"se.lu.nateko.cp"    %% "views-core"                         % "0.2-SNAPSHOT",
 			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.0-SNAPSHOT",
+			"com.typesafe.akka"  %% "akka-testkit"						 % akkaVersion,
 			"org.scalatest"      %% "scalatest"                          % "3.0.1"            % "test"
 		),
 
