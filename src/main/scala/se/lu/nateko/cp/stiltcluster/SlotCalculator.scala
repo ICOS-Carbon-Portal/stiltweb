@@ -17,15 +17,14 @@ class SlotCalculator extends Actor with ActorLogging {
 				log.info("Future starting")
 				// A sequence of strings such as 2012071203
 				val strings = RunStilt.cmd_calcslots(job.start, job.stop)
-				println(s"(println) Slots calculated (all ${strings.length} of them)")
 				// Convert these strings into proper slots
 				val slots = strings.map ( parseCalcSlotString(job, _) )
 				log.info(s"Slots converted (all ${slots.length} of them)")
 				origin ! SlotListCalculated(slots)
 			} onComplete {
 				// FIXME - Would like automatic logging of stacktraces in failed futures.
-				case Success(_) => println("Future successfully completed")
-				case Failure(t) => { println("An error has occured: " + t); t.printStackTrace }
+				case Success(_) => ()
+				case Failure(e) => { log.error(e, "Could not run stilt") }
 			}
 			log.info("Started slot calculation in separate future")
 	}

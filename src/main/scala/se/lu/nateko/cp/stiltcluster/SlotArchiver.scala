@@ -51,7 +51,6 @@ object LocallyAvailableSlot {
 	def save(slotArchive: Path, result: StiltResult): LocallyAvailableSlot = {
 		val slotDir = getSlotDir(slotArchive, result.slot)
 		val tmpDir = Files.createDirectories(Paths.get(slotDir + ".tmp"))
-		println(s"Saving slot files to ${tmpDir}")
 		for (f <- result.files) {
 			val name = f.typ match {
 				case StiltResultFileType.Foot	   => "foot"
@@ -60,7 +59,6 @@ object LocallyAvailableSlot {
 			}
 			Util.writeFileAtomically(tmpDir.resolve(name).toFile, f.data)
 		}
-		println(s"Renaming ${tmpDir} to ${slotDir}")
 		Files.move(tmpDir, slotDir)
 		new LocallyAvailableSlot(result.slot, slotDir)
 	}
