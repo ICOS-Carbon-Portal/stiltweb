@@ -12,12 +12,14 @@ class LocalStiltFile (slot: StiltSlot, src: Path, typ: StiltResultFileType.Value
 	def link(dir: Path): Unit = {
 		val relPath = StiltResultFile.calcFileName(slot, typ)
 		val absPath = dir.resolve(relPath)
+		// Create leading directories, e.g 'Footprints/XXX/2012'
+		Files.createDirectories(absPath.getParent)
 		Files.createSymbolicLink(absPath, src)
 	}
 }
 
 
-class LocallyAvailableSlot private (val slot: StiltSlot, slotDir: Path) {
+class LocallyAvailableSlot private (val slot: StiltSlot, val slotDir: Path) {
 
 	assert(Files.isDirectory(slotDir))
 
@@ -86,12 +88,10 @@ class SlotArchiver(stateDir: Path) extends Actor with ActorLogging {
 
 	def receive = {
 		case SlotCalculated(result) =>
-			log.info(s"Slot calculated ${result.slot}")
 			val local = LocallyAvailableSlot.save(slotsDir, result)
 			sender() ! SlotAvailable(local)
 
 		case RequestSingleSlot(slot) =>
-			log.info("Receiving single slot request")
 			LocallyAvailableSlot.load(slotsDir, slot) match {
 				case None => sender() ! SlotUnAvailable(slot)
 				case Some(local) => sender ! SlotAvailable(local)

@@ -15,12 +15,14 @@ object StiltResultTest {
 
 	val sampleSlotDir = Paths.get(getClass.getResource("/stilt-sample-run/output").getFile)
 	assert(Files.exists(sampleSlotDir))
+
+	val sampleResult = StiltResult(sampleSlot, sampleSlotDir)
 }
 
 
 class StiltResultTest extends FunSuite {
 
-	import StiltResultTest.{sampleSlotDir, sampleSlot}
+	import StiltResultTest.{sampleSlotDir, sampleResult}
 
 	test("Read output directory") {
 		val g = sampleSlotDir.resolve("Footprints/XXX/2012/stiltresult2012x46.55Nx007.98Ex00720_1.csv")
@@ -29,7 +31,7 @@ class StiltResultTest extends FunSuite {
 		val h = sampleSlotDir.resolve("Footprints/XXX/2012/.RDatastiltresult2012x46.55Nx007.98Ex00720_1")
 		assert(Files.exists(h))
 
-		val r = StiltResult(sampleSlot, sampleSlotDir)
+		val r = sampleResult
 		assert(r.slot.year == 2012)
 		assert(r.slot.month == 12)
 		assert(r.slot.day == 8)
