@@ -1,3 +1,5 @@
+scalaVersion in ThisBuild := "2.12.4"
+
 cancelable in Global := true
 
 // By default sbt will exclude files starting with a dot when copying
@@ -38,7 +40,6 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 			"com.typesafe.akka" %% "akka-cluster"		 % akkaVersion,
 			"com.typesafe.akka" %% "akka-cluster-tools"	 % akkaVersion,
 			"com.typesafe.akka" %% "akka-slf4j"			 % akkaVersion,
-			"com.typesafe.akka" %% "akka-testkit"		 % akkaVersion,
 			"org.scalatest"     %% "scalatest"           % "3.0.1" % "test"
 		),
 		fork in run := true,

@@ -6,6 +6,7 @@ import akka.actor.{Actor, ActorLogging}
 import spray.json._
 import se.lu.nateko.cp.stiltweb.StiltJsonSupport._
 
+
 class JobDir(val job: Job, val dir: Path) {
 
 	private val slotsFile = dir.resolve("slots.json")
@@ -35,11 +36,15 @@ class JobDir(val job: Job, val dir: Path) {
 	}
 
 	def link(local: LocallyAvailableSlot) = {
-		local.link(this.dir)
+		local.link(this.slotsDir)
 	}
 
 	def slotPresent(s: StiltSlot): Boolean = {
 		LocallyAvailableSlot.isLinked(dir, s)
+	}
+
+	def slotPresent(s: LocallyAvailableSlot): Boolean = {
+		LocallyAvailableSlot.isLinked(dir, s.slot)
 	}
 
 	def missingSlots = {
@@ -78,7 +83,6 @@ class JobArchiver(dataDir: Path) extends Actor with ActorLogging {
 		case JobFinished(jdir: JobDir) => {
 			jdir.markAsDone
 		}
-
 	}
 
 	private def readOldJobsFromDisk() = {

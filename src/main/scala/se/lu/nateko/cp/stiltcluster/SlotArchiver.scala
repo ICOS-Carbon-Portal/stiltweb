@@ -1,5 +1,6 @@
 package se.lu.nateko.cp.stiltcluster
 
+import akka.event.LoggingAdapter
 import java.nio.file.{Files, Path, Paths}
 
 import akka.actor.{Actor, ActorLogging}
@@ -50,18 +51,23 @@ object LocallyAvailableSlot {
 		}
 	}
 
-	def save(slotArchive: Path, result: StiltResult): LocallyAvailableSlot = {
+	def save(slotArchive: Path, result: StiltResult)
+			(implicit log: LoggingAdapter): LocallyAvailableSlot = {
 		val slotDir = getSlotDir(slotArchive, result.slot)
-		val tmpDir = Files.createDirectories(Paths.get(slotDir + ".tmp"))
-		for (f <- result.files) {
-			val name = f.typ match {
-				case StiltResultFileType.Foot	   => "foot"
-				case StiltResultFileType.RDataFoot => "rdatafoot"
-				case StiltResultFileType.RData	   => "rdata"
+		if (! Files.exists(slotDir)) {
+			val tmpDir = Files.createDirectories(Paths.get(slotDir + ".tmp"))
+			for (f <- result.files) {
+				val name = f.typ match {
+					case StiltResultFileType.Foot	   => "foot"
+					case StiltResultFileType.RDataFoot => "rdatafoot"
+					case StiltResultFileType.RData	   => "rdata"
+				}
+				Util.writeFileAtomically(tmpDir.resolve(name).toFile, f.data)
 			}
-			Util.writeFileAtomically(tmpDir.resolve(name).toFile, f.data)
+			Files.move(tmpDir, slotDir)
+		} else {
+			log.warning("received a stilt result I already have")
 		}
-		Files.move(tmpDir, slotDir)
 		new LocallyAvailableSlot(result.slot, slotDir)
 	}
 
@@ -85,6 +91,7 @@ class SlotArchiver(stateDir: Path) extends Actor with ActorLogging {
 
 	val slotsDir = Util.ensureDirectory(stateDir.resolve("slots"))
 	log.info(s"starting up in ${slotsDir}")
+	implicit val _: LoggingAdapter = log
 
 	def receive = {
 		case SlotCalculated(result) =>

@@ -40,7 +40,6 @@ class SlotProducer extends Actor with ActorLogging {
 			log.info(s"Received ${slots.length} slot requests")
 			for (slot <- slots) {
 				requests.update(slot, requests.getOrElse(slot, List()) :+ sender())
-				log.info("Sending single slot request to slotarchiver")
 				slotArchiver ! RequestSingleSlot(slot)
 			}
 
