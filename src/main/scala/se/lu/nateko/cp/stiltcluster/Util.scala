@@ -6,6 +6,7 @@ import java.nio.file.{ Files, Path }
 
 
 object Util {
+	import scala.sys.process._
 
 	def writeFileAtomically(f: File, data: Array[Byte]) = {
 		val t = new File(f.toString + ".tmp")
@@ -40,6 +41,17 @@ object Util {
 		if (! Files.isDirectory(d))
 			Files.createDirectory(d)
 		d
+	}
+
+	def listDirTree(dir: Path): String = {
+		val cmd = Seq("bash", "-c", s"cd '${dir}' && find | sort")
+		cmd.!!
+	}
+
+	def deleteTmpDirTree(dir: Path): Unit = {
+		assert(dir.getParent.toString == "/tmp")
+		val cmd = Seq("rm", "-rf", "--", dir.toString)
+		cmd.!!
 	}
 
 }
