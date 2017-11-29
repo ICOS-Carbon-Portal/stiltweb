@@ -40,11 +40,11 @@ class JobDir(val job: Job, val dir: Path) {
 	}
 
 	def slotPresent(s: StiltSlot): Boolean = {
-		LocallyAvailableSlot.isLinked(dir, s)
+		LocallyAvailableSlot.isLinked(slotsDir, s)
 	}
 
 	def slotPresent(s: LocallyAvailableSlot): Boolean = {
-		LocallyAvailableSlot.isLinked(dir, s.slot)
+		slotPresent(s.slot)
 	}
 
 	def missingSlots = {
