@@ -1,5 +1,6 @@
 package se.lu.nateko.cp.stiltcluster
 
+import akka.actor.ActorRef
 import java.nio.file.{Files, Paths}
 
 import scala.concurrent.Future
@@ -36,17 +37,17 @@ trait Tracker extends Actor {
 class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 
 	private var freeCores = nCores
-
-	def receive = slotCalculation orElse trackPeer
+	private var slotProd: Option[ActorSelection] = None
 
 	traceSetPath(Paths.get("workmaster.log"))
 	trace("WorkMaster starting up")
 
+	def receive = slotCalculation orElse trackPeer
+
 	def slotCalculation: Receive = {
 		case CalculateSlot(slot: StiltSlot) =>
-			trace("Received CalculateSlot")
 			if (freeCores <= 0) {
-				trace("Got CalculateSlot even though I'm busy")
+				trace("Received CalculateSlot even though I'm busy")
 				sender() ! myStatus
 			} else {
 				startStilt(slot)
@@ -55,6 +56,7 @@ class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 
 	def newPeerFound(sp: ActorSelection) = {
 		trace(s"New slotproducer detected, sending greeting (${freeCores} free cores)")
+		slotProd = Some(sp)
 		sp ! myStatus
 	}
 
@@ -75,7 +77,7 @@ class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 			freeCores += 1
 			orgSender ! myStatus
 		} onComplete {
-			case Failure(t) => { println("An error has occured: " + t); t.printStackTrace }
+			case Failure(t) => { trace("An error has occured: " + t.getStackTraceString) }
 			case Success(_) => { }
 		}
 	}

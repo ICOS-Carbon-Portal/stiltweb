@@ -99,6 +99,7 @@ class SlotArchiver(stateDir: Path) extends Actor with Trace{
 	def receive = {
 		case SlotCalculated(result) =>
 			val local = LocallyAvailableSlot.save(slotsDir, result)(trace)
+			trace(s"Slot ${local.slotDir} saved.")
 			sender() ! SlotAvailable(local)
 
 		case RequestSingleSlot(slot) =>

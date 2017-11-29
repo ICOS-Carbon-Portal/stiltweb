@@ -2,7 +2,7 @@ package se.lu.nateko.cp.stiltcluster
 
 import java.nio.file.Path
 
-import scala.collection.mutable.{Buffer, Map, Set}
+import scala.collection.mutable.{Map, Set}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -21,12 +21,13 @@ class SlotProducer (tracePath: Path) extends Actor with Trace {
 
 	val workmasters = Map[ActorRef, Int]()
 	val requests = Map[StiltSlot, Seq[ActorRef]]()
-	val waiting = Buffer.empty[StiltSlot]
+	var waiting = Array.empty[StiltSlot]
 	val sent = Set[(Deadline, StiltSlot)]()
 
 	var previousStatus = getStatus
 
-	def getStatus = (workmasters.size, requests.size, waiting.size, sent.size)
+	def getStatus =
+		(workmasters.size, workmasters.values.sum, requests.size, waiting.size, sent.size)
 
 	scheduleTick
 
@@ -36,6 +37,7 @@ class SlotProducer (tracePath: Path) extends Actor with Trace {
 				trace(s"New WorkMaster ${sender}, ${freeCores} free cores")
 				context.watch(sender)
 			}
+			trace(s"Updating WorkMaster status for ${sender} to ${freeCores} free cores")
 			workmasters.update(sender, freeCores)
 
 		case Terminated(dead) =>
@@ -52,9 +54,10 @@ class SlotProducer (tracePath: Path) extends Actor with Trace {
 			}
 			trace(s"Passed ${slots.length} requests on to the slot archiver")
 
-		case msg: SlotCalculated => {
+		case msg @ SlotCalculated(result) => {
 			trace("Got SlotCalculated, sending on to slot archive")
 			slotArchiver ! msg
+			waiting = waiting.filter { _ != result }
 		}
 
 		case msg @ SlotAvailable(local) =>
@@ -67,15 +70,14 @@ class SlotProducer (tracePath: Path) extends Actor with Trace {
 			}
 
 		case SlotUnAvailable(slot) =>
-			trace(s"SlotUnavailable(${slot}, appending to waiting")
-			waiting.append(slot)
+			waiting = waiting :+ slot
 
 		case Tick =>
 			val status = getStatus
 			if (status != previousStatus) {
-				val (nWm, nR, nW, nS) = status
+				val (nWm, nCpus, nR, nW, nS) = status
 				// Only trace when something has changed, to avoid spamming the log
-				trace(s"Tick - $nWm workmasters, $nR requests, $nW waiting, $nS sent")
+				trace(s"Tick - $nWm workmasters (${nCpus} cpus), $nR requests, $nW waiting, $nS sent")
 				previousStatus = status
 			}
 			checkTimeouts
@@ -83,37 +85,39 @@ class SlotProducer (tracePath: Path) extends Actor with Trace {
 			scheduleTick
 	}
 
-
 	private def scheduleTick() = {
 		context.system.scheduler.scheduleOnce(tickInterval, self, Tick)
 	}
 
 	private def checkTimeouts() = {
 		val overdue = sent.filter { case (deadline, slot) => deadline.isOverdue }
-		// FIXME: timeouts should go back to requests?
 		overdue.foreach { case elem @ (deadline, slot) =>
-			trace(s"Slot ${slot} is overdue, requeuing")
-			waiting.prepend(slot)
 			sent.remove(elem)
+			if (! requests.contains(slot)) {
+				trace(s"Overdue slot ${slot} no longer requested")
+			} else {
+				trace(s"Overdue slot ${slot} still requested, bouncing off slot archiver")
+				// Before requeueing the slot, check (again) that it isn't archived.
+				slotArchiver ! RequestSingleSlot(slot)
+			}
 		}
 	}
 
-	private def sendSomeSlots() =
-		try {
-			for ((wm, freeCores) <- workmasters) {
-				for (i <- freeCores-1 to 0 by -1) {
-					// Keep track of the number of available slot ourselves.
-					// This will get overwritten once the workmaster reports in
-					// again.
-					workmasters.update(wm, i)
-					val slot = waiting.remove(0)
-					val deadline = calcTimeout.fromNow
-					sent.add((deadline, slot))
-					wm ! CalculateSlot(slot)
-					trace(s"Sent slot to ${wm} (timeout in ${calcTimeout} seconds)")
-				}
+	private def sendSomeSlots():Unit = {
+		for ((wm, freeCores) <- workmasters) {
+			for (i <- freeCores-1 to 0 by -1) {
+				if (waiting.isEmpty)
+					return
+				val slot = waiting.head
+				waiting = waiting.drop(1)
+				sent.add((calcTimeout.fromNow, slot))
+				wm ! CalculateSlot(slot)
+				trace(s"Sent slot to ${wm} (timeout in ${calcTimeout} seconds)")
+				// Keep track of the number of available slot ourselves.
+				// This will get overwritten once the workmaster reports in
+				// again.
+				workmasters.update(wm, i)
 			}
-		} catch {
-				case e: java.lang.IndexOutOfBoundsException => ()
 		}
+	}
 }
