@@ -15,7 +15,7 @@ object WorkMasterApp extends App {
 			val seedHostname = conf.getString("stiltcluster.seedhost")
 			hostname == seedHostname
 		}
-		val reservedCores = if(thisIsFrontendVm) 2 else 0
+		val reservedCores = if(thisIsFrontendVm) 1 else 0
 		Runtime.getRuntime.availableProcessors - reservedCores
 	}
 
