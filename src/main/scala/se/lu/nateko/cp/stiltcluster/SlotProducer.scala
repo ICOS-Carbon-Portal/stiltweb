@@ -84,7 +84,6 @@ class SlotProducer extends Actor with ActorLogging {
 	private def sendSomeSlots() =
 		try {
 			for ((wm, freeCores) <- workmasters) {
-				log.info(s"Considering workmaster ${wm} with ${freeCores} free cores")
 				for (i <- freeCores-1 to 0 by -1) {
 					// Keep track of the number of available slot ourselves.
 					// This will get overwritten once the workmaster reports in

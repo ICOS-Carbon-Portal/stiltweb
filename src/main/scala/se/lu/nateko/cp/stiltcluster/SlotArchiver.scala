@@ -15,7 +15,8 @@ class LocalStiltFile (slot: StiltSlot, src: Path, typ: StiltResultFileType.Value
 		val absPath = dir.resolve(relPath)
 		// Create leading directories, e.g 'Footprints/XXX/2012'
 		Files.createDirectories(absPath.getParent)
-		Files.createSymbolicLink(absPath, src)
+		if (! Files.exists(absPath))
+			Files.createSymbolicLink(absPath, src)
 	}
 }
 
