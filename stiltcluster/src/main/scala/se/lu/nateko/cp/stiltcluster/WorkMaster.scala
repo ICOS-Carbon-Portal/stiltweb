@@ -37,7 +37,7 @@ trait Tracker extends Actor {
 class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 
 	private var freeCores = nCores
-	private var slotProd: Option[ActorSelection] = None
+	private var slotProd  = context.actorSelection("")
 
 	traceSetPath(Paths.get("workmaster.log"))
 	trace("WorkMaster starting up")
@@ -56,8 +56,8 @@ class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 
 	def newPeerFound(sp: ActorSelection) = {
 		trace(s"New slotproducer detected, sending greeting (${freeCores} free cores)")
-		slotProd = Some(sp)
-		sp ! myStatus
+		slotProd = sp
+		slotProd ! myStatus
 	}
 
 	private def myStatus = WorkMasterStatus(freeCores)
@@ -65,7 +65,6 @@ class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 	private def startStilt(slot: StiltSlot) = {
 		import scala.concurrent.ExecutionContext.Implicits.global
 		freeCores -= 1
-		val orgSender = sender()
 		Future {
 			trace(s"Starting stilt calculation of $slot")
 			val s = RunStilt.cmd_run(slot)
@@ -73,9 +72,9 @@ class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 			val d = Paths.get(s)
 			assert(Files.isDirectory(d))
 			val r = StiltResult(slot, d.resolve("output"))
-			orgSender ! SlotCalculated(r)
+			slotProd ! SlotCalculated(r)
 			freeCores += 1
-			orgSender ! myStatus
+			slotProd ! myStatus
 		} onComplete {
 			case Failure(t) => { trace("An error has occured: " + t.getStackTraceString) }
 			case Success(_) => { }
