@@ -2,9 +2,9 @@ package se.lu.nateko.cp.stiltcluster
 
 import java.nio.file.{Files, Path}
 
-import akka.actor.{Actor, ActorLogging}
-import spray.json._
+import akka.actor.Actor
 import se.lu.nateko.cp.stiltweb.StiltJsonSupport._
+import spray.json._
 
 
 class JobDir(val job: Job, val dir: Path) {
@@ -54,29 +54,29 @@ class JobDir(val job: Job, val dir: Path) {
 
 
 
-class JobArchiver(dataDir: Path) extends Actor with ActorLogging {
+class JobArchiver(dataDir: Path) extends Actor with Trace {
 
 	val receptionist = context.actorSelection("/user/receptionist")
 
-	final val jobsDir = dataDir.resolve("jobs")
-	Util.ensureDirectory(jobsDir)
-
+	final val jobsDir = Util.ensureDirectory(dataDir.resolve("jobs"))
 	final val jobFile = "job.json"
-	log.info(s"starting up in ${jobsDir}")
+
+	traceSetPath(jobsDir.resolve("trace.log"))
+	trace(s"Starting up in ${jobsDir}")
 
 	readOldJobsFromDisk
 
 	def receive = {
 		case PersistJob(job: Job) =>
-			log.info(s"Asked to create job $job")
+			trace(s"Asked to create job $job")
 			val dir = jobsDir.resolve(job.id)
 			if (Files.isDirectory(dir)) {
-				log.warning(s"$dir already existed, ignoring")
+				trace(s"$dir already existed, ignoring")
 			} else {
 				Files.createDirectory(dir)
 				val f = dir.resolve(jobFile)
 				Util.writeFileAtomically(f.toFile, job.toJson.prettyPrint)
-				log.info(s"Wrote job file $f")
+				trace(s"Wrote job file $f")
 				sender() ! BeginJob(new JobDir(job, dir))
 			}
 
@@ -88,12 +88,12 @@ class JobArchiver(dataDir: Path) extends Actor with ActorLogging {
 	private def readOldJobsFromDisk() = {
 		import scala.collection.JavaConverters._
 
-		log.info(s"Looking in ${jobsDir} for unfinished jobs")
+		trace(s"Looking in ${jobsDir} for unfinished jobs")
 		val isJobDir   = { f:Path => Files.isDirectory(f) && Files.exists(f.resolve("job.json")) }
 		val jobNotDone = { f:Path => ! Util.fileExists(f.toFile, "done") }
 
 		for (d <- Files.list(jobsDir).iterator.asScala) {
-			log.info(s"JobArchiver looking at ${d} isJobDir=${isJobDir(d)} jobNotDone=${jobNotDone(d)}")
+			trace(s"JobArchiver looking at ${d} isJobDir=${isJobDir(d)} jobDone=${! jobNotDone(d)}")
 		}
 		// FIXME: Couldn't get this to work without the .iterator.asScala dance :(
 		val i = Files.list(jobsDir).iterator.asScala
@@ -102,7 +102,7 @@ class JobArchiver(dataDir: Path) extends Actor with ActorLogging {
 			val json = scala.io.Source.fromFile(file.toFile).mkString.parseJson
 			val job  = JobFormat.read(json)
 			val jdir = new JobDir(job, d)
-			log.info(s"Read old job '${job}' and sending it to receptionist")
+			trace(s"Read old job '${job}' and sending it to receptionist")
 			receptionist ! BeginJob(jdir)
 		}
 	}

@@ -1,9 +1,8 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.event.LoggingAdapter
 import java.nio.file.{Files, Path, Paths}
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.Actor
 
 
 class LocalStiltFile (slot: StiltSlot, src: Path, typ: StiltResultFileType.Value) {
@@ -33,6 +32,8 @@ class LocallyAvailableSlot private (val slot: StiltSlot, val slotDir: Path) {
 		new LocalStiltFile(slot, slotDir.resolve(name), typ) }
 
 
+	override def toString() = s"LocallyAvailableslot(${slot}, ${slotDir})"
+
 	def link(dir: Path) = {
 		files.foreach { f => f.link(dir) }
 	}
@@ -53,7 +54,7 @@ object LocallyAvailableSlot {
 	}
 
 	def save(slotArchive: Path, result: StiltResult)
-			(implicit log: LoggingAdapter): LocallyAvailableSlot = {
+			(implicit trace: (String => Unit)): LocallyAvailableSlot = {
 		val slotDir = getSlotDir(slotArchive, result.slot)
 		if (! Files.exists(slotDir)) {
 			val tmpDir = Files.createDirectories(Paths.get(slotDir + ".tmp"))
@@ -67,7 +68,7 @@ object LocallyAvailableSlot {
 			}
 			Files.move(tmpDir, slotDir)
 		} else {
-			log.warning("received a stilt result I already have")
+			trace("received a stilt result I already have")
 		}
 		new LocallyAvailableSlot(result.slot, slotDir)
 	}
@@ -88,15 +89,16 @@ object LocallyAvailableSlot {
 }
 
 
-class SlotArchiver(stateDir: Path) extends Actor with ActorLogging {
+class SlotArchiver(stateDir: Path) extends Actor with Trace{
 
 	val slotsDir = Util.ensureDirectory(stateDir.resolve("slots"))
-	log.info(s"starting up in ${slotsDir}")
-	implicit val _: LoggingAdapter = log
+	traceSetPath(slotsDir.resolve("trace.log"))
+
+	trace(s"Starting up in ${slotsDir}")
 
 	def receive = {
 		case SlotCalculated(result) =>
-			val local = LocallyAvailableSlot.save(slotsDir, result)
+			val local = LocallyAvailableSlot.save(slotsDir, result)(trace)
 			sender() ! SlotAvailable(local)
 
 		case RequestSingleSlot(slot) =>

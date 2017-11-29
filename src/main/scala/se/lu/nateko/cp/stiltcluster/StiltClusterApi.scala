@@ -19,7 +19,8 @@ class StiltClusterApi {
 	val stateDir = ConfigLoader.loadStiltEnv.stateDir.toPath
 	system.actorOf(Props(new SlotArchiver(stateDir)), name="slotarchiver")
 	system.actorOf(Props[SlotCalculator], name="slotcalculator")
-	system.actorOf(Props[SlotProducer], name="slotproducer")
+	system.actorOf(Props(new SlotProducer(stateDir.resolve("slotproducer.log"))),
+						 name="slotproducer")
 	system.actorOf(Props(new JobArchiver(stateDir)), name="jobarchiver")
 
 	import system.dispatcher

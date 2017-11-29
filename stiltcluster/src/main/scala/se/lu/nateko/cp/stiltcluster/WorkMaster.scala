@@ -1,12 +1,13 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.nio.file.{ Files, Paths }
-import scala.concurrent.Future
+import java.nio.file.{Files, Paths}
 
-import akka.actor.{Actor, ActorLogging, ActorSelection, RootActorPath}
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
+
+import akka.actor.{Actor, ActorSelection, RootActorPath}
 import akka.cluster.{Cluster, Member, MemberStatus}
 import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
-import scala.util.{ Failure, Success }
 
 
 trait Tracker extends Actor {
@@ -32,19 +33,20 @@ trait Tracker extends Actor {
 }
 
 
-class WorkMaster(nCores: Int) extends Actor with ActorLogging with Tracker {
+class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 
 	private var freeCores = nCores
 
 	def receive = slotCalculation orElse trackPeer
 
-	log.info("WorkMaster starting up")
+	traceSetPath(Paths.get("workmaster.log"))
+	trace("WorkMaster starting up")
 
 	def slotCalculation: Receive = {
 		case CalculateSlot(slot: StiltSlot) =>
-			log.info("Received CalculateSlot")
+			trace("Received CalculateSlot")
 			if (freeCores <= 0) {
-				log.warning("Got CalculateSlot even though I'm busy")
+				trace("Got CalculateSlot even though I'm busy")
 				sender() ! myStatus
 			} else {
 				startStilt(slot)
@@ -52,7 +54,7 @@ class WorkMaster(nCores: Int) extends Actor with ActorLogging with Tracker {
 	}
 
 	def newPeerFound(sp: ActorSelection) = {
-		log.info(s"New slotproducer detected, sending greeting (${freeCores} free cores)")
+		trace(s"New slotproducer detected, sending greeting (${freeCores} free cores)")
 		sp ! myStatus
 	}
 
@@ -63,9 +65,9 @@ class WorkMaster(nCores: Int) extends Actor with ActorLogging with Tracker {
 		freeCores -= 1
 		val orgSender = sender()
 		Future {
-			log.info(s"Starting stilt calculation of $slot")
+			trace(s"Starting stilt calculation of $slot")
 			val s = RunStilt.cmd_run(slot)
-			log.info(s"Stilt simulation finished ${s}")
+			trace(s"Stilt simulation finished ${s}")
 			val d = Paths.get(s)
 			assert(Files.isDirectory(d))
 			val r = StiltResult(slot, d.resolve("output"))

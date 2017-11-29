@@ -1,13 +1,17 @@
 package se.lu.nateko.cp.stiltcluster
 
-import scala.collection.mutable.{Map, Set, Buffer}
+import java.nio.file.Path
+
+import scala.collection.mutable.{Buffer, Map, Set}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Terminated}
+import akka.actor.{Actor, ActorRef, Terminated}
 
 
-class SlotProducer extends Actor with ActorLogging {
+class SlotProducer (tracePath: Path) extends Actor with Trace {
+
+	traceSetPath(tracePath)
 
 	case object Tick
 	final val tickInterval = 5 seconds
@@ -20,48 +24,60 @@ class SlotProducer extends Actor with ActorLogging {
 	val waiting = Buffer.empty[StiltSlot]
 	val sent = Set[(Deadline, StiltSlot)]()
 
+	var previousStatus = getStatus
+
+	def getStatus = (workmasters.size, requests.size, waiting.size, sent.size)
+
 	scheduleTick
 
 	def receive = {
 		case WorkMasterStatus(freeCores) =>
 			if (! workmasters.contains(sender)) {
-				log.info(s"New WorkMaster ${sender}, ${freeCores} free cores")
+				trace(s"New WorkMaster ${sender}, ${freeCores} free cores")
 				context.watch(sender)
 			}
 			workmasters.update(sender, freeCores)
 
 		case Terminated(dead) =>
 			if (workmasters.contains(dead)) {
-				log.info(s"WorkMaster ${sender.path} terminated")
+				trace(s"WorkMaster ${sender.path} terminated")
 				workmasters.remove(dead)
 			}
 
 		case RequestManySlots(slots) =>
-			log.info(s"Received ${slots.length} slot requests")
+			trace(s"Received a request for ${slots.length} slots.")
 			for (slot <- slots) {
 				requests.update(slot, requests.getOrElse(slot, List()) :+ sender())
 				slotArchiver ! RequestSingleSlot(slot)
 			}
+			trace(s"Passed ${slots.length} requests on to the slot archiver")
 
 		case msg: SlotCalculated => {
-			log.info("Got SlotCalculated, sending to slot archive")
+			trace("Got SlotCalculated, sending on to slot archive")
 			slotArchiver ! msg
 		}
 
 		case msg @ SlotAvailable(local) =>
-			log.info("SlotAvailable(slot)")
 			requests.remove(local.slot) match {
-				case None => log.warning(s"SlotAvailable(${local}) with no requests")
-				case Some(actors) => actors.foreach { _ ! msg }
+				case None => trace(s"${local.slotDir} with no requests!")
+				case Some(actors) => {
+					actors.foreach { _ ! msg }
+					trace(s"${local.slotDir} passed on to ${actors.size} actors")
+				}
 			}
 
 		case SlotUnAvailable(slot) =>
-			log.info("SlotUnavailable")
+			trace(s"SlotUnavailable(${slot}, appending to waiting")
 			waiting.append(slot)
 
 		case Tick =>
-			log.info("Tick!")
-			log.info(s"${requests.size} requests, ${waiting.length} in queue, ${sent.size} sent")
+			val status = getStatus
+			if (status != previousStatus) {
+				val (nWm, nR, nW, nS) = status
+				// Only trace when something has changed, to avoid spamming the log
+				trace(s"Tick - $nWm workmasters, $nR requests, $nW waiting, $nS sent")
+				previousStatus = status
+			}
 			checkTimeouts
 			sendSomeSlots
 			scheduleTick
@@ -74,8 +90,9 @@ class SlotProducer extends Actor with ActorLogging {
 
 	private def checkTimeouts() = {
 		val overdue = sent.filter { case (deadline, slot) => deadline.isOverdue }
+		// FIXME: timeouts should go back to requests?
 		overdue.foreach { case elem @ (deadline, slot) =>
-			log.warning(s"Slot ${slot} is overdue, requeuing")
+			trace(s"Slot ${slot} is overdue, requeuing")
 			waiting.prepend(slot)
 			sent.remove(elem)
 		}
@@ -93,11 +110,10 @@ class SlotProducer extends Actor with ActorLogging {
 					val deadline = calcTimeout.fromNow
 					sent.add((deadline, slot))
 					wm ! CalculateSlot(slot)
-					log.info(s"Sent slot to workmaster (timeout in ${calcTimeout} seconds)")
+					trace(s"Sent slot to ${wm} (timeout in ${calcTimeout} seconds)")
 				}
 			}
 		} catch {
-				case e: java.lang.IndexOutOfBoundsException =>
-					log.info("No slots waiting")
+				case e: java.lang.IndexOutOfBoundsException => ()
 		}
 }

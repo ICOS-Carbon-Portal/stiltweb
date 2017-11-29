@@ -1,21 +1,27 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.Actor
 
 
-class JobMonitor(jobDir: JobDir) extends Actor with ActorLogging {
+class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 
 	val slotCalculator = context.actorSelection("/user/slotcalculator")
 	val slotProducer = context.actorSelection("/user/slotproducer")
 
-	if (jobDir.slots.isEmpty)
+	traceSetPath(jobDir.dir.resolve("trace.log"))
+	trace(s"Starting up in ${jobDir.dir}")
+
+	if (jobDir.slots.isEmpty) {
+		trace("No slot list, requesting one.")
 		slotCalculator ! CalculateSlotList(jobDir.job)
-	else
-		 requestRemainingSlots()
+	} else {
+		trace("Already have slot list")
+		requestRemainingSlots()
+	}
 
 	def receive = {
 		case SlotListCalculated(slots) =>
-			log.info(s"Received a list ${slots.length} slots")
+			trace(s"Received a list of ${slots.length} slots")
 			jobDir.saveSlotList(slots)
 			// FIXME - send update to browser about slot having been calculated
 			requestRemainingSlots()
@@ -23,7 +29,7 @@ class JobMonitor(jobDir: JobDir) extends Actor with ActorLogging {
 
 	def requestRemainingSlots() = {
 		val remaining = jobDir.missingSlots
-		log.info(s"${jobDir.slots.get.length} slots in total. ${remaining.length} remaining")
+		trace(s"${jobDir.slots.get.length} slots in total. ${remaining.length} remaining, sending request.")
 		slotProducer ! RequestManySlots(remaining)
 		context become working(remaining)
 	}
@@ -32,12 +38,12 @@ class JobMonitor(jobDir: JobDir) extends Actor with ActorLogging {
 		case SlotAvailable(local) =>
 			val (removed, remaining) = outstanding.partition(local.equals(_))
 			if (removed.isEmpty) {
-				log.error(s"Received slot I'm not waiting for ${local}")
+				trace(s"Received slot I'm not waiting for ${local}")
 			} else {
 				if (jobDir.slotPresent(local)) {
-					log.info("received a slot that is already present")
+					trace("Received a slot that is already present")
 				} else {
-					log.info(s"Received new slot, ${remaining.length} remaining.")
+					trace(s"Received new slot, ${remaining.length} remaining.")
 					jobDir.link(local)
 				}
 			}
@@ -48,7 +54,7 @@ class JobMonitor(jobDir: JobDir) extends Actor with ActorLogging {
 	}
 
 	def done() = {
-		log.info(s"JobMonitor done, terminating")
+		trace(s"Done, terminating")
 		jobDir.markAsDone()
 		context stop self
 	}
