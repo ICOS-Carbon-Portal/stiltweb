@@ -1,10 +1,19 @@
 /* Representation of single stilt Slot.
 
- The stilt model outputs files using a particular naming convention
+ A "slot" is the smallest unit of simulation when using stilt. While
+ theoretically variable in length, both our frontend and the simulation code is
+ filled with assumptions that a slot is 3 hours long.
 
+ When the user submits a Stilt job through the web frontend, we turn around and
+ asks the simulation how many slots are in the given date range. This module
+ represents those slots.
+
+ This stilt simulation outputs files using a particular naming convention:
  For example:
    foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
 
+ The objects in this module all know how to convert themselves to/from such a
+ string representation.
  */
 
 package se.lu.nateko.cp.stiltcluster

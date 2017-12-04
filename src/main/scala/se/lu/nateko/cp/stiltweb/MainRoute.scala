@@ -68,9 +68,9 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			path("worker.js"){
 				getFromResource("www/worker.js")
 			}
-			// path("wsdashboardinfo"){
-			//	handleWebSocketMessages(cluster.websocketsFlow)
-			// }
+			path("wsdashboardinfo"){
+				handleWebSocketMessages(cluster.websocketsFlow)
+			}
 		} ~
 		post{
 			path("enqueuejob"){

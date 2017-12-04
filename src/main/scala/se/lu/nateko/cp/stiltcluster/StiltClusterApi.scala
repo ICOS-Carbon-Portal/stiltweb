@@ -1,5 +1,7 @@
 package se.lu.nateko.cp.stiltcluster
 
+import akka.http.scaladsl.model.ws.Message
+import akka.stream.scaladsl.{ Flow, Keep, Sink, Source }
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
@@ -37,16 +39,16 @@ class StiltClusterApi {
 		}
 	}
 
-	// val websocketsFlow: Flow[Message, Message, Any] = {
-	//	import StiltJsonSupport._
-	//	import spray.json._
-	//	import akka.http.scaladsl.model.ws.TextMessage.Strict
+	val websocketsFlow: Flow[Message, Message, Any] = {
+		import se.lu.nateko.cp.stiltweb.StiltJsonSupport._
+		import spray.json._
+		import akka.http.scaladsl.model.ws.TextMessage.Strict
 
-	//	val source: Source[Message, Any] = Source
-	//		.actorPublisher[DashboardInfo](DashboardPublisher.props(receptionist))
-	//		.map(di => Strict(di.toJson.compactPrint))
+		val source: Source[Message, Any] = Source
+			.actorPublisher[DashboardInfo](DashboardPublisher.props(receptionist))
+			.map(di => Strict(di.toJson.compactPrint))
 
-	//	Flow.fromSinkAndSourceMat(Sink.ignore, source)(Keep.right)
-	//		.keepAlive(30 seconds, () => Strict(""))
-	// }
+		Flow.fromSinkAndSourceMat(Sink.ignore, source)(Keep.right)
+			.keepAlive(30 seconds, () => Strict(""))
+	}
 }
