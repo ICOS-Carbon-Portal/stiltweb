@@ -57,7 +57,8 @@ class SlotProducer (tracePath: Path) extends Actor with Trace {
 		case msg @ SlotCalculated(result) => {
 			trace("Got SlotCalculated, sending on to slot archive")
 			slotArchiver ! msg
-			waiting = waiting.filter { _ != result }
+			waiting = waiting.filter { _ != result.slot }
+			sent.retain { case (_, slot) => slot == result.slot }
 		}
 
 		case msg @ SlotAvailable(local) =>
