@@ -1,6 +1,5 @@
 package se.lu.nateko.cp.stiltweb
 
-import java.io.File
 import se.lu.nateko.cp.cpauth.core.PublicAuthConfig
 import spray.json._
 import com.typesafe.config.Config
@@ -20,6 +19,7 @@ case class StiltWebConfig(
 	mainDirectory: String,
 	jobsOutputDirectory: String,
 	metDataDirectory: String,
+	stateDirectory: String,
 	netcdf: NetCdfConfig,
 	stations: Seq[Seq[String]]
 )
@@ -28,16 +28,12 @@ object ConfigReader extends DefaultJsonProtocol{
 
 	implicit val pubAuthConfigFormat = jsonFormat2(PublicAuthConfig)
 	implicit val netcdfConfigFormat = jsonFormat4(NetCdfConfig)
-	implicit val cpdataConfigFormat = jsonFormat7(StiltWebConfig)
+	implicit val cpdataConfigFormat = jsonFormat8(StiltWebConfig)
 
-	def getDefault: StiltWebConfig = fromAppConfig(getAppConfig)
-
-	def getAppConfig: Config = {
-		// First load configuration from local.conf, located in the current
-		// directory, then fall back to application.conf, referenc.conf (all
-		// found in classpath) etc etc
-		ConfigFactory.parseFile(new File("local.conf")).withFallback(ConfigFactory.load())
-	}
+	lazy val default: StiltWebConfig = fromAppConfig(
+		ConfigFactory.parseFile(new java.io.File("local.conf"))
+			.withFallback(ConfigFactory.load())
+	)
 
 	def fromAppConfig(applicationConfig: Config): StiltWebConfig = {
 		val renderOpts = ConfigRenderOptions.concise.setJson(true)

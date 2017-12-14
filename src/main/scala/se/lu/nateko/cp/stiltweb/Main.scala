@@ -21,7 +21,7 @@ object Main extends App {
 	implicit val materializer = ActorMaterializer(namePrefix = Some("stiltweb_mat"))
 	implicit val dispatcher = system.dispatcher
 
-	val config = ConfigReader.getDefault
+	val config = ConfigReader.default
 
 	val exceptionHandler = ExceptionHandler{
 		case ex =>

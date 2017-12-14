@@ -8,17 +8,26 @@ import scala.concurrent.duration.DurationInt
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import se.lu.nateko.cp.stiltweb.ConfigReader
+import java.nio.file.Paths
+import com.typesafe.config.ConfigFactory
 
 
 class StiltClusterApi {
 
-	private val conf = ConfigLoader.load(Some("stiltfrontend.conf"))
+	private val conf = ConfigFactory.parseResources("clusterfront.conf")
+		.withFallback(ConfigLoader.clusterBase())
+
 	private val system = ActorSystem(conf.getString("stiltcluster.name"), conf)
 
 	private val receptionist = system.actorOf(
 		Props[WorkReceptionist], name = "receptionist")
 
-	val stateDir = ConfigLoader.loadStiltEnv.stateDir.toPath
+	val stateDir = {
+		val dirPath = ConfigReader.default.stateDirectory
+		Paths.get(dirPath.replaceFirst("^~", System.getProperty("user.home")))
+	}
+
 	system.actorOf(Props(new SlotArchiver(stateDir)), name="slotarchiver")
 	system.actorOf(Props[SlotCalculator], name="slotcalculator")
 	system.actorOf(Props(new SlotProducer(stateDir.resolve("slotproducer.log"))),

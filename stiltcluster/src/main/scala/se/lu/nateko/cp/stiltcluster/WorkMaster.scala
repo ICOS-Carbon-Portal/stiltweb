@@ -1,6 +1,5 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.ActorRef
 import java.nio.file.{Files, Paths}
 
 import scala.concurrent.Future

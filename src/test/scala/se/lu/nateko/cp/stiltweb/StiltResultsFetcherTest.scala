@@ -1,11 +1,9 @@
 package se.lu.nateko.cp.stiltweb
 
 import org.scalatest.FunSuite
-import se.lu.nateko.cp.stiltweb.{ConfigReader, StiltResultsFetcher}
 
 
 class StiltResultsFetcherTest extends FunSuite {
-	val config = ConfigReader.getDefault
 
 	/* The following test won't work unless some specific file are created or
 	   a mocked filesystem is set up.
@@ -41,6 +39,7 @@ touch /mnt/additional_disk/WORKER/Input/Metdata/Europe2/ECmetF.12120100.IN
 	 */
 
 	ignore("Test availablemonths") {
+		val config = ConfigReader.default
 		val srf = new StiltResultsFetcher(config)
 		val cor = Vector("2011-12", "2012-01", "2012-02", "2012-03", "2012-04",
 						 "2012-05", "2012-06", "2012-07", "2012-08", "2012-09",
