@@ -37,8 +37,8 @@ class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 
 	private var freeCores = nCores
 	private var slotProd  = context.actorSelection("")
+	protected val traceFile = Paths.get("workmaster.log")
 
-	traceSetPath(Paths.get("workmaster.log"))
 	trace("WorkMaster starting up")
 
 	def receive = slotCalculation orElse trackPeer

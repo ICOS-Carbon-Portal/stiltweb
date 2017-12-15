@@ -9,16 +9,11 @@ import java.time.LocalDateTime
 
 trait Trace {
 
-	var traceFile : Option[Path] = None
-
-	def traceSetPath(f: Path): Unit = {
-		traceFile = Some(f)
-	}
+	protected def traceFile: Path
 
 	def trace(msg: String) = {
-		assert(! traceFile.isEmpty)
 		val s = s"${LocalDateTime.now.toString()} - ${msg}\n"
-		Files.write(traceFile.get, s.getBytes, CREATE, APPEND)
+		Files.write(traceFile, s.getBytes, CREATE, APPEND)
 	}
 }
 

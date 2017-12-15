@@ -60,8 +60,8 @@ class JobArchiver(dataDir: Path) extends Actor with Trace {
 
 	final val jobsDir = Util.ensureDirectory(dataDir.resolve("jobs"))
 	final val jobFile = "job.json"
+	protected final val traceFile = jobsDir.resolve("trace.log")
 
-	traceSetPath(jobsDir.resolve("trace.log"))
 	trace(s"Starting up in ${jobsDir}")
 
 	readOldJobsFromDisk

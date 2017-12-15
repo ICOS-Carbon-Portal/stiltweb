@@ -92,7 +92,7 @@ object LocallyAvailableSlot {
 class SlotArchiver(stateDir: Path) extends Actor with Trace{
 
 	val slotsDir = Util.ensureDirectory(stateDir.resolve("slots"))
-	traceSetPath(slotsDir.resolve("trace.log"))
+	protected val traceFile = slotsDir.resolve("trace.log")
 
 	trace(s"Starting up in ${slotsDir}")
 
