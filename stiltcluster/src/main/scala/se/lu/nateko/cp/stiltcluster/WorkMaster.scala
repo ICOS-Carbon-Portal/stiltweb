@@ -75,6 +75,7 @@ class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 			freeCores += 1
 			slotProd ! myStatus
 		} onComplete {
+			//TODO Add proper failure reporting to StolProducer
 			case Failure(t) => { trace(s"An error has occured:\n${t}") }
 			case Success(_) => { }
 		}

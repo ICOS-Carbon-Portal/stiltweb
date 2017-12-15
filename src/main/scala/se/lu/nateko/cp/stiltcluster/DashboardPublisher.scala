@@ -3,16 +3,14 @@ package se.lu.nateko.cp.stiltcluster
 import akka.stream.actor.ActorPublisher
 import akka.stream.actor.ActorPublisherMessage._
 import akka.actor.ActorRef
-import akka.actor.Terminated
 import akka.actor.Props
 
-class DashboardPublisher(receptionist: ActorRef) extends ActorPublisher[DashboardInfo]{
+class DashboardPublisher(dashboard: ActorRef) extends ActorPublisher[DashboardInfo]{
 
 	private var unsentInfo: DashboardInfo = null
 
 	override def preStart(): Unit = {
-		receptionist ! Subscribe
-		context watch receptionist
+		dashboard ! Subscribe
 	}
 
 	override def receive = {
@@ -25,7 +23,6 @@ class DashboardPublisher(receptionist: ActorRef) extends ActorPublisher[Dashboar
 				unsentInfo = di
 
 		case Cancel | SubscriptionTimeoutExceeded =>
-			receptionist ! Cancel
 			context stop self
 
 		case Request(n) =>
@@ -34,9 +31,6 @@ class DashboardPublisher(receptionist: ActorRef) extends ActorPublisher[Dashboar
 				unsentInfo = null
 			}
 
-		case Terminated(watchee) =>
-			if(watchee == receptionist) onComplete()
-
 	}
 
 }
@@ -44,6 +38,6 @@ class DashboardPublisher(receptionist: ActorRef) extends ActorPublisher[Dashboar
 
 object DashboardPublisher{
 
-	def props(receptionist: ActorRef) = Props(classOf[DashboardPublisher], receptionist)
+	def props(dashboard: ActorRef) = Props(classOf[DashboardPublisher], dashboard)
 
 }

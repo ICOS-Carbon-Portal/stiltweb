@@ -2,22 +2,24 @@ package se.lu.nateko.cp.stiltcluster
 
 import akka.actor.Actor
 
-
 class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 
 	val slotCalculator = context.actorSelection("/user/slotcalculator")
 	val slotProducer = context.actorSelection("/user/slotproducer")
+	val dashboard = context.actorSelection("/user/dashboardmaker")
 
 	protected val traceFile = jobDir.dir.resolve("trace.log")
 
-	trace(s"Starting up in ${jobDir.dir}")
+	override def preStart(): Unit = {
+		trace(s"Starting up in ${jobDir.dir}")
 
-	if (jobDir.slots.isEmpty) {
-		trace("No slot list, requesting one.")
-		slotCalculator ! CalculateSlotList(jobDir.job)
-	} else {
-		trace("Already have slot list")
-		requestRemainingSlots()
+		if (jobDir.slots.isEmpty) {
+			trace("No slot list, requesting one.")
+			slotCalculator ! CalculateSlotList(jobDir.job)
+		} else {
+			trace("Already have slot list")
+			requestRemainingSlots()
+		}
 	}
 
 	def receive = {
@@ -30,14 +32,32 @@ class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 
 	def requestRemainingSlots() = {
 		val remaining = jobDir.missingSlots
-		trace(s"${jobDir.slots.get.length} slots in total. ${remaining.length} remaining, sending request.")
+
+		trace(s"$totalSlotsNum slots in total. ${remaining.length} remaining, sending request.")
+
 		slotProducer ! RequestManySlots(remaining)
-		context become working(remaining)
+		workOnRemaining(remaining)
 	}
 
-	def working(outstanding: Seq[StiltSlot]): Receive = {
+	def totalSlotsNum = jobDir.slots.fold(0)(_.length)
+
+	def workOnRemaining(remaining: Seq[StiltSlot]): Unit = {
+
+		val totSlots = totalSlotsNum
+		dashboard ! JobInfo(jobDir.job, totSlots, totSlots - remaining.length)
+
+		if(remaining.isEmpty){
+			trace(s"Done, terminating")
+			jobDir.markAsDone()
+			context stop self
+		} else
+			context become workingOn(remaining)
+	}
+
+	def workingOn(outstanding: Seq[StiltSlot]): Receive = {
 		case SlotAvailable(local) =>
 			val (removed, remaining) = outstanding.partition(local.equals(_))
+
 			if (removed.isEmpty) {
 				trace(s"Received slot I'm not waiting for ${local}")
 			} else {
@@ -48,15 +68,7 @@ class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 					jobDir.link(local)
 				}
 			}
-			if (remaining.isEmpty)
-				done
-			else
-				context become working(remaining)
+			workOnRemaining(remaining)
 	}
 
-	def done() = {
-		trace(s"Done, terminating")
-		jobDir.markAsDone()
-		context stop self
-	}
 }

@@ -33,6 +33,7 @@ class StiltClusterApi {
 	system.actorOf(Props(new SlotProducer(stateDir.resolve("slotproducer.log"))),
 						 name="slotproducer")
 	system.actorOf(Props(new JobArchiver(stateDir)), name="jobarchiver")
+	val dashboard = system.actorOf(Props[DashboardMaker], name="dashboardmaker")
 
 	import system.dispatcher
 
@@ -54,7 +55,7 @@ class StiltClusterApi {
 		import akka.http.scaladsl.model.ws.TextMessage.Strict
 
 		val source: Source[Message, Any] = Source
-			.actorPublisher[DashboardInfo](DashboardPublisher.props(receptionist))
+			.actorPublisher[DashboardInfo](DashboardPublisher.props(dashboard))
 			.map(di => Strict(di.toJson.compactPrint))
 
 		Flow.fromSinkAndSourceMat(Sink.ignore, source)(Keep.right)
