@@ -9,9 +9,7 @@ import scala.concurrent.duration._
 import akka.actor.{Actor, ActorRef, Terminated}
 
 
-class SlotProducer (tracePath: Path) extends Actor with Trace {
-
-	traceSetPath(tracePath)
+class SlotProducer (protected val traceFile: Path) extends Actor with Trace {
 
 	case object Tick
 	final val tickInterval = 5 seconds

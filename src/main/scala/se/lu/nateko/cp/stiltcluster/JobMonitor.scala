@@ -8,7 +8,8 @@ class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 	val slotCalculator = context.actorSelection("/user/slotcalculator")
 	val slotProducer = context.actorSelection("/user/slotproducer")
 
-	traceSetPath(jobDir.dir.resolve("trace.log"))
+	protected val traceFile = jobDir.dir.resolve("trace.log")
+
 	trace(s"Starting up in ${jobDir.dir}")
 
 	if (jobDir.slots.isEmpty) {
