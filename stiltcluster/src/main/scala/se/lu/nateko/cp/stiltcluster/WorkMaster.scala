@@ -1,13 +1,12 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.Paths
 
-import scala.concurrent.Future
-import scala.util.{Failure, Success}
-
-import akka.actor.{Actor, ActorSelection, RootActorPath}
-import akka.cluster.{Cluster, Member, MemberStatus}
-import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
+import akka.actor.{ Actor, ActorSelection, RootActorPath }
+import akka.actor.OneForOneStrategy
+import akka.actor.SupervisorStrategy
+import akka.cluster.{ Cluster, Member, MemberStatus }
+import akka.cluster.ClusterEvent.{ CurrentClusterState, MemberUp }
 
 
 trait Tracker extends Actor {
@@ -33,7 +32,7 @@ trait Tracker extends Actor {
 }
 
 
-class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
+class WorkMaster(nCores: Int) extends Trace with Tracker {
 
 	private var freeCores = nCores
 	private var slotProd  = context.actorSelection("")
@@ -41,16 +40,32 @@ class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 
 	trace("WorkMaster starting up")
 
+	override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 1, loggingEnabled = true){
+		SupervisorStrategy.defaultDecider
+	}
+
 	def receive = slotCalculation orElse trackPeer
 
 	def slotCalculation: Receive = {
 		case CalculateSlot(slot: StiltSlot) =>
-			if (freeCores <= 0) {
+			if (freeCores <= 0)
 				trace("Received CalculateSlot even though I'm busy")
-				sender() ! myStatus
-			} else {
-				startStilt(slot)
+			else {
+				freeCores -= 1
+				context.actorOf(Worker.props(slot))
 			}
+			sender() ! myStatus
+
+		case result: SlotCalculated =>
+			finishSlot(result)
+		case failure: StiltFailure =>
+			finishSlot(failure)
+	}
+
+	private def finishSlot(msg: Any): Unit = {
+		slotProd ! msg
+		freeCores += 1
+		slotProd ! myStatus
 	}
 
 	def newPeerFound(sp: ActorSelection) = {
@@ -59,25 +74,8 @@ class WorkMaster(nCores: Int) extends Actor with Trace with Tracker {
 		slotProd ! myStatus
 	}
 
-	private def myStatus = WorkMasterStatus(freeCores)
-
-	private def startStilt(slot: StiltSlot) = {
-		import scala.concurrent.ExecutionContext.Implicits.global
-		freeCores -= 1
-		Future {
-			trace(s"Starting stilt calculation of $slot")
-			val s = RunStilt.cmd_run(slot)
-			trace(s"Stilt simulation finished ${s}")
-			val d = Paths.get(s)
-			assert(Files.isDirectory(d))
-			val r = StiltResult(slot, d.resolve("output"))
-			slotProd ! SlotCalculated(r)
-			freeCores += 1
-			slotProd ! myStatus
-		} onComplete {
-			//TODO Add proper failure reporting to StolProducer
-			case Failure(t) => { trace(s"An error has occured:\n${t}") }
-			case Success(_) => { }
-		}
+	private def myStatus = {
+		trace(s"Free cores now: $freeCores")
+		WorkMasterStatus(freeCores)
 	}
 }

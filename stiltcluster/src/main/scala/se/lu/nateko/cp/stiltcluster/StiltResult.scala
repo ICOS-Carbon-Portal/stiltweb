@@ -81,7 +81,8 @@ object StiltResultFile {
  * Instances of this are sent on the wire (as Akka messages) from the backend
  * (computation) nodes to the frontend (web).
  */
-case class StiltResult (val slot: StiltSlot, files: Seq[StiltResultFile])
+case class StiltResult (slot: StiltSlot, files: Seq[StiltResultFile])
+case class StiltFailure(slot: StiltSlot)
 
 object StiltResult {
 

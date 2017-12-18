@@ -69,6 +69,9 @@ class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 				}
 			}
 			workOnRemaining(remaining)
+
+		case StiltFailure(slot) =>
+			workOnRemaining(outstanding.filter(_ != slot))
 	}
 
 }

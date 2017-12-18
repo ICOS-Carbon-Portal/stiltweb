@@ -13,7 +13,8 @@ class SlotProducer (protected val traceFile: Path) extends Actor with Trace {
 
 	case object Tick
 	final val tickInterval = 5 seconds
-	final val calcTimeout = 120 seconds
+	//TODO Replace timeout with DeathWatch on work masters
+	final val calcTimeout = 400 seconds
 
 	val slotArchiver = context.actorSelection("/user/slotarchiver")
 
@@ -55,18 +56,15 @@ class SlotProducer (protected val traceFile: Path) extends Actor with Trace {
 		case msg @ SlotCalculated(result) => {
 			trace("Got SlotCalculated, sending on to slot archive")
 			slotArchiver ! msg
-			waiting = waiting.filter { _ != result.slot }
-			sent.retain { case (_, slot) => slot == result.slot }
+			removeSlot(result.slot)
 		}
 
+		case msg @ StiltFailure(slot) =>
+			removeSlot(slot)
+			removeRequests(slot, msg)
+
 		case msg @ SlotAvailable(local) =>
-			requests.remove(local.slot) match {
-				case None => trace(s"${local.slotDir} with no requests!")
-				case Some(actors) => {
-					actors.foreach { _ ! msg }
-					trace(s"${local.slotDir} passed on to ${actors.size} actors")
-				}
-			}
+			removeRequests(local.slot, msg)
 
 		case SlotUnAvailable(slot) =>
 			waiting = waiting :+ slot
@@ -82,6 +80,21 @@ class SlotProducer (protected val traceFile: Path) extends Actor with Trace {
 			checkTimeouts
 			sendSomeSlots
 			scheduleTick
+	}
+
+	private def removeRequests(slot: StiltSlot, msg: Any): Unit = {
+		requests.remove(slot) match {
+			case None => trace(s"$msg with no requests to match!")
+			case Some(actors) => {
+				actors.foreach { _ ! msg }
+				trace(s"$msg passed on to ${actors.size} actors")
+			}
+		}
+	}
+
+	private def removeSlot(slot: StiltSlot): Unit = {
+		waiting = waiting.filter { _ != slot }
+		sent.retain { case (_, sentSlot) => sentSlot != slot }
 	}
 
 	private def scheduleTick() = {
