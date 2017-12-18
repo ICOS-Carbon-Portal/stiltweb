@@ -1,10 +1,10 @@
 package se.lu.nateko.cp.stiltweb
 
 import se.lu.nateko.cp.cpauth.core.PublicAuthConfig
+import se.lu.nateko.cp.stiltcluster.ConfigLoader
 import spray.json._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigRenderOptions
-import com.typesafe.config.ConfigFactory
 
 case class NetCdfConfig(
 	dateVars: Seq[String],
@@ -30,10 +30,7 @@ object ConfigReader extends DefaultJsonProtocol{
 	implicit val netcdfConfigFormat = jsonFormat4(NetCdfConfig)
 	implicit val cpdataConfigFormat = jsonFormat8(StiltWebConfig)
 
-	lazy val default: StiltWebConfig = fromAppConfig(
-		ConfigFactory.parseFile(new java.io.File("local.conf"))
-			.withFallback(ConfigFactory.load())
-	)
+	lazy val default: StiltWebConfig = fromAppConfig(ConfigLoader.localWithDefault())
 
 	def fromAppConfig(applicationConfig: Config): StiltWebConfig = {
 		val renderOpts = ConfigRenderOptions.concise.setJson(true)

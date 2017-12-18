@@ -4,7 +4,7 @@ import akka.actor.{ActorSystem, Props}
 
 object WorkMasterApp extends App {
 
-	val conf = ConfigLoader.clusterBase()
+	val conf = ConfigLoader.workerNode()
 	val system = ActorSystem(conf.getString("stiltcluster.name"), conf)
 	val worker = system.actorOf(Props(new WorkMaster(coresForStilt)),
 								name = "workmaster")

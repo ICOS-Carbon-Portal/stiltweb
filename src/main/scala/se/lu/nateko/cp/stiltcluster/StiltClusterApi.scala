@@ -10,13 +10,11 @@ import akka.pattern.ask
 import akka.util.Timeout
 import se.lu.nateko.cp.stiltweb.ConfigReader
 import java.nio.file.Paths
-import com.typesafe.config.ConfigFactory
 
 
 class StiltClusterApi {
 
-	private val conf = ConfigFactory.parseResources("clusterfront.conf")
-		.withFallback(ConfigLoader.clusterBase())
+	private val conf = ConfigLoader.frontNode()
 
 	private val system = ActorSystem(conf.getString("stiltcluster.name"), conf)
 
