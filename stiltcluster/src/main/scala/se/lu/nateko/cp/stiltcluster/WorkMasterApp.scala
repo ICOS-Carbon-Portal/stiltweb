@@ -1,22 +1,22 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.ActorSystem
-import akka.pattern.gracefulStop
-import scala.util.Try
+import akka.actor.Props
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
+import scala.util.Try
+
+import akka.actor.ActorSystem
+import akka.pattern.gracefulStop
 
 object WorkMasterApp extends App {
 
 	val conf = ConfigLoader.workerNode()
-	val clusterConf = conf.getConfig("stiltcluster")
-
-	val system = ActorSystem(clusterConf.getString("name"), conf)
+	val system = ActorSystem("StiltCluster", conf)
 
 	private val coresForStilt: Int = {
 
 		val maxAllowedTry = Try{
-			val maxVal = clusterConf.getInt("maxCores")
+			val maxVal = conf.getInt("maxCores")
 			if(maxVal <= 0) Int.MaxValue
 			else maxVal
 		}
@@ -27,7 +27,9 @@ object WorkMasterApp extends App {
 		)
 	}
 
-	val wm = system.actorOf(WorkMaster.props(coresForStilt), name = "workmaster")
+	val wm = system.actorOf(Props(new WorkMaster(coresForStilt,
+												 conf.getString("stiltcluster.producerAddress"))),
+							name = "workmaster")
 
 	sys.addShutdownHook{
 		val done = gracefulStop(wm, 2.seconds, WorkMaster.Stop).transformWith{

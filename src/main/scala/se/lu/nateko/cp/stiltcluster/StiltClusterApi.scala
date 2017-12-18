@@ -16,7 +16,7 @@ class StiltClusterApi {
 
 	private val conf = ConfigLoader.frontNode()
 
-	private val system = ActorSystem(conf.getString("stiltcluster.name"), conf)
+	private val system = ActorSystem("StiltCluster", conf)
 
 
 	val stateDir = {

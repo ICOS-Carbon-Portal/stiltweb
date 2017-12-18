@@ -1,61 +1,63 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.{ Actor, ActorSelection, RootActorPath }
-import akka.actor.Cancellable
-import akka.actor.Props
-import akka.cluster.{ Cluster, Member, MemberStatus }
-import akka.cluster.ClusterEvent.{ CurrentClusterState, MemberUp }
+import java.nio.file.{Files, Paths}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration._
 
-import java.nio.file.Files
-import java.nio.file.Paths
+import akka.actor.{Actor, ActorIdentity, ActorRef, ActorSelection, Identify, Props, Terminated}
 
 
-trait Tracker extends Actor {
+/* Tracks a remote SlotProducer actor.
 
-	val cluster = Cluster(context.system)
+ Sends an Identify message using an ActorSelection and then use ActorRef from
+ the response.
+ */
+trait TrackSlotProducer extends Actor {
 
-	override def preStart(): Unit = cluster.subscribe(self, classOf[MemberUp])
-	override def postStop(): Unit = cluster.unsubscribe(self)
+	case object Tick
+	final val tickInterval = 5 seconds
+	var producer: ActorRef = context.system.deadLetters
+	final val ping = context.actorSelection(producerAddress)
 
-	def trackPeer: Receive = {
-		case state: CurrentClusterState =>
-			state.members.filter(_.status == MemberStatus.Up) foreach register
-		case MemberUp(m) => register(m)
+	scheduleTick
+
+	def trackSlotProducer: Receive = {
+		case ActorIdentity(_, Some(ref)) =>
+			if (ref != producer) {
+				context.watch(ref)
+				producer = ref
+				producerFound
+			}
+
+		case Terminated(_) =>
+			producer = context.system.deadLetters
+			producerDied
+
+		case Tick =>
+			ping ! Identify(1)
+			scheduleTick
 	}
 
-	def register(member: Member): Unit =
-		if (member.hasRole("frontend")) {
-			newPeerFound(context.actorSelection(
-				RootActorPath(member.address) / "user" / "slotproducer"))
-		}
+	private def scheduleTick() = {
+		context.system.scheduler.scheduleOnce(tickInterval, self, Tick)
+	}
 
-	def newPeerFound(as: ActorSelection): Unit
+	def producerAddress(): String
+	def producerFound(): Unit
+	def producerDied(): Unit
 }
 
 
-class WorkMaster(nCores: Int) extends Trace with Tracker {
+class WorkMaster(nCores: Int, prodAddr: String) extends Trace with TrackSlotProducer {
 
 	private var freeCores = nCores
-	private var slotProd  = context.actorSelection("")
-	private var tickCancel: Cancellable = null
 	protected val traceFile = Paths.get("workmaster.log")
 
-	override def preStart(): Unit = {
-		super.preStart()
-		trace("WorkMaster starting up")
-		implicit val ctxt = context.system.dispatcher
-		tickCancel = context.system.scheduler.schedule(30.seconds, 30.seconds, self, WorkMaster.Tick)
-	}
+	trace("WorkMaster starting up")
 
-	override def postStop(): Unit = {
-		super.postStop()
-		if(tickCancel != null) tickCancel.cancel()
-	}
-
-	def receive = slotCalculation orElse trackPeer
+	def receive = slotCalculation orElse trackSlotProducer
 
 	def slotCalculation: Receive = {
 		case CalculateSlot(slot: StiltSlot) =>
@@ -68,7 +70,7 @@ class WorkMaster(nCores: Int) extends Trace with Tracker {
 			sender() ! myStatus
 
 		case WorkMaster.Tick =>
-			slotProd ! myStatus
+			producer ! myStatus
 
 		case WorkMaster.Stop =>
 			trace(s"Terminated (was $self)")
@@ -76,22 +78,25 @@ class WorkMaster(nCores: Int) extends Trace with Tracker {
 	}
 
 	private def finishSlot(msg: Any): Unit = {
+		producer ! msg
 		freeCores += 1
-		slotProd ! msg
-		slotProd ! myStatus
 	}
 
-	def newPeerFound(sp: ActorSelection) = {
+	def producerFound() = {
 		trace(s"New slotproducer detected, sending greeting (${freeCores} free cores)")
-		slotProd = sp
-		slotProd ! myStatus
+		producer ! myStatus
 	}
+
+	def producerDied() = {
+		trace("Slotproducer died")
+	}
+
+	def producerAddress = prodAddr
 
 	private def myStatus = WorkMasterStatus(freeCores, nCores)
 
 	private def calculateSlot(slot: StiltSlot): Unit = {
 
-		import scala.concurrent.ExecutionContext.Implicits.global
 
 		def calculateOnce(): Future[Unit] = Future{
 			trace(s"Starting stilt calculation of $slot")
