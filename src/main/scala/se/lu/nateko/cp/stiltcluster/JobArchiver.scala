@@ -1,6 +1,7 @@
 package se.lu.nateko.cp.stiltcluster
 
 import java.nio.file.{Files, Path}
+import java.util.Comparator
 
 import akka.actor.Actor
 import se.lu.nateko.cp.stiltweb.StiltJsonSupport._
@@ -50,6 +51,15 @@ class JobDir(val job: Job, val dir: Path) {
 	def missingSlots = {
 		_slots.get.filterNot { slotPresent(_) }
 	}
+
+	def delete(): Unit =
+		try{
+			Files.walk(dir)
+				.sorted(Comparator.reverseOrder[Path])
+				.forEach(_.toFile.delete())
+		}catch{
+			case _: Throwable =>
+		}
 }
 
 

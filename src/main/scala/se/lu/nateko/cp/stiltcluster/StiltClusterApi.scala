@@ -42,7 +42,7 @@ class StiltClusterApi {
 	def queryOwner(jobId: String): Future[Option[String]] = {
 		// The assumption is that this query will run on the same JVM as the responding actor.
 		implicit val timeout = Timeout(1 seconds)
-		ask(receptionist, PleaseSendDashboardInfo).mapTo[DashboardInfo].map{ dbi =>
+		ask(dashboard, PleaseSendDashboardInfo).mapTo[DashboardInfo].map{ dbi =>
 			dbi.findCancellableJobById(jobId).map(_.userId)
 		}
 	}

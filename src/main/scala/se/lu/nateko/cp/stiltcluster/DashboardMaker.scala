@@ -40,6 +40,12 @@ class DashboardMaker extends Actor{
 				mustNotify |= addToDone(jinfo)
 			}
 			if(mustNotify) notifySubscribers()
+
+		case CancelJob(id) =>
+			if(cancelJob(id)) notifySubscribers()
+
+		case PleaseSendDashboardInfo =>
+			sender ! info
 	}
 
 	def removeFromQueue(job: Job): Boolean = if(info.queue.contains(job)){
@@ -68,5 +74,15 @@ class DashboardMaker extends Actor{
 	def addToDone(jinfo: JobInfo): Boolean = {
 		info = info.copy(done = info.done :+ jinfo)
 		true
+	}
+
+	def cancelJob(jobId: String): Boolean = {
+		if(info.queue.exists(_.id == jobId)){
+			info = info.copy(queue = info.queue.filterNot(_.id == jobId))
+			true
+		}else if(info.running.exists(_.id == jobId)){
+			info = info.copy(running = info.running.filter(_.id != jobId))
+			true
+		}else false
 	}
 }

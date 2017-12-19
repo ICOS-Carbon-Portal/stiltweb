@@ -1,6 +1,7 @@
 package se.lu.nateko.cp.stiltcluster
 
 import akka.actor.Actor
+import akka.actor.Props
 
 class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 
@@ -22,11 +23,19 @@ class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 		}
 	}
 
-	def receive = {
+	private val deletionHandler: Receive = {
+		case deletion @ CancelJob(id) =>
+			if(id == jobDir.job.id){
+				dashboard ! deletion
+				jobDir.delete()
+				context stop self
+			}
+	}
+
+	def receive = deletionHandler.orElse{
 		case SlotListCalculated(slots) =>
 			trace(s"Received a list of ${slots.length} slots")
 			jobDir.saveSlotList(slots)
-			// FIXME - send update to browser about slot having been calculated
 			requestRemainingSlots()
 	}
 
@@ -54,7 +63,7 @@ class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 			context become workingOn(remaining)
 	}
 
-	def workingOn(outstanding: Seq[StiltSlot]): Receive = {
+	def workingOn(outstanding: Seq[StiltSlot]): Receive = deletionHandler.orElse{
 		case SlotAvailable(local) =>
 			val (removed, remaining) = outstanding.partition(local.equals(_))
 
@@ -73,5 +82,8 @@ class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 		case StiltFailure(slot) =>
 			workOnRemaining(outstanding.filter(_ != slot))
 	}
+}
 
+object JobMonitor{
+	def props(jdir: JobDir): Props = Props.create(classOf[JobMonitor], jdir)
 }

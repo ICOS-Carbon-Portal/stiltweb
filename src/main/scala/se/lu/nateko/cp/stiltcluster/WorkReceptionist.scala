@@ -1,6 +1,6 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.{Actor, Props,ActorLogging}
+import akka.actor.{Actor, ActorLogging}
 
 class WorkReceptionist extends Actor with ActorLogging {
 
@@ -14,8 +14,10 @@ class WorkReceptionist extends Actor with ActorLogging {
 
 		case beginning @ BeginJob(jdir) =>
 			log.info(s"Starting new job $jdir.job")
-			context.actorOf(Props(new JobMonitor(jdir)))
+			context.actorOf(JobMonitor.props(jdir))
 			dashboard ! beginning
 
+		case deletion: CancelJob =>
+			context.children foreach{_ ! deletion}
 	}
 }
