@@ -7,6 +7,7 @@ import akka.actor.OneForOneStrategy
 import akka.actor.SupervisorStrategy
 import akka.cluster.{ Cluster, Member, MemberStatus }
 import akka.cluster.ClusterEvent.{ CurrentClusterState, MemberUp }
+import akka.actor.Props
 
 
 trait Tracker extends Actor {
@@ -60,6 +61,10 @@ class WorkMaster(nCores: Int) extends Trace with Tracker {
 			finishSlot(result)
 		case failure: StiltFailure =>
 			finishSlot(failure)
+
+		case WorkMaster.Stop =>
+			trace(s"Terminated (was $self)")
+			context stop self
 	}
 
 	private def finishSlot(msg: Any): Unit = {
@@ -74,8 +79,11 @@ class WorkMaster(nCores: Int) extends Trace with Tracker {
 		slotProd ! myStatus
 	}
 
-	private def myStatus = {
-		trace(s"Free cores now: $freeCores")
-		WorkMasterStatus(freeCores)
-	}
+	private def myStatus = WorkMasterStatus(freeCores, nCores)
+}
+
+object WorkMaster{
+	def props(nCores: Int) = Props.create(classOf[WorkMaster], Int.box(nCores))
+
+	case object Stop
 }

@@ -1,6 +1,7 @@
 package se.lu.nateko.cp.stiltcluster
 
 import java.time.{Instant, LocalDate}
+import akka.actor.Address
 
 
 /** The description of a Stilt simulation to be run. */
@@ -52,12 +53,21 @@ case class JobInfo(job: Job, nSlots: Int, nSlotsFinished: Int) {
 	def id = job.id
 }
 
-case class DashboardInfo(running: Seq[JobInfo], done: Seq[JobInfo], queue: Seq[Job]){
+case class WorkerNodeInfo(address: Address, nCpusFree: Int, nCpusTotal: Int)
+
+case class DashboardInfo(
+		running: Seq[JobInfo],
+		done: Seq[JobInfo],
+		queue: Seq[Job],
+		infra: Seq[WorkerNodeInfo]
+	){
 
 	def findCancellableJobById(jobId: String): Option[Job] = {
 		queue.find(_.id == jobId).orElse(running.find(_.id == jobId).map(_.job))
 	}
 }
 
-
 case object PleaseSendDashboardInfo
+
+case class WorkMasterUpdate(address: Address, status: WorkMasterStatus)
+case class WorkMasterDown(address: Address)

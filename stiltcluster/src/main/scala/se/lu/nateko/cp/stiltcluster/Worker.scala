@@ -13,9 +13,12 @@ class Worker(slot: StiltSlot) extends Actor with Trace{
 	private var r: StiltResult = _
 
 	override def preStart() = runStilt()
+	//To avoid postStop() being called during restart:
+	override def preRestart(reason: Throwable, message: Option[Any]): Unit = {}
 
 	override def postStop() = {
 		val msg = if(r == null) StiltFailure(slot) else SlotCalculated(r)
+		trace(s"Slot calculation attempt(s) resulted in  $msg")
 		context.parent ! msg
 	}
 

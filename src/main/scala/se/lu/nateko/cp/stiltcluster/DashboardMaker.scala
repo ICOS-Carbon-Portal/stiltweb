@@ -4,14 +4,29 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 
 import scala.collection.mutable.Set
+import scala.collection.mutable.Map
 import akka.actor.Terminated
+import akka.actor.Address
 
 class DashboardMaker extends Actor{
 
-	var info = DashboardInfo(Nil, Nil, Nil)
+	val resources = Map.empty[Address, WorkMasterStatus]
+	var queue = Seq.empty[Job]
+	var running, done = Seq.empty[JobInfo]
+
 	val subscribers = Set.empty[ActorRef]
 
-	def notifySubscribers(): Unit = subscribers.foreach(_ ! info)
+	def notifySubscribers(): Unit = {
+		val completeInfo = getInfo
+		subscribers.foreach(_ ! completeInfo)
+	}
+
+	def getInfo = {
+		val infra = resources.map{
+			case (addr, wms) => WorkerNodeInfo(addr, wms.nCpusFree, wms.nCpusTotal)
+		}.toSeq
+		DashboardInfo(running, done, queue, infra)
+	}
 
 	def receive = {
 
@@ -19,13 +34,13 @@ class DashboardMaker extends Actor{
 			val publisher = sender()
 			subscribers.add(publisher)
 			context watch publisher
-			publisher ! info
+			publisher ! getInfo
 
 		case Terminated(publisher) =>
 			subscribers.remove(publisher)
 
 		case BeginJob(jdir) =>
-			info = info.copy(queue = info.queue :+ jdir.job)
+			queue = queue :+ jdir.job
 			notifySubscribers()
 
 		case jinfo@ JobInfo(job, totalSlots, doneSlots) =>
@@ -45,43 +60,50 @@ class DashboardMaker extends Actor{
 			if(cancelJob(id)) notifySubscribers()
 
 		case PleaseSendDashboardInfo =>
-			sender ! info
+			sender ! getInfo
+
+		case WorkMasterUpdate(address, wms) =>
+			resources.update(address, wms)
+			notifySubscribers()
+
+		case WorkMasterDown(address) =>
+			resources.remove(address)
+			notifySubscribers()
 	}
 
-	def removeFromQueue(job: Job): Boolean = if(info.queue.contains(job)){
-		info = info.copy(queue = info.queue.filterNot(_ == job))
+	def removeFromQueue(job: Job): Boolean = if(queue.contains(job)){
+		queue = queue.filterNot(_ == job)
 		true
 	} else false
 
-	def updateRunning(jinfo: JobInfo): Boolean = info.running.find(_.id == jinfo.id) match {
+	def updateRunning(jinfo: JobInfo): Boolean = running.find(_.id == jinfo.id) match {
 		case None =>
-			info = info.copy(running = jinfo +: info.running)
+			running = jinfo +: running
 			true
 
 		case Some(oldInfo) if oldInfo != jinfo =>
-			val newRunning = jinfo +: info.running.filter(_.id != jinfo.id)
-			info = info.copy(running = newRunning)
+			running = jinfo +: running.filter(_.id != jinfo.id)
 			true
 
 		case _ => false
 	}
 
-	def removeFromRunning(jinfo: JobInfo): Boolean = if(info.running.exists(_.id == jinfo.id)){
-		info = info.copy(running = info.running.filter(_.id != jinfo.id))
+	def removeFromRunning(jinfo: JobInfo): Boolean = if(running.exists(_.id == jinfo.id)){
+		running = running.filter(_.id != jinfo.id)
 		true
 	} else false
 
 	def addToDone(jinfo: JobInfo): Boolean = {
-		info = info.copy(done = info.done :+ jinfo)
+		done = done :+ jinfo
 		true
 	}
 
 	def cancelJob(jobId: String): Boolean = {
-		if(info.queue.exists(_.id == jobId)){
-			info = info.copy(queue = info.queue.filterNot(_.id == jobId))
+		if(queue.exists(_.id == jobId)){
+			queue = queue.filterNot(_.id == jobId)
 			true
-		}else if(info.running.exists(_.id == jobId)){
-			info = info.copy(running = info.running.filter(_.id != jobId))
+		}else if(running.exists(_.id == jobId)){
+			running = running.filter(_.id != jobId)
 			true
 		}else false
 	}

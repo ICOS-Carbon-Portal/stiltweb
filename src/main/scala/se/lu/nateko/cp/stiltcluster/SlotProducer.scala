@@ -17,6 +17,7 @@ class SlotProducer (protected val traceFile: Path) extends Actor with Trace {
 	final val calcTimeout = 400 seconds
 
 	val slotArchiver = context.actorSelection("/user/slotarchiver")
+	val dashboard = context.actorSelection("/user/dashboardmaker")
 
 	val workmasters = Map[ActorRef, Int]()
 	val requests = Map[StiltSlot, Seq[ActorRef]]()
@@ -31,18 +32,20 @@ class SlotProducer (protected val traceFile: Path) extends Actor with Trace {
 	scheduleTick
 
 	def receive = {
-		case WorkMasterStatus(freeCores) =>
+		case wms @ WorkMasterStatus(freeCores, _) =>
 			if (! workmasters.contains(sender)) {
 				trace(s"New WorkMaster ${sender}, ${freeCores} free cores")
 				context.watch(sender)
 			}
 			trace(s"Updating WorkMaster status for ${sender} to ${freeCores} free cores")
 			workmasters.update(sender, freeCores)
+			dashboard ! WorkMasterUpdate(sender.path.address, wms)
 
 		case Terminated(dead) =>
 			if (workmasters.contains(dead)) {
 				trace(s"WorkMaster ${sender.path} terminated")
 				workmasters.remove(dead)
+				dashboard ! WorkMasterDown(dead.path.address)
 			}
 
 		case RequestManySlots(slots) =>
@@ -124,7 +127,7 @@ class SlotProducer (protected val traceFile: Path) extends Actor with Trace {
 				waiting = waiting.drop(1)
 				sent.add((calcTimeout.fromNow, slot))
 				wm ! CalculateSlot(slot)
-				trace(s"Sent slot to ${wm} (timeout in ${calcTimeout} seconds)")
+				trace(s"Sent slot to ${wm} (timeout in ${calcTimeout})")
 				// Keep track of the number of available slot ourselves.
 				// This will get overwritten once the workmaster reports in
 				// again.

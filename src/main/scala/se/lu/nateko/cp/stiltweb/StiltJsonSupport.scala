@@ -9,9 +9,10 @@ import se.lu.nateko.cp.stiltcluster.DashboardInfo
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.JobInfo
 import se.lu.nateko.cp.stiltcluster.{ StiltTime, StiltPosition, StiltSlot }
+import se.lu.nateko.cp.stiltcluster.WorkMasterStatus
+import se.lu.nateko.cp.stiltcluster.WorkerNodeInfo
 
-import spray.json.{ DefaultJsonProtocol, DeserializationException, JsString, JsValue,
-					JsonFormat, RootJsonFormat, JsObject }
+import spray.json._
 
 object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -36,7 +37,6 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 		)
 	}
 
-
 	implicit object InstantFormat extends JsonFormat[Instant]{
 		def write(i: Instant) = JsString(i.toString)
 		// We never want to read the time{Enqueued,Started,Finished} fields from JSON
@@ -56,7 +56,10 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 	}
 
 	implicit val jobInfoFormat = jsonFormat3(JobInfo)
-	implicit val dashboardInfoFormat = jsonFormat3(DashboardInfo)
+	implicit val workMasterStatusFormat = jsonFormat2(WorkMasterStatus)
+	implicit val workerNodeInfoFormat = jsonFormat3(WorkerNodeInfo)
+
+	implicit val dashboardInfoFormat = jsonFormat4(DashboardInfo)
 
 	implicit val stiltTimeFormat = jsonFormat4(StiltTime.apply)
 	implicit val stiltPositionFormat = jsonFormat3(StiltPosition.apply)
