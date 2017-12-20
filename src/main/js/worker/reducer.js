@@ -1,5 +1,5 @@
 import {ERROR, FETCHED_INIT_INFO, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_UPDATED, DATES_UPDATED, USE_EXISTING_STATION, STARTED_JOB} from './actions';
-import {MAP_VIEW, DASHBOARD_VIEW, TOGGLE_YESNO, FETCHED_MONTHS} from './actions';
+import {MAP_VIEW, DASHBOARD_VIEW, FETCHED_MONTHS} from './actions';
 
 import AvailableMonths from './models/AvailableMonths';
 import {copyprops, deepUpdate} from 'icos-cp-utils';
@@ -53,9 +53,6 @@ export default function(state, action){
 
 		case MAP_VIEW:
 			return update({currentView: MAP_VIEW});
-
-		case TOGGLE_YESNO:
-			return update({yesNoViewVisible: !state.yesNoViewVisible});
 
 		default:
 			return state;

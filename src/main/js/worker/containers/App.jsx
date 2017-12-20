@@ -4,7 +4,7 @@ import * as Toaster from 'icos-cp-toaster';
 import {copyprops} from 'icos-cp-utils';
 import MapView from '../components/MapView.jsx';
 import DashboardView from '../components/DashboardView.jsx';
-import {stationSelected, jobdefUpdated, datesUpdated, useExistingStationData, startJob, toggleYesNoView, cancelQueue, cancelJob} from '../actions';
+import {stationSelected, jobdefUpdated, datesUpdated, useExistingStationData, startJob, cancelJob} from '../actions';
 import {MAP_VIEW, DASHBOARD_VIEW} from '../actions';
 
 class App extends Component {
@@ -65,7 +65,7 @@ class App extends Component {
 						toastWarning={this.toastWarning.bind(this)}
 						toastError={this.toastError.bind(this)}
 						{...props}/>
-					: <DashboardView {...copyprops(props, ['dashboardState', 'showMap', 'currUser', 'toggleYesNoView', 'yesNoViewVisible', 'cancelJob', 'cancelQueue'])} />
+					: <DashboardView {...copyprops(props, ['dashboardState', 'showMap', 'currUser', 'cancelJob'])} />
 			}
 
 		</div>;
@@ -85,8 +85,6 @@ function dispatchToProps(dispatch){
 		startJob: () => dispatch(startJob),
 		showDashboard: () => dispatch({type: DASHBOARD_VIEW}),
 		showMap: () => dispatch({type: MAP_VIEW}),
-		toggleYesNoView: () => dispatch(toggleYesNoView()),
-		cancelQueue: job => dispatch(cancelQueue(job)),
 		cancelJob: jobId => dispatch(cancelJob(jobId))
 	};
 }

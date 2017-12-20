@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import JobInfoView, {InfoPanelWithList} from './JobInfoView.jsx';
+import JobInfoView from './JobInfoView.jsx';
 
 export default class DashboardView extends Component {
 	constructor(props) {
@@ -12,21 +12,19 @@ export default class DashboardView extends Component {
 
 		return <WideRow>
 
+			<CompInfraState infra={ds.infra} />
+
 			<JobInfoList
 				title="Job queue"
-				jobs={ds.queue}
+				jobs={ds.queue.map(jobToJobInfo)}
 				currUser={props.currUser}
-				toggleYesNoView={props.toggleYesNoView}
 				cancelJob={props.cancelJob}
-				yesNoViewVisible={props.yesNoViewVisible}
 			/>
 			<JobInfoList
 				title="Running computations"
 				jobs={ds.running}
 				currUser={props.currUser}
-				toggleYesNoView={props.toggleYesNoView}
 				cancelJob={props.cancelJob}
-				yesNoViewVisible={props.yesNoViewVisible}
 			/>
 			<JobInfoList
 				title="Finished computations"
@@ -41,13 +39,15 @@ export default class DashboardView extends Component {
 	}
 }
 
+function jobToJobInfo(job){
+	return {job, nSlots: undefined, nSlotsFinished: 0};
+}
+
 const JobInfoList = props => props.jobs.length
 	? <InfoPanelWithList title={props.title}>{
 				props.jobs.map(jinfo => {
 					return <JobInfoView
 						currUser={props.currUser}
-						toggleYesNoView={props.toggleYesNoView}
-						yesNoViewVisible={props.yesNoViewVisible}
 						cancelJob={props.cancelJob}
 						jobInfo={jinfo}
 						key={jinfo.job.id}
@@ -61,3 +61,25 @@ const WideRow = props => <div className="row">
 		{props.children}
 	</div>
 </div>;
+
+
+const InfoPanelWithList = props => <div className="panel panel-info">
+	<div className="panel-heading">
+		<h3 className="panel-title">{props.title}</h3>
+	</div>
+	<div className="panel-body">
+		<div>{props.children}</div>
+	</div>
+</div>;
+
+const CompInfraState = props => <InfoPanelWithList title="Computational resources">
+	<table className="table">
+		<thead>
+			<tr><th>Node</th><th>Free CPUs</th><th>Total CPUs</th></tr>
+		</thead>
+		<tbody>{props.infra.map(nodeInfo =>
+			<tr key={nodeInfo.address}><td>{nodeInfo.address}</td><td>{nodeInfo.nCpusFree}</td><td>{nodeInfo.nCpusTotal}</td></tr>
+		)}</tbody>
+	</table>
+</InfoPanelWithList>;
+

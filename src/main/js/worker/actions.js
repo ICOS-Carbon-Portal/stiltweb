@@ -8,7 +8,6 @@ export const JOBDEF_UPDATED = 'JOBDEF_UPDATED';
 export const DATES_UPDATED = 'DATES_UPDATED';
 export const USE_EXISTING_STATION = 'USE_EXISTING_STATION';
 export const STARTED_JOB = 'STARTED_JOB';
-export const TOGGLE_YESNO = 'TOGGLE_YESNO';
 export const ERROR = 'ERROR';
 
 export const MAP_VIEW = 'MAP_VIEW';
@@ -67,15 +66,9 @@ export function useExistingStationData(){
 	};
 }
 
-export function toggleYesNoView(){
-	return {
-		type: TOGGLE_YESNO
-	};
-}
-
 export const cancelJob = jobId => dispatch => {
 	deleteJob(jobId).then(
-		() => dispatch({type: TOGGLE_YESNO}),
+		() => {},
 		err => dispatch(failWithError(err))
 	);
 };
@@ -98,3 +91,4 @@ export const fetchAvailableMonths = dispatch => {
 		err => dispatch(failWithError(err))
 	);
 };
+

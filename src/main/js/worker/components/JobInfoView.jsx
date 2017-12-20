@@ -4,217 +4,54 @@ import YesNoView from './YesNoView.jsx';
 export default class JobInfoView extends Component {
 	constructor(props) {
 		super(props);
-		this.state = {
-			expanded: false
-		};
-		this.mouseClick = undefined;
+		this.state = {showCancelJobDialog: false};
 	}
 
-	handleClick(){
-		this.setState({expanded: !this.state.expanded});
+	toggleCancelJobDialog(){
+		this.setState({showCancelJobDialog: !this.state.showCancelJobDialog});
 	}
 
-	handleCancelClick(ev){
-		ev.stopPropagation();
-		this.mouseClick = ev.nativeEvent;
-		if (this.props.toggleYesNoView) this.props.toggleYesNoView();
+	confirmJobCancel(){
+		this.props.cancelJob(this.props.jobInfo.job.id);
+		this.toggleCancelJobDialog();
 	}
 
 	render() {
 		const props = this.props;
 		const jinfo = props.jobInfo;
 		const job = jinfo.job;
-		const status = jinfo.status;
-		const jobId = job.id;
-		const allowCancel = !!props.cancelJob && !!props.toggleYesNoView
-			&& (props.currUser.email === job.userId || props.currUser.isAdmin);
+		const allowCancel = !!props.cancelJob &&
+			(props.currUser.email === job.userId || props.currUser.isAdmin);
 
-		// console.log({props, job, status, jobId, allowCancel});
-
-		return <div>
-			{allowCancel
-				? <YesNoView
-					visible={props.yesNoViewVisible}
-					mouseClick={this.mouseClick}
-					title={'Cancel job'}
-					question={'Are you sure you want to cancel this job?'}
-					actionYes={{fn: props.cancelJob, args: [jobId]}}
-					actionNo={{fn: props.toggleYesNoView}}
-				/>
-				: null
-			}
-
-			<div className="panel panel-default">
-				<div className="panel-heading" onClick={this.handleClick.bind(this)} style={{cursor: "pointer"}}>
-					{allowCancel
-						? <button className="btn btn-primary" onClick={this.handleCancelClick.bind(this)}>
-							<span className="glyphicon glyphicon-remove-sign" style={{marginRight: 10, top: 3, fontSize:'130%'}} />
-							Cancel job
-						</button>
-						: null
-					}
-					<StatusLabel status={status} />
-					<HeaderInfo job={job} />
-				</div>
-				{
-				this.state.expanded
-					? status
-						? <RunningAndFinished status={status} job={job} jinfo={jinfo} />
-						: <Queue job={job} />
+		return <div className="panel panel-default">
+			<div className="panel-heading">
+				{allowCancel
+					? <button className="btn btn-primary" onClick={this.toggleCancelJobDialog.bind(this)}>
+						<span className="glyphicon glyphicon-remove-sign" style={{marginRight: 10, top: 3, fontSize:'130%'}} />
+						{this.state.showCancelJobDialog ? "Keep running" : "Cancel job"}
+					</button>
 					: null
 				}
+				<span>
+					<span> <b>Site id: <i>{job.siteId}</i></b> (<b>lat:</b> {job.lat}, <b>lon:</b> {job.lon}), </span>
+					<span><b>alt:</b> {job.alt}, <b>start:</b> {job.start}, <b>stop:</b> {job.stop}, </span>
+					<span><b>done:</b> {jinfo.nSlotsFinished} of {jinfo.nSlots}</span>
+					<span> - submitted by {job.userId}</span>
+				</span>
 			</div>
+			{allowCancel
+				? <div className="panel-body">
+					<YesNoView
+						visible={this.state.showCancelJobDialog}
+						title={'Cancel job'}
+						question={'Are you sure you want to cancel this job?'}
+						actionYes={this.confirmJobCancel.bind(this)}
+						actionNo={this.toggleCancelJobDialog.bind(this)}
+					/>
+				</div>
+				: null
+			}
 		</div>;
 	}
 }
 
-const StatusLabel = props => {
-	const status = props.status;
-
-	return <span style={{fontSize: '120%', position: 'relative', top: -2, marginRight: 20}}>
-		{status && Number.isInteger(status.exitValue)
-			? status.exitValue === 0
-				? <span className="label label-success">Calculation finished</span>
-				: <span className="label label-danger">Calculation failed</span>
-			: null
-		}
-	</span>;
-};
-
-const HeaderInfo = props => {
-	const job = props.job;
-	const params = <span>
-		<b>lat:</b> {job.lat}, <b>lon:</b> {job.lon}, <b>alt:</b> {job.alt}, <b>start:</b> {job.start}, <b>stop:</b> {job.stop}
-	</span>;
-
-	return <span>
-		<span><b>Site id: <i>{job.siteId}</i></b></span>
-		<span> - Submitted {toISO(job.timeEnqueued)} by {job.userId} ({params})</span>
-	</span>;
-};
-
-const Queue = props => {
-	const job = props.job;
-
-	return(
-		<div className="panel-body">
-			<InfoPanelWithList title="Job definition">
-				<div><b>Site id: </b>{job.siteId}</div>
-				<div><b>Lat: </b>{job.lat}</div>
-				<div><b>Lon: </b>{job.lon}</div>
-				<div><b>Alt: </b>{job.alt}</div>
-				<div><b>Start: </b>{job.start}</div>
-				<div><b>Stop: </b>{job.stop}</div>
-				<div><b>Was put in the queue at: </b>{toISO(job.timeEnqueued)}</div>
-			</InfoPanelWithList>
-		</div>
-	);
-};
-
-const RunningAndFinished = props => {
-	const job = props.job;
-	const status = props.status;
-	const jinfo = props.jinfo;
-
-	return(
-		<div className="panel-body">
-			<InfoPanelWithList title="Summary of job">
-				{Number.isInteger(status.exitValue)
-					? status.exitValue === 0
-						? <div style={{marginBottom: 10}}>
-							<div>Calculation started {toISO(job.timeStarted)} and finished {toISO(job.timeStopped)}</div>
-							<div>
-								View results <a target="_blank" href={"/viewer/" + status.id + "/"}>here</a>
-							</div>
-						</div>
-						: <div style={{marginBottom: 10}}>
-							<div>Calculation started {toISO(job.timeStarted)} and failed {toISO(job.timeStopped)}</div>
-						</div>
-					: <div style={{marginBottom: 10}}>
-						Calculation started {toISO(job.timeStarted)}
-					</div>
-				}
-				<div><b>Site id: </b>{job.siteId}</div>
-				<div><b>Lat: </b>{job.lat}</div>
-				<div><b>Lon: </b>{job.lon}</div>
-				<div><b>Alt: </b>{job.alt}</div>
-				<div><b>Start: </b>{job.start}</div>
-				<div><b>Stop: </b>{job.stop}</div>
-				<div><b>Execution node: </b>{jinfo.executionNode}</div>
-				<div><b>Was put in the queue at: </b>{toISO(job.timeEnqueued)}</div>
-				<div><b>Started at: </b>{toISO(job.timeStarted)}</div>
-				{job.timeStopped
-					? <div>
-						<div><b>Ended at: </b>{toISO(job.timeStopped)}</div>
-						<div><b>Total runtime: </b>{getRuntime(job.timeStarted, job.timeStopped)}</div>
-					</div>
-					: null
-				}
-			</InfoPanelWithList>
-
-			<OutputStrings title="Standard output" stylecontext="success" strings={status.output}/>
-			<OutputStrings title="Errors" stylecontext="danger" strings={status.errors}/>
-			<OutputStrings title="STILT logs (merged, last 200 lines only)" stylecontext="info" strings={status.logs}/>
-		</div>
-	);
-};
-
-const OutputStrings = props => {
-	const strings = props.strings.map(s => s.trim()).filter(s => s.length);
-	return strings.length
-		? <div className={`panel panel-${props.stylecontext}`}>
-			<div className="panel-heading">
-				<h3 className="panel-title">{props.title}</h3>
-			</div>
-			<div className="panel-body" style={{overflow: 'auto', maxHeight: 300}}>
-			{
-				strings.map((s, i) => <p key={"s_" + i}>{s}</p>)
-			}
-			</div>
-		</div>
-		: null;
-};
-
-export const InfoPanelWithList = props => <div className="panel panel-info">
-	<div className="panel-heading">
-		<h3 className="panel-title">{props.title}</h3>
-	</div>
-	<div className="panel-body">
-		<div>{props.children}</div>
-	</div>
-</div>;
-
-const toISO = dateStr => {
-	if (!dateStr) return "Unknown";
-
-	const ts = new Date(dateStr);
-	return ts.toISOString().slice(0, 10) + " " + ts.toLocaleTimeString();
-};
-
-const getRuntime = (startStr, stopStr) => {
-	if (!(startStr || stopStr)) return "Unknown";
-
-	const start = new Date(startStr);
-	const stop = new Date(stopStr);
-
-	if (!(start && stop)) return <span>Not defined</span>;
-
-	start.setMinutes(start.getMinutes() - start.getTimezoneOffset());
-	stop.setMinutes(stop.getMinutes() - stop.getTimezoneOffset());
-
-	const msPerDay = 24 * 60 * 60 * 1000;
-	const msRuntime = stop.getTime() - start.getTime();
-	const runtime = new Date(msRuntime);
-
-	const days = Math.floor(msRuntime / msPerDay);
-	const hours = runtime.getUTCHours();
-	const minutes = runtime.getUTCMinutes();
-	const seconds = runtime.getUTCSeconds();
-
-	return <span>
-		{days > 1 ? days + " days, " : days + " day, "}
-		{hours > 1 ? hours + " hours, " : hours + " hour, "}
-		{minutes > 1 ? minutes + " minutes and " : minutes + " minute and "}
-		{seconds > 1 ? seconds + " seconds" : seconds + " second"}
-	</span>;
-};

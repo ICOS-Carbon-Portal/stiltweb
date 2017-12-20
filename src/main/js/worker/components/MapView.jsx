@@ -262,7 +262,7 @@ const JobList = props => props.jobs.length
 			props.jobs.map(job => {
 				return props.isQueue
 					? <JobLabel user={props.user} job={job} key={job.id} />
-					: <JobLabel user={props.user} job={job.job} status={job.status} key={job.job.id} />;
+					: <JobLabel user={props.user} job={job.job} key={job.job.id} />;
 			})
 		}
 		</div>
@@ -271,7 +271,6 @@ const JobList = props => props.jobs.length
 
 const JobLabel = props => {
 	const job = props.job;
-	const status = props.status;
 	const lbl = {
 		txt: "Site '" + job.siteId + "'",
 		cls: "label label-default",
@@ -282,22 +281,6 @@ Altitude: ${job.alt}
 From: ${job.start}
 To: ${job.stop}`
 	};
-
-	if (!status){
-		lbl.txt += " enqueued";
-	} else {
-		if (isNumber(status.exitValue)){
-			if (status.exitValue === 0){
-				lbl.txt += " is done";
-				lbl.cls += "label label-success";
-			} else {
-				lbl.txt += " failed";
-				lbl.cls += "label label-danger";
-			}
-		} else {
-			lbl.txt += " is running";
-		}
-	}
 
 	const myJob = props.user ? props.user.email === job.userId : undefined;
 

@@ -7,8 +7,7 @@ import WorkerData from './models/WorkerData';
 const initState = {
 	workerData: new WorkerData(),
 	currentView: MAP_VIEW,
-	dashboardState: {running: undefined, done: undefined, queue: undefined},
-	yesNoViewVisible: false
+	dashboardState: {running: [], done: [], queue: [], infra: []}
 };
 
 
