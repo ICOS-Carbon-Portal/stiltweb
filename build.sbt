@@ -34,7 +34,7 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 	.settings(commonSettings: _*)
 	.settings(
 		name := "stiltcluster",
-		version := "0.1.0",
+		version := "0.2.0",
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka" %% "akka-cluster"		 % akkaVersion,
 			"com.typesafe.akka" %% "akka-cluster-tools"	 % akkaVersion,
@@ -54,7 +54,7 @@ lazy val stiltweb = (project in file("."))
 	.settings(commonSettings: _*)
 	.settings(
 		name := "stiltweb",
-		version := "0.1.0",
+		version := "0.2.0",
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka"  %% "akka-http-spray-json"               % akkaHttpVersion,
 			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.5-SNAPSHOT",
