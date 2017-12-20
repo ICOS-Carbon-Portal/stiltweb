@@ -32,6 +32,7 @@ lazy val deploy = inputKey[Unit]("Deploys to production using Ansible (depends o
 
 lazy val stiltcluster = (project in file("stiltcluster"))
 	.settings(commonSettings: _*)
+	.enablePlugins(IcosCpSbtDeployPlugin)
 	.settings(
 		name := "stiltcluster",
 		version := "0.2.0",
@@ -41,6 +42,11 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 			"com.typesafe.akka" %% "akka-slf4j"			 % akkaVersion,
 			"org.scalatest"     %% "scalatest"           % "3.0.1" % "test"
 		),
+
+		cpDeployTarget := "stiltcluster",
+		cpDeployPlaybook := "stilt.yml",
+		cpDeployBuildInfoPackage := "se.lu.nateko.cp.stiltcluster",
+
 		fork in run := true,
 		connectInput in run := true
 	)
