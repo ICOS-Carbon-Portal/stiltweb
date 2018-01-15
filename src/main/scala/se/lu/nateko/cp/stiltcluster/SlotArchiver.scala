@@ -12,7 +12,7 @@ class LocalStiltFile (slot: StiltSlot, src: Path, typ: StiltResultFileType.Value
 	def link(dir: Path): Unit = {
 		val relPath = StiltResultFile.calcFileName(slot, typ)
 		val absPath = dir.resolve(relPath)
-		// Create leading directories, e.g 'Footprints/XXX/2012'
+		// Create leading directories, e.g 'Footprints/XXX'
 		Files.createDirectories(absPath.getParent)
 		if (! Files.exists(absPath))
 			Files.createSymbolicLink(absPath, src)

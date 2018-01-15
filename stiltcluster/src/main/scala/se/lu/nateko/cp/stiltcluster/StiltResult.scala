@@ -3,30 +3,29 @@
  The original stilt simulation software produces a lot of output files.  Below
  is a listing of a stilt simulation output directory.
 
+
 Footprints
 Footprints/XXX
-Footprints/XXX/2012
-Footprints/XXX/2012/.RDatastiltresult2012x56.10Nx013.42Ex00150_1
-Footprints/XXX/2012/stiltresult2012x56.10Nx013.42Ex00150_1.csv
-Footprints/XXX/2012/foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
-Footprints/XXX/2012/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
+Footprints/XXX/.RDatastiltresult2012x56.10Nx013.42Ex00150_1
+Footprints/XXX/stiltresult2012x56.10Nx013.42Ex00150_1.csv
+Footprints/XXX/foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
+Footprints/XXX/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
 Results
 Results/XXX
 Results/XXX/stiltresult2012x56.10Nx013.42Ex00150.csv
 Results/XXX/.RData.XXX.2012.request
 RData
 RData/XXX
-RData/XXX/2012
-RData/XXX/2012/.RData2012x12x01x00x56.10Nx013.42Ex00150
+RData/XXX/.RData2012x12x01x00x56.10Nx013.42Ex00150
 
  The above files were produced by a simulation started with this command:
    $ stilt run XXX 56.10 13.42 150 2012120100 2012120100
 
  We (the stiltweb software) is only interested in the following files:
 
-Footprints/XXX/2012/foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
-Footprints/XXX/2012/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
-RData/XXX/2012/.RData2012x12x01x00x56.10Nx013.42Ex00150
+Footprints/XXX/foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
+Footprints/XXX/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
+RData/XXX/.RData2012x12x01x00x56.10Nx013.42Ex00150
 
  The above files are those that are valuable to cache between runs of stilt.
  */
@@ -61,14 +60,14 @@ object StiltResultFile {
 					 jobId: String = "XXX"): Path = {
 		typ match {
 			case StiltResultFileType.Foot =>
-				// Footprints/XXX/2012/foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
-				Paths.get(f"Footprints/${jobId}/${slot.year}/foot${slot}_aggreg.nc")
+				// Footprints/XXX/foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
+				Paths.get(f"Footprints/${jobId}/foot${slot}_aggreg.nc")
 			case StiltResultFileType.RDataFoot =>
-				// Footprints/XXX/2012/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
-				Paths.get(f"Footprints/${jobId}/${slot.year}/.RDatafoot${slot}")
+				// Footprints/XXX/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
+				Paths.get(f"Footprints/${jobId}/.RDatafoot${slot}")
 			case StiltResultFileType.RData =>
-				// RData/XXX/2012/.RData2012x12x01x00x56.10Nx013.42Ex00150
-				Paths.get(f"RData/${jobId}/${slot.year}/.RData${slot}")
+				// RData/XXX/.RData2012x12x01x00x56.10Nx013.42Ex00150
+				Paths.get(f"RData/${jobId}/.RData${slot}")
 		}
 	}
 }
