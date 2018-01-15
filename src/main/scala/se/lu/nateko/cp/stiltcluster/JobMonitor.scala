@@ -56,9 +56,9 @@ class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 		dashboard ! JobInfo(jobDir.job, totSlots, totSlots - remaining.length)
 
 		if(remaining.isEmpty){
-			trace(s"Done, terminating")
-			jobDir.markAsDone()
-			context stop self
+			trace(s"All slots computed, telling slot calculator to merge.")
+			slotCalculator ! MergeJobDir(jobDir)
+			context become merging
 		} else
 			context become workingOn(remaining)
 	}
@@ -82,6 +82,14 @@ class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 		case StiltFailure(slot) =>
 			workOnRemaining(outstanding.filter(_ != slot))
 	}
+
+	def merging(): Receive = {
+		case JobDirMerged =>
+			trace(s"Job directory merged. All done, terminating")
+			jobDir.markAsDone()
+			context stop self
+	}
+
 }
 
 object JobMonitor{
