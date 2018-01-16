@@ -38,7 +38,7 @@ class JobMonitorTest extends TestKit(ActorSystem()) with FunSuiteLike with Impli
 		val sProd = TestProbe()
 		system.actorOf(Props(new ForwardActor(sProd.ref)), "slotproducer")
 
-		val jobM = system.actorOf(Props(new JobMonitor(dir)), name="jobmonitor")
+		val jobM = system.actorOf(JobMonitor.props(dir, tmp), name="jobmonitor")
 
 		sCalc.expectMsgPF() {
 			case (CalculateSlotList(_)) => ()

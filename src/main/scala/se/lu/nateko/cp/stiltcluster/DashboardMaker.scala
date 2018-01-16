@@ -44,17 +44,10 @@ class DashboardMaker extends Actor{
 			notifySubscribers()
 
 		case jinfo@ JobInfo(job, totalSlots, doneSlots) =>
-			var mustNotify = false
+			if(removeFromQueue(job) || updateRunning(jinfo)) notifySubscribers()
 
-			mustNotify |= removeFromQueue(job)
-
-			if(totalSlots != doneSlots)
-				mustNotify |= updateRunning(jinfo)
-			else {
-				mustNotify |= removeFromRunning(jinfo)
-				mustNotify |= addToDone(jinfo)
-			}
-			if(mustNotify) notifySubscribers()
+		case JobFinished(jinfo) =>
+			if(removeFromRunning(jinfo.job) || addToDone(jinfo)) notifySubscribers()
 
 		case CancelJob(id) =>
 			if(cancelJob(id)) notifySubscribers()
@@ -88,8 +81,8 @@ class DashboardMaker extends Actor{
 		case _ => false
 	}
 
-	def removeFromRunning(jinfo: JobInfo): Boolean = if(running.exists(_.id == jinfo.id)){
-		running = running.filter(_.id != jinfo.id)
+	def removeFromRunning(job: Job): Boolean = if(running.exists(_.id == job.id)){
+		running = running.filter(_.id != job.id)
 		true
 	} else false
 

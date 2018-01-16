@@ -2,9 +2,11 @@ package se.lu.nateko.cp.stiltcluster
 
 import akka.actor.Actor
 import akka.actor.Props
+import java.nio.file.Path
 
-class JobMonitor(jobDir: JobDir) extends Actor with Trace {
+class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 
+	val exposer = new ResultsExposer(mainDirectory)
 	val slotCalculator = context.actorSelection("/user/slotcalculator")
 	val slotProducer = context.actorSelection("/user/slotproducer")
 	val dashboard = context.actorSelection("/user/dashboardmaker")
@@ -85,13 +87,16 @@ class JobMonitor(jobDir: JobDir) extends Actor with Trace {
 
 	def merging(): Receive = {
 		case JobDirMerged =>
-			trace(s"Job directory merged. All done, terminating")
+			trace(s"Job directory merged. Exposing the job results for the STILT viewer")
 			jobDir.markAsDone()
+			exposer.expose(jobDir)
+			dashboard ! JobFinished(JobInfo(jobDir.job, totalSlotsNum, totalSlotsNum))
+			trace(s"Results exposed, dashboard notified, terminating.")
 			context stop self
 	}
 
 }
 
 object JobMonitor{
-	def props(jdir: JobDir): Props = Props.create(classOf[JobMonitor], jdir)
+	def props(jdir: JobDir, mainDirectory: Path): Props = Props.create(classOf[JobMonitor], jdir, mainDirectory)
 }

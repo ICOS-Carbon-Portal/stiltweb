@@ -49,7 +49,7 @@ case object JobMonitorRegistering
 case object SendSlotRequest
 case object AllDone
 
-case class JobFinished(jdir: JobDir)
+case class JobFinished(jinfo: JobInfo)
 
 
 case class JobInfo(job: Job, nSlots: Int, nSlotsFinished: Int) {

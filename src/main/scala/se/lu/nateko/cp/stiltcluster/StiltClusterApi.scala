@@ -18,13 +18,15 @@ class StiltClusterApi {
 
 	private val system = ActorSystem(conf.getString("stiltcluster.name"), conf)
 
-	private val receptionist = system.actorOf(
-		Props[WorkReceptionist], name = "receptionist")
 
 	val stateDir = {
 		val dirPath = ConfigReader.default.stateDirectory
 		Paths.get(dirPath.replaceFirst("^~", System.getProperty("user.home")))
 	}
+
+	val mainDir = Paths.get(ConfigReader.default.mainDirectory)
+
+	val receptionist = system.actorOf(WorkReceptionist.props(mainDir), name = "receptionist")
 
 	system.actorOf(Props(new SlotArchiver(stateDir)), name="slotarchiver")
 	system.actorOf(Props[SlotCalculator], name="slotcalculator")

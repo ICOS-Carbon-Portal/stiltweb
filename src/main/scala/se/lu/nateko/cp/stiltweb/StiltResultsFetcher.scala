@@ -13,13 +13,10 @@ import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
 import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
 
 
-class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) {
+class StiltResultsFetcher(config: StiltWebConfig) {
 	import StiltResultFetcher._
 
-	val mainDirectory = jobId match{
-		case None => config.mainDirectory
-		case Some(job) => config.jobsOutputDirectory + "/" + job
-	}
+	val mainDirectory = config.mainDirectory
 
 	private def listSubdirectories(parent: String, child: String): Array[File] = {
 		new File(parent, child).listFiles() match {
@@ -126,11 +123,13 @@ class StiltResultsFetcher(config: StiltWebConfig, jobId: Option[String] = None) 
 	  */
 	def availableInputMonths(): Seq[String] = {
 		val pat = "\\w+\\.(\\d\\d)(\\d\\d)0100\\.arl".r
-		val lst = listFileNames(Paths.get(config.metDataDirectory), "*.arl")
-		lst.collect	{
-			// "ECmetF.12090100.arl" => (12, 09) => "2012-09"
-			case pat(year, month) => s"20${year}-${month}"
-		}.toSet.toSeq.sorted
+		listFileNames(Paths.get(config.metDataDirectory), "*.arl")
+			.collect{
+				// "ECmetF.12090100.arl" => (12, 09) => "2012-09"
+				case pat(year, month) => s"20${year}-${month}"
+			}
+			.distinct
+			.sorted
 	}
 }
 
@@ -143,10 +142,13 @@ object StiltResultFetcher{
 	// ex: "foot2012x12x09x00x46.55Nx007.98Ex00720_aggreg.nc"
 	val fpnameRegex = """^foot\d{4}x\d\dx\d\dx\d\dx(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+).+$""".r
 
-	def listFileNames(dir: Path, fileGlob: String, limit: Option[Int] = None): Seq[String] = {
+	def listFileNames(dir: Path, fileGlob: String, limit: Option[Int] = None): IndexedSeq[String] =
+		listFiles(dir, fileGlob, limit).map(_.getFileName.toString)
+
+	def listFiles(dir: Path, fileGlob: String, limit: Option[Int] = None): IndexedSeq[Path] = {
 		val dirStream = Files.newDirectoryStream(dir, fileGlob)
 		try{
-			val fnameIter = dirStream.iterator().asScala.map(_.getFileName.toString)
+			val fnameIter = dirStream.iterator().asScala
 			(limit match{
 				case None => fnameIter
 				case Some(lim) => fnameIter.take(lim)

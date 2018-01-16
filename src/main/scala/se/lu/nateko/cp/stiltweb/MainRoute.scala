@@ -12,7 +12,9 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 	val authRouting = new AuthRouting(config.auth)
 	import authRouting.user
 
-	def viewerRoute(service: StiltResultsFetcher): Route = {
+	private val service = new StiltResultsFetcher(config)
+
+	def route: Route = pathPrefix("viewer") {
 		get {
 			path("footprint") {
 				parameters(("stationId", "footprint")) { (stationId, filename) =>
@@ -48,16 +50,6 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				}
 			}
 		}
-	}
-
-	val standardViewerRoute = viewerRoute(new StiltResultsFetcher(config, None))
-
-	def route: Route = pathPrefix("viewer") {
-		pathPrefix("job_.+".r){ jobId =>
-			val service = new StiltResultsFetcher(config, Some(jobId))
-			viewerRoute(service)
-		} ~
-		standardViewerRoute
 	} ~
 	pathPrefix("worker"){
 		get {
