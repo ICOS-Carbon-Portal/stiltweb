@@ -7,10 +7,10 @@ import se.lu.nateko.cp.stiltcluster.{StiltResult, StiltSlot, StiltResultFileType
 
 
 object StiltResultTest {
-	val sampleFileName = "./Footprints/XXX/2012/foot2012x12x08x18x46.55Nx007.98Ex00720_aggreg.nc"
+	val sampleFileName = "./Footprints/XXX/foot2012x12x08x18x46.55Nx007.98Ex00720_aggreg.nc"
 	val (_prefix, sampleSlot, _suffix) = StiltSlot.ofFilename(sampleFileName)
 
-	assert(_prefix == "./Footprints/XXX/2012/foot")
+	assert(_prefix == "./Footprints/XXX/foot")
 	assert(_suffix == "_aggreg.nc")
 
 	val sampleSlotDir = Paths.get(getClass.getResource("/stilt-sample-run/output").getFile)
@@ -25,10 +25,10 @@ class StiltResultTest extends FunSuite {
 	import StiltResultTest.{sampleSlotDir, sampleResult}
 
 	test("Read output directory") {
-		val g = sampleSlotDir.resolve("Footprints/XXX/2012/stiltresult2012x46.55Nx007.98Ex00720_1.csv")
+		val g = sampleSlotDir.resolve("Footprints/XXX/stiltresult2012x46.55Nx007.98Ex00720_1.csv")
 		assert(Files.exists(g))
 
-		val h = sampleSlotDir.resolve("Footprints/XXX/2012/.RDatastiltresult2012x46.55Nx007.98Ex00720_1")
+		val h = sampleSlotDir.resolve("Footprints/XXX/.RDatastiltresult2012x46.55Nx007.98Ex00720_1")
 		assert(Files.exists(h))
 
 		val r = sampleResult
