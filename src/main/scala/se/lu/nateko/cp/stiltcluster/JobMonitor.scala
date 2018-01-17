@@ -28,6 +28,9 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 	private val deletionHandler: Receive = {
 		case deletion @ CancelJob(id) =>
 			if(id == jobDir.job.id){
+				jobDir.slots.foreach{slots =>
+					slotProducer ! CancelSlots(slots)
+				}
 				dashboard ! deletion
 				jobDir.delete()
 				context stop self
@@ -85,7 +88,7 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 			workOnRemaining(outstanding.filter(_ != slot))
 	}
 
-	def merging(): Receive = {
+	def merging(): Receive = deletionHandler.orElse{
 		case JobDirMerged =>
 			trace(s"Job directory merged. Exposing the job results for the STILT viewer")
 			jobDir.markAsDone()

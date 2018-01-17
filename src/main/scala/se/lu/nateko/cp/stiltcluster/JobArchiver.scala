@@ -89,10 +89,6 @@ class JobArchiver(dataDir: Path) extends Actor with Trace {
 				trace(s"Wrote job file $f")
 				sender() ! BeginJob(new JobDir(job, dir))
 			}
-
-		case JobFinished(jdir: JobDir) => {
-			jdir.markAsDone
-		}
 	}
 
 	private def readOldJobsFromDisk() = {

@@ -56,6 +56,15 @@ class SlotProducer (protected val traceFile: Path) extends Actor with Trace {
 			}
 			trace(s"Passed ${slots.length} requests on to the slot archiver")
 
+		case CancelSlots(slots) =>
+			trace(s"Received a request for cancelling ${slots.length} slots.")
+			val toCancel = slots.toSet
+			requests.retain{
+				case (slot, jobMons) => !(
+					toCancel.contains(slot) && jobMons.filter(_ != sender()).isEmpty
+				)
+			}
+
 		case msg @ SlotCalculated(result) => {
 			trace("Got SlotCalculated, sending on to slot archive")
 			slotArchiver ! msg

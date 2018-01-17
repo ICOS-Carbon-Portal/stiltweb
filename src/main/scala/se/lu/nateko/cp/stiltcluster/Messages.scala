@@ -40,6 +40,7 @@ case class MergeJobDir(jobDir: JobDir)
 case object JobDirMerged
 
 case class RequestManySlots(slots: Seq[StiltSlot])
+case class CancelSlots(slots: Seq[StiltSlot])
 case class RequestSingleSlot(slot: StiltSlot)
 case class SlotAvailable(slot: LocallyAvailableSlot)
 case class SlotUnAvailable(slot: StiltSlot)
