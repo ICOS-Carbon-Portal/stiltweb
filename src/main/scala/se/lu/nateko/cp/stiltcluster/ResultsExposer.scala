@@ -20,11 +20,10 @@ class ResultsExposer(mainDir: Path) {
 		Files.createDirectories(stationFootsDir)
 
 		listFiles(jobDir.dir.resolve(s"slots/$footPrintsDirectory/XXX"), "foot*.nc")
-			.map(_.toRealPath())
-			.foreach{target =>
-				val src = stationFootsDir.resolve(target.getFileName)
-				Files.deleteIfExists(src)
-				Files.createSymbolicLink(src, target)
+			.foreach{linkToFoot =>
+				val result = stationFootsDir.resolve(linkToFoot.getFileName)
+				Files.deleteIfExists(result)
+				Files.createSymbolicLink(result, linkToFoot.toRealPath())
 			}
 
 		val stationResDir = resDir.resolve(jobDir.job.siteId)

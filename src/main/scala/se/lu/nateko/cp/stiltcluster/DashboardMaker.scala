@@ -44,10 +44,14 @@ class DashboardMaker extends Actor{
 			notifySubscribers()
 
 		case jinfo@ JobInfo(job, totalSlots, doneSlots) =>
-			if(removeFromQueue(job) || updateRunning(jinfo)) notifySubscribers()
+			removeFromQueue(job)
+			updateRunning(jinfo)
+			notifySubscribers()
 
 		case JobFinished(jinfo) =>
-			if(removeFromRunning(jinfo.job) || addToDone(jinfo)) notifySubscribers()
+			removeFromRunning(jinfo.job)
+			addToDone(jinfo)
+			notifySubscribers()
 
 		case CancelJob(id) =>
 			if(cancelJob(id)) notifySubscribers()
