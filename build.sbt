@@ -48,7 +48,11 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 		cpDeployBuildInfoPackage := "se.lu.nateko.cp.stiltcluster",
 
 		fork in run := true,
-		connectInput in run := true
+		connectInput in run := true,
+
+		baseDirectory in reStart := {
+			baseDirectory.in(reStart).value.getParentFile
+		}
 	)
 
 val npmPublish = taskKey[Unit]("runs 'npm publish'")

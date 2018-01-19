@@ -1,13 +1,16 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.nio.file.Paths
-
 import akka.actor.{ Actor, ActorSelection, RootActorPath }
-import akka.actor.OneForOneStrategy
-import akka.actor.SupervisorStrategy
+import akka.actor.Cancellable
+import akka.actor.Props
 import akka.cluster.{ Cluster, Member, MemberStatus }
 import akka.cluster.ClusterEvent.{ CurrentClusterState, MemberUp }
-import akka.actor.Props
+
+import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+
+import java.nio.file.Files
+import java.nio.file.Paths
 
 
 trait Tracker extends Actor {
@@ -37,12 +40,19 @@ class WorkMaster(nCores: Int) extends Trace with Tracker {
 
 	private var freeCores = nCores
 	private var slotProd  = context.actorSelection("")
+	private var tickCancel: Cancellable = null
 	protected val traceFile = Paths.get("workmaster.log")
 
-	trace("WorkMaster starting up")
+	override def preStart(): Unit = {
+		super.preStart()
+		trace("WorkMaster starting up")
+		implicit val ctxt = context.system.dispatcher
+		tickCancel = context.system.scheduler.schedule(30.seconds, 30.seconds, self, WorkMaster.Tick)
+	}
 
-	override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 1, loggingEnabled = true){
-		SupervisorStrategy.defaultDecider
+	override def postStop(): Unit = {
+		super.postStop()
+		if(tickCancel != null) tickCancel.cancel()
 	}
 
 	def receive = slotCalculation orElse trackPeer
@@ -53,14 +63,12 @@ class WorkMaster(nCores: Int) extends Trace with Tracker {
 				trace("Received CalculateSlot even though I'm busy")
 			else {
 				freeCores -= 1
-				context.actorOf(Worker.props(slot))
+				calculateSlot(slot)
 			}
 			sender() ! myStatus
 
-		case result: SlotCalculated =>
-			finishSlot(result)
-		case failure: StiltFailure =>
-			finishSlot(failure)
+		case WorkMaster.Tick =>
+			slotProd ! myStatus
 
 		case WorkMaster.Stop =>
 			trace(s"Terminated (was $self)")
@@ -68,8 +76,8 @@ class WorkMaster(nCores: Int) extends Trace with Tracker {
 	}
 
 	private def finishSlot(msg: Any): Unit = {
-		slotProd ! msg
 		freeCores += 1
+		slotProd ! msg
 		slotProd ! myStatus
 	}
 
@@ -80,10 +88,39 @@ class WorkMaster(nCores: Int) extends Trace with Tracker {
 	}
 
 	private def myStatus = WorkMasterStatus(freeCores, nCores)
+
+	private def calculateSlot(slot: StiltSlot): Unit = {
+
+		import scala.concurrent.ExecutionContext.Implicits.global
+
+		def calculateOnce(): Future[Unit] = Future{
+			trace(s"Starting stilt calculation of $slot")
+
+			val stiltOutput = RunStilt.cmd_run(slot)
+
+			trace(s"Stilt simulation finished $slot ($stiltOutput)")
+
+			val d = Paths.get(stiltOutput)
+			assert(Files.isDirectory(d))
+
+			finishSlot(SlotCalculated(StiltResult(slot, d.resolve("output"))))
+
+			trace(s"Slot calculation for $slot was a success")
+		}
+
+		calculateOnce().recoverWith{ case _: Throwable => calculateOnce()}
+			.failed
+			.foreach{err =>
+				trace(s"Slot calculation for $slot was a failure: " + err.getMessage)
+				trace(err.getStackTrace().mkString("", "\n", "\n"))
+				finishSlot(StiltFailure(slot))
+			}
+	}
 }
 
 object WorkMaster{
 	def props(nCores: Int) = Props.create(classOf[WorkMaster], Int.box(nCores))
 
 	case object Stop
+	case object Tick
 }
