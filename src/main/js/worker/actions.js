@@ -46,7 +46,7 @@ export function stationSelected(selectedStation){
 	};
 }
 
-export function jobdefUpdated(update){
+export function jobDefUpdated(update){
 	return {
 		type: JOBDEF_UPDATED,
 		update

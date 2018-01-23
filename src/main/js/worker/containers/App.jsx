@@ -4,7 +4,7 @@ import * as Toaster from 'icos-cp-toaster';
 import {copyprops} from 'icos-cp-utils';
 import MapView from '../components/MapView.jsx';
 import DashboardView from '../components/DashboardView.jsx';
-import {stationSelected, jobdefUpdated, datesUpdated, useExistingStationData, startJob, cancelJob} from '../actions';
+import {stationSelected, jobDefUpdated, datesUpdated, useExistingStationData, startJob, cancelJob} from '../actions';
 import {MAP_VIEW, DASHBOARD_VIEW} from '../actions';
 
 class App extends Component {
@@ -38,7 +38,7 @@ class App extends Component {
 
 	render() {
 		const props = this.props;
-		const subtitle = props.currentView == MAP_VIEW ? "Job starter" : "Dashboard";
+		const subtitle = props.currentView === MAP_VIEW ? "Job starter" : "Dashboard";
 
 		return <div>
 			<Toaster.AnimatedToasters
@@ -59,7 +59,7 @@ class App extends Component {
 			</div>
 
 			{
-				props.currentView == MAP_VIEW
+				props.currentView === MAP_VIEW
 					? <MapView
 						toastInfo={this.toastInfo.bind(this)}
 						toastWarning={this.toastWarning.bind(this)}
@@ -79,7 +79,7 @@ function stateToProps(state){
 function dispatchToProps(dispatch){
 	return {
 		selectStation: station => dispatch(stationSelected(station)),
-		updateJobdef: update => dispatch(jobdefUpdated(update)),
+		updateJobDef: update => dispatch(jobDefUpdated(update)),
 		updateDates: dates => dispatch(datesUpdated(dates)),
 		useExistingStationData: update => dispatch(useExistingStationData(update)),
 		startJob: () => dispatch(startJob),

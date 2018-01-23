@@ -4,8 +4,8 @@ import Select from '../../common/components/Select.jsx';
 import TextInput from '../components/TextInput.jsx';
 import StationInfo from '../models/StationInfo';
 import DatesValidation from '../models/DatesValidation';
-import InfiniteCalendar from 'react-infinite-calendar';
-import 'react-infinite-calendar/styles.css';
+import {DatePickerInput} from 'rc-datepicker';
+
 
 const geoBoundary = {
 	latMin: 33,
@@ -17,32 +17,21 @@ const geoBoundary = {
 export default class MapView extends Component {
 	constructor(props) {
 		super(props);
+
 		this.state = {
-			startCalVisible: undefined,
-			stopCalVisible: undefined
+			startInvalid: false,
+			stopInvalid: false
 		};
 
-		this.bound_onClick = this.onClick.bind(this);
-		document.body.addEventListener('click', this.bound_onClick);
+		this.startInput = undefined;
+		this.stopInput = undefined;
+		this.onKeyUpHandler = this.onKeyUp.bind(this);
 	}
 
-	onClick(e){
-		const activeElement = e.target;
-		const hideCal = !this.mapDiv.contains(activeElement)
-			&& !this.startCalDiv.contains(activeElement)
-			&& !this.stopCalDiv.contains(activeElement)
-			&& activeElement !== this.startCalInput
-			&& activeElement !== this.stopCalInput;
-
-		if (hideCal) {
-			this.setState({startCalVisible: false, stopCalVisible: false});
-		}
-	}
-
-	getJobdefUpdater(prop){
+	getJobDefUpdater(prop){
 		const props = this.props;
 		return function(update){
-			props.updateJobdef(Object.assign({propertyName: prop}, update));
+			props.updateJobDef(Object.assign({propertyName: prop}, update));
 		};
 	}
 
@@ -50,32 +39,103 @@ export default class MapView extends Component {
 		this.props.useExistingStationData();
 	}
 
-	toggleCalendar(cal){
-		this.setState({[cal]: !this.state[cal]});
-	}
+	onStartDateSelected(dateObj, dateString){
+		if (dateString === 'Invalid date') {
+			this.setState({startInvalid: true});
+			return;
+		} else if (this.state.startInvalid) {
+			this.setState({startInvalid: false});
+		}
 
-	onStartDateSelected(date){
-		const dates = new DatesValidation(date, this.props.workerData.formData.stop);
-		// setTimeout(() => this.toggleCalendar('startCalVisible'), 1);
-		this.toggleCalendar('startCalVisible');
+		const {stop, minDate, maxDate, disabledDates} = getDatesFromProps(this.props);
+		const dates = new DatesValidation(dateString, stop, minDate, maxDate, disabledDates);
+		if (dates.startError) this.props.toastError(dates.startError);
 		this.props.updateDates(dates);
 	}
 
-	onStopDateSelected(date){
-		const dates = new DatesValidation(this.props.workerData.formData.start, date);
-		// setTimeout(() => this.toggleCalendar('stopCalVisible'), 1);
-		this.toggleCalendar('stopCalVisible');
+	onStopDateSelected(dateObj, dateString){
+		if (dateString === 'Invalid date') {
+			this.setState({stopInvalid: true});
+			return;
+		} else if (this.state.stopInvalid) {
+			this.setState({stopInvalid: false});
+		}
+
+		const {start, minDate, maxDate, disabledDates} = getDatesFromProps(this.props);
+		const dates = new DatesValidation(start, dateString, minDate, maxDate, disabledDates);
+		if (dates.stopError) this.props.toastError(dates.stopError);
 		this.props.updateDates(dates);
+	}
+
+	componentDidMount(){
+		// Add handler for emptying date picker input
+		const datePickerInputStart = this.datePickerInputStart;
+		const datePickerInputStop = this.datePickerInputStop;
+
+		this.startInput = datePickerInputStart.getDatePickerInput().firstChild.firstChild;
+		this.stopInput = datePickerInputStop.getDatePickerInput().firstChild.firstChild;
+
+		this.startInput.setAttribute('sender', 'start');
+		this.stopInput.setAttribute('sender', 'stop');
+
+		this.startInput.addEventListener('keyup', this.onKeyUpHandler);
+		this.stopInput.addEventListener('keyup', this.onKeyUpHandler);
+	}
+
+	onKeyUp(evt){
+		if (evt.target.value === '') {
+			const sender = evt.target.getAttribute('sender');
+
+			if (sender === 'start'){
+				this.onStartDateSelected();
+			} else if (sender === 'stop'){
+				this.onStopDateSelected();
+			}
+		}
 	}
 
 	componentWillUnmount(){
-		document.body.removeEventListener('click', this.bound_onClick);
+		this.startInput.removeEventListener("keyup", this.onKeyUpHandler);
+		this.stopInput.removeEventListener("keyup", this.onKeyUpHandler);
+		// document.body.removeEventListener('click', this.bound_onClick);
+	}
+
+	onDateSet(sender, dateObj, dateString){
+		if (dateString === 'Invalid date') {
+			this.setState({[sender + 'Invalid']: true});
+			return;
+		} else if (this.state[sender + 'Invalid']) {
+			this.setState({[sender + 'Invalid']: false});
+		}
+
+		// Set time to midnight
+		const selectedDate = dateString === undefined ? undefined : new Date(dateString);
+		const {category, filterTemporal, setFilterTemporal} = this.props;
+		let newFilter = undefined;
+
+		if (sender === 'start'){
+			newFilter = category === 'dataTime'
+				? filterTemporal.withDataTimeFrom(selectedDate)
+				: filterTemporal.withSubmissionFrom(selectedDate);
+		} else if (sender === 'stop'){
+			newFilter = category === 'dataTime'
+				? filterTemporal.withDataTimeTo(selectedDate)
+				: filterTemporal.withSubmissionTo(selectedDate);
+		} else {
+			throw new Error('Unknown sender category: ' + sender);
+		}
+
+		if (newFilter && setFilterTemporal) setFilterTemporal(newFilter);
 	}
 
 	render() {
+		const {startInvalid, stopInvalid} = this.state;
 		const props = this.props;
 		const formData = props.workerData.formData;
 		const errors = props.workerData.errors;
+		const errorStart = !!errors.start;
+		const errorStop = !!errors.stop;
+		const {start, stop, minDate, maxDate} = getDatesFromProps(props);
 		const isExisting = props.workerData.selectedStation.isExisting;
 		const selectedStation = props.workerData.isFormAndExistingStationDifferent
 			? new StationInfo(formData.lat, formData.lon)
@@ -85,19 +145,7 @@ export default class MapView extends Component {
 		const buttonStyle = {display: 'block', clear: 'both', marginTop: 40};
 		const verticalMargin = {marginBottom: 20};
 		const ds = props.dashboardState;
-		const calStyle = {position:'absolute', left: -5, display:'block', zIndex: 9, boxShadow: '7px 7px 5px #888'};
-		// The calendar must have the style set on first load. Otherwise it is shown empty
-		const startCalStyle = this.state.startCalVisible === undefined
-			? {visibility: 'hidden', position:'absolute', left: -5, display:'block', zIndex: 9}
-			: this.state.startCalVisible ? calStyle : {display:'none'};
-		const stopCalStyle = this.state.stopCalVisible === undefined
-			? {visibility: 'hidden', position:'absolute', left: -5, display:'block', zIndex: 9}
-			: this.state.stopCalVisible ? calStyle : {display:'none'};
-
-		// console.log({props, formData, form: props.workerData._workerFormData, selSt: props.workerData.selectedStation,
-		// 	hasErrors: props.workerData.hasErrors, errors, isJobDefComplete: props.workerData.isJobDefComplete,
-		// 	jobDef: props.workerData.jobDef, ds, disabledDates: props.workerData.selectedStation.disabledDates
-		// });
+		// console.log({props, formData, minDate, maxDate, start, stop, disabledDates: props.availableMonths, hasErrors: props.workerData.hasErrors, errors});
 
 		return <div className="row">
 
@@ -136,65 +184,21 @@ export default class MapView extends Component {
 			<div className="col-md-2" style={{minWidth: 310}}>
 				<h4>Create new STILT footprint</h4>
 
-				<div ref={(div) => {this.startCalDiv = div;}} style={startCalStyle}>{
-					props.availableMonths
-						? <InfiniteCalendar
-							locale={{
-								weekStartsOn: 1
-							}}
-							displayOptions={{
-								shouldHeaderAnimate: false,
-								showTodayHelper: false
-							}}
-							width={320}
-							height={420}
-							onSelect={this.onStartDateSelected.bind(this)}
-							min={props.availableMonths.min}
-							minDate={props.availableMonths.min}
-							max={props.availableMonths.max}
-							maxDate={props.availableMonths.max}
-							disabledDates={props.availableMonths.disabledDates}
-						/>
-						: null
-				}</div>
-
-				<div ref={(div) => {this.stopCalDiv = div;}} style={stopCalStyle}>{
-					props.availableMonths
-						? <InfiniteCalendar
-							locale={{
-								weekStartsOn: 1
-							}}
-							displayOptions={{
-								shouldHeaderAnimate: false,
-								showTodayHelper: false
-							}}
-							width={320}
-							height={420}
-							onSelect={this.onStopDateSelected.bind(this)}
-							min={props.availableMonths.min}
-							minDate={props.availableMonths.min}
-							max={props.availableMonths.max}
-							maxDate={props.availableMonths.max}
-							disabledDates={props.availableMonths.disabledDates}
-						/>
-						: null
-				}</div>
-
 				<div className="panel panel-default">
 					<div className="panel-body">
 
 						<label style={labelStyle}>Latitude (decimal degree)</label>
-						<TextInput style={verticalMargin} value={formData.lat} action={this.getJobdefUpdater('lat')} converter={toLat} disabled={isExisting}/>
+						<TextInput style={verticalMargin} value={formData.lat} action={this.getJobDefUpdater('lat')} converter={toLat} disabled={isExisting}/>
 
 						<label style={labelStyle}>Longitude (decimal degree)</label>
-						<TextInput style={verticalMargin} value={formData.lon} action={this.getJobdefUpdater('lon')} converter={toLon} disabled={isExisting}/>
+						<TextInput style={verticalMargin} value={formData.lon} action={this.getJobDefUpdater('lon')} converter={toLon} disabled={isExisting}/>
 
 						<label style={labelStyle}>Altitude above ground (meters)</label>
-						<TextInput style={verticalMargin} value={formData.alt} action={this.getJobdefUpdater('alt')} converter={toInt} disabled={isExisting}/>
+						<TextInput style={verticalMargin} value={formData.alt} action={this.getJobDefUpdater('alt')} converter={toInt} disabled={isExisting}/>
 
 						<label style={labelStyle}>Site id (usually a 3 letter code)</label>
 						<div className="input-group" style={verticalMargin}>
-							<TextInput value={formData.siteId} action={this.getJobdefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="5"/>
+							<TextInput value={formData.siteId} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="5"/>
 							<span className="input-group-btn">
 								<button className="btn btn-primary cp-pointer"
 										onClick={this.onLoadDataBtnClick.bind(this)}
@@ -203,23 +207,34 @@ export default class MapView extends Component {
 						</div>
 
 						<label style={labelStyle}>Start date (YYYY-MM-DD)</label>
-						<TextInput
-							ref={(TextInput) => {this.startCalInput = TextInput;}}
+						<DatePickerInput
+							ref={dpi => this.datePickerInputStart = dpi}
+							minDate={minDate}
+							maxDate={maxDate}
+							defaultValue={start ? undefined : minDate}
 							style={verticalMargin}
-							maxLength="10"
-							value={formData.start}
-							error={errors.start}
-							onClick={this.toggleCalendar.bind(this, 'startCalVisible')}
+							showOnInputClick={false}
+							value={start}
+							className={errorStart || startInvalid ? 'cp-dpi-error' : ''}
+							onChange={this.onStartDateSelected.bind(this)}
+							onClear={this.onStartDateSelected.bind(this)}
+							displayFormat="YYYY-MM-DD"
+							returnFormat="YYYY-MM-DD"
 						/>
 
 						<label style={labelStyle}>End date (YYYY-MM-DD)</label>
-						<TextInput
-							ref={(TextInput) => {this.stopCalInput = TextInput;}}
-							style={verticalMargin}
-							maxLength="10"
-							value={formData.stop}
-							error={errors.stop}
-							onClick={this.toggleCalendar.bind(this, 'stopCalVisible')}
+						<DatePickerInput
+							ref={dpi => this.datePickerInputStop = dpi}
+							minDate={minDate}
+							maxDate={maxDate}
+							defaultValue={stop ? undefined : minDate}
+							showOnInputClick={false}
+							value={stop}
+							className={errorStop || stopInvalid ? 'cp-dpi-error' : ''}
+							onChange={this.onStopDateSelected.bind(this)}
+							onClear={this.onStopDateSelected.bind(this)}
+							displayFormat="YYYY-MM-DD"
+							returnFormat="YYYY-MM-DD"
 						/>
 
 						<button style={buttonStyle}
@@ -294,6 +309,16 @@ To: ${job.stop}`
 		</span>
 	</h4>;
 };
+
+function getDatesFromProps(props){
+	return {
+		start: props.workerData.formData ? props.workerData.formData.start : undefined,
+		stop: props.workerData.formData ? props.workerData.formData.stop : undefined,
+		minDate: props.availableMonths ? props.availableMonths.min : undefined,
+		maxDate: props.availableMonths ? props.availableMonths.max : undefined,
+		disabledDates: props.availableMonths ? props.availableMonths.disabledDates : undefined,
+	}
+}
 
 function toLat(str){
 	if (str.length == 0) return str;
