@@ -145,6 +145,7 @@ export default class MapView extends Component {
 		const buttonStyle = {display: 'block', clear: 'both', marginTop: 40};
 		const verticalMargin = {marginBottom: 20};
 		const ds = props.dashboardState;
+		console.log({lat: formData.lat, lon: formData.lon, selectedStation});
 		// console.log({props, formData, minDate, maxDate, start, stop, disabledDates: props.availableMonths, hasErrors: props.workerData.hasErrors, errors});
 
 		return <div className="row">
@@ -188,10 +189,12 @@ export default class MapView extends Component {
 					<div className="panel-body">
 
 						<label style={labelStyle}>Latitude (decimal degree)</label>
-						<TextInput style={verticalMargin} value={formData.lat} action={this.getJobDefUpdater('lat')} converter={toLat} disabled={isExisting}/>
+						<TextInput style={verticalMargin} value={formData.lat} action={this.getJobDefUpdater('lat')}
+								   converter={validateLatLngVal(geoBoundary.latMin, geoBoundary.latMax)} disabled={isExisting}/>
 
 						<label style={labelStyle}>Longitude (decimal degree)</label>
-						<TextInput style={verticalMargin} value={formData.lon} action={this.getJobDefUpdater('lon')} converter={toLon} disabled={isExisting}/>
+						<TextInput style={verticalMargin} value={formData.lon} action={this.getJobDefUpdater('lon')}
+								   converter={validateLatLngVal(geoBoundary.lonMin, geoBoundary.lonMax)} disabled={isExisting}/>
 
 						<label style={labelStyle}>Altitude above ground (meters)</label>
 						<TextInput style={verticalMargin} value={formData.alt} action={this.getJobDefUpdater('alt')} converter={toInt} disabled={isExisting}/>
@@ -320,36 +323,28 @@ function getDatesFromProps(props){
 	}
 }
 
-function toLat(str){
-	if (str.length == 0) return str;
+function validateLatLngVal(min, max){
+	return str => {
+		if (str.length === 0) return str;
 
-	const res = parseFloat(parseFloat(str).toFixed(2));
+		// Force '.' as decimal character and remove duplicate decimal character
+		const cleanedStr = str.replace(',', '.').split('.').slice(0, 2).join('.');
 
-	if (!isNumber(res)) throw new Error("This is not a number");
-	else if (res < geoBoundary.latMin || res > geoBoundary.latMax) throw new Error("The position lies outside of boundary");
-	else if (str.match(/\.$/) || str.match(/\.0+$/)) return str;
-	else if(res.toString() != str) throw new Error("The number is not in a canonical format");
-	else return res;
-}
-
-function toLon(str){
-	if (str.length == 0) return str;
-
-	const res = parseFloat(parseFloat(str).toFixed(2));
-
-	if (!isNumber(res)) throw new Error("This is not a number");
-	else if (res < geoBoundary.lonMin || res > geoBoundary.lonMax) throw new Error("The position lies outside of boundary");
-	else if (str.match(/\.$/) || str.match(/\.0+$/)) return str;
-	else if(res.toString() != str) throw new Error("The number is not in a canonical format");
-	else return res;
+		const res = parseFloat(parseFloat(cleanedStr).toFixed(2));
+		if (!isNumber(res)) throw new Error("This is not a number");
+		else if (res < min || res > max) throw new Error("The position lies outside of boundary");
+		else if (cleanedStr.match(/\.$/) || cleanedStr.match(/\.\d0$/) || cleanedStr.match(/\.0+$/)) return cleanedStr;
+		else if (res.toString() !== cleanedStr) throw new Error("The number is not in a canonical format");
+		else return res;
+	}
 }
 
 function toInt(str){
-	if (str.length == 0) return str;
+	if (str.length === 0) return str;
 
 	const res = parseInt(str);
 	if(!isNumber(res)) throw new Error("This is not a number");
-	else if(res.toString() != str || res <= -1) throw new Error("The number is not a non-negative integer");
+	else if(res.toString() !== str || res <= -1) throw new Error("The number is not a non-negative integer");
 	else return res;
 }
 

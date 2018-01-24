@@ -1,11 +1,17 @@
 export default class StationInfo {
 	constructor(lat, lon, alt, siteId, name, disabledDates) {
-		this._lat = lat || undefined,
-		this._lon = lon || undefined,
-		this._alt = alt || undefined,
-		this._siteId = siteId || '',
-		this._name = name || '',
-		this._disabledDates = disabledDates || []
+		this._lat = this.formatVal(lat);
+		this._lon = this.formatVal(lon);
+		this._alt = alt || undefined;
+		this._siteId = siteId || '';
+		this._name = name || '';
+		this._disabledDates = disabledDates || [];
+	}
+
+	formatVal(val){
+		return val === '-' || val === undefined
+			? undefined
+			: val;
 	}
 
 	withSelectedStation(selSt){
