@@ -47,9 +47,11 @@ export default class MapView extends Component {
 			this.setState({startInvalid: false});
 		}
 
-		const {stop, minDate, maxDate, disabledDates} = getDatesFromProps(this.props);
-		const dates = new DatesValidation(dateString, stop, minDate, maxDate, disabledDates);
+		const {stop, minDate, maxDate, disabledDates, disabledMonths} = getDatesFromProps(this.props);
+		const dates = new DatesValidation(dateString, stop, minDate, maxDate, disabledDates, disabledMonths);
+
 		if (dates.startError) this.props.toastError(dates.startError);
+		if (dates.gapWarning) this.props.toastWarning(dates.gapWarning);
 		this.props.updateDates(dates);
 	}
 
@@ -61,9 +63,11 @@ export default class MapView extends Component {
 			this.setState({stopInvalid: false});
 		}
 
-		const {start, minDate, maxDate, disabledDates} = getDatesFromProps(this.props);
-		const dates = new DatesValidation(start, dateString, minDate, maxDate, disabledDates);
+		const {start, minDate, maxDate, disabledDates, disabledMonths} = getDatesFromProps(this.props);
+		const dates = new DatesValidation(start, dateString, minDate, maxDate, disabledDates, disabledMonths);
+
 		if (dates.stopError) this.props.toastError(dates.stopError);
+		if (dates.gapWarning) this.props.toastWarning(dates.gapWarning);
 		this.props.updateDates(dates);
 	}
 
@@ -97,35 +101,6 @@ export default class MapView extends Component {
 	componentWillUnmount(){
 		this.startInput.removeEventListener("keyup", this.onKeyUpHandler);
 		this.stopInput.removeEventListener("keyup", this.onKeyUpHandler);
-		// document.body.removeEventListener('click', this.bound_onClick);
-	}
-
-	onDateSet(sender, dateObj, dateString){
-		if (dateString === 'Invalid date') {
-			this.setState({[sender + 'Invalid']: true});
-			return;
-		} else if (this.state[sender + 'Invalid']) {
-			this.setState({[sender + 'Invalid']: false});
-		}
-
-		// Set time to midnight
-		const selectedDate = dateString === undefined ? undefined : new Date(dateString);
-		const {category, filterTemporal, setFilterTemporal} = this.props;
-		let newFilter = undefined;
-
-		if (sender === 'start'){
-			newFilter = category === 'dataTime'
-				? filterTemporal.withDataTimeFrom(selectedDate)
-				: filterTemporal.withSubmissionFrom(selectedDate);
-		} else if (sender === 'stop'){
-			newFilter = category === 'dataTime'
-				? filterTemporal.withDataTimeTo(selectedDate)
-				: filterTemporal.withSubmissionTo(selectedDate);
-		} else {
-			throw new Error('Unknown sender category: ' + sender);
-		}
-
-		if (newFilter && setFilterTemporal) setFilterTemporal(newFilter);
 	}
 
 	render() {
@@ -145,8 +120,6 @@ export default class MapView extends Component {
 		const buttonStyle = {display: 'block', clear: 'both', marginTop: 40};
 		const verticalMargin = {marginBottom: 20};
 		const ds = props.dashboardState;
-		console.log({lat: formData.lat, lon: formData.lon, selectedStation});
-		// console.log({props, formData, minDate, maxDate, start, stop, disabledDates: props.availableMonths, hasErrors: props.workerData.hasErrors, errors});
 
 		return <div className="row">
 
@@ -201,7 +174,7 @@ export default class MapView extends Component {
 
 						<label style={labelStyle}>Site id (usually a 3 letter code)</label>
 						<div className="input-group" style={verticalMargin}>
-							<TextInput value={formData.siteId} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="5"/>
+							<TextInput value={formData.siteId} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="6"/>
 							<span className="input-group-btn">
 								<button className="btn btn-primary cp-pointer"
 										onClick={this.onLoadDataBtnClick.bind(this)}
@@ -214,7 +187,7 @@ export default class MapView extends Component {
 							ref={dpi => this.datePickerInputStart = dpi}
 							minDate={minDate}
 							maxDate={maxDate}
-							defaultValue={start ? undefined : minDate}
+							defaultValue={start ? undefined : stop || minDate}
 							style={verticalMargin}
 							showOnInputClick={false}
 							value={start}
@@ -230,7 +203,7 @@ export default class MapView extends Component {
 							ref={dpi => this.datePickerInputStop = dpi}
 							minDate={minDate}
 							maxDate={maxDate}
-							defaultValue={stop ? undefined : minDate}
+							defaultValue={stop ? undefined : start || maxDate}
 							showOnInputClick={false}
 							value={stop}
 							className={errorStop || stopInvalid ? 'cp-dpi-error' : ''}
@@ -320,6 +293,7 @@ function getDatesFromProps(props){
 		minDate: props.availableMonths ? props.availableMonths.min : undefined,
 		maxDate: props.availableMonths ? props.availableMonths.max : undefined,
 		disabledDates: props.availableMonths ? props.availableMonths.disabledDates : undefined,
+		disabledMonths: props.availableMonths ? props.availableMonths.disabledMonths : undefined,
 	}
 }
 

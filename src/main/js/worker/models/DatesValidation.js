@@ -1,12 +1,16 @@
 export default class DatesValidation{
-	constructor(start, stop, minDate, maxDate, disabledDates){
+	constructor(start, stop, minDate, maxDate, disabledDates, disabledMonths){
 		this._start = this.getDateObj(start);
 		this._stop = this.getDateObj(stop);
 		this._minDate = minDate;
 		this._maxDate = maxDate;
 		this._disabledDates = disabledDates || [];
+		this._disabledMonths = disabledMonths || [];
 		this._startErrorMsg = this.validateStart();
 		this._stopErrorMsg = this.validateStop();
+		this._gapWarning = this._startErrorMsg === undefined && this._stopErrorMsg === undefined
+			? this.validateForGapWarning()
+			: undefined;
 	}
 
 	getDateObj(date){
@@ -58,8 +62,8 @@ export default class DatesValidation{
 			: undefined;
 		if (errorMsg) return errorMsg;
 
-		return this._disabledDates.length && this._start && this._disabledDates.some(d => d.getTime() === this._start.getTime())
-			? "Start date cannot be one of these " + this._disabledDates.map(d => this.getISOStr(d)).join(', ')
+		return this.validateForGapError()
+			? "There is no meteorological input data in the time frame you specified"
 			: undefined;
 	}
 
@@ -79,8 +83,36 @@ export default class DatesValidation{
 			: undefined;
 		if (errorMsg) return errorMsg;
 
-		return this._disabledDates && this._stop && this._disabledDates.some(d => d.getTime() === this._stop.getTime())
-			? "Stop date cannot be one of these " + this._disabledDates.map(d => this.getISOStr(d)).join(', ')
+		return this.validateForGapError()
+			? "There is no meteorological input data in the time frame you specified"
+			: undefined;
+	}
+
+	validateForGapError(){
+		if (this._start === undefined || this._stop === undefined || this._disabledDates.length === 0) {
+			return undefined;
+		}
+
+		const msStart = this._start.getTime();
+		const msStop = this._stop.getTime();
+		const hits = this._disabledDates.filter(d => msStart <= d.getTime() && d.getTime() <= msStop).length;
+		const daysSpan = ((msStop - msStart) / 86400000) + 1;
+
+		return hits === daysSpan;
+	}
+
+	validateForGapWarning(){
+		if (this._start === undefined || this._stop === undefined || this._disabledDates.length === 0) {
+			return undefined;
+		}
+
+		const msStart = this._start.getTime();
+		const msStop = this._stop.getTime();
+		const hits = this._disabledDates.filter(d => msStart <= d.getTime() && d.getTime() <= msStop).length;
+
+		return this._disabledDates.filter(d => msStart <= d.getTime() && d.getTime() <= msStop).length > 0
+			? "Your selected dates stretches over a gap in the meteorological input data: "
+				+ this._disabledMonths.map(d => formatDate(d)).join(', ')
 			: undefined;
 	}
 
@@ -91,4 +123,13 @@ export default class DatesValidation{
 	get stopError(){
 		return this._stopErrorMsg;
 	}
+
+	get gapWarning(){
+		return this._gapWarning;
+	}
+}
+
+function formatDate(d){
+	const date = new Date(`${d[0]}-${d[1]}-01`);
+	return date.toLocaleString('en-us', { month: 'long' }) + ' ' + d[0];
 }
