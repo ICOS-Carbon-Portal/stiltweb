@@ -84,6 +84,8 @@ export default class LMap extends Component{
 			|| selectedStation === null
 			|| selectedStation.lat === undefined
 			|| selectedStation.lon === undefined
+			|| selectedStation.lat === ''
+			|| selectedStation.lon === ''
 			|| markers.getLayers().length === 0
 			|| this.app.isOutside) return;
 
