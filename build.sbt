@@ -70,7 +70,7 @@ lazy val stiltweb = (project in file("."))
 			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.5-SNAPSHOT",
 			"se.lu.nateko.cp"    %% "views-core"                         % "0.2-SNAPSHOT",
 			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.0-SNAPSHOT",
-			"com.typesafe.akka"  %% "akka-testkit"						 % akkaVersion,
+			"com.typesafe.akka"  %% "akka-testkit"                       % akkaVersion        % "test",
 			"org.scalatest"      %% "scalatest"                          % "3.0.1"            % "test"
 		),
 
