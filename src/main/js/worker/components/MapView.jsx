@@ -3,8 +3,7 @@ import StationsMap from '../../common/components/LMap.jsx';
 import Select from '../../common/components/Select.jsx';
 import TextInput from '../components/TextInput.jsx';
 import StationInfo from '../models/StationInfo';
-import DatesValidation from '../models/DatesValidation';
-import {DatePickerInput} from 'rc-datepicker';
+import DatePickerWrapper from './DatePickerWrapper.jsx';
 
 
 const geoBoundary = {
@@ -17,15 +16,6 @@ const geoBoundary = {
 export default class MapView extends Component {
 	constructor(props) {
 		super(props);
-
-		this.state = {
-			startInvalid: false,
-			stopInvalid: false
-		};
-
-		this.startInput = undefined;
-		this.stopInput = undefined;
-		this.onKeyUpHandler = this.onKeyUp.bind(this);
 	}
 
 	getJobDefUpdater(prop){
@@ -39,78 +29,13 @@ export default class MapView extends Component {
 		this.props.useExistingStationData();
 	}
 
-	onStartDateSelected(dateObj, dateString){
-		if (dateString === 'Invalid date') {
-			this.setState({startInvalid: true});
-			return;
-		} else if (this.state.startInvalid) {
-			this.setState({startInvalid: false});
-		}
-
-		const {stop, minDate, maxDate, disabledDates, disabledMonths} = getDatesFromProps(this.props);
-		const dates = new DatesValidation(dateString, stop, minDate, maxDate, disabledDates, disabledMonths);
-
-		if (dates.startError) this.props.toastError(dates.startError);
-		if (dates.gapWarning) this.props.toastWarning(dates.gapWarning);
-		this.props.updateDates(dates);
-	}
-
-	onStopDateSelected(dateObj, dateString){
-		if (dateString === 'Invalid date') {
-			this.setState({stopInvalid: true});
-			return;
-		} else if (this.state.stopInvalid) {
-			this.setState({stopInvalid: false});
-		}
-
-		const {start, minDate, maxDate, disabledDates, disabledMonths} = getDatesFromProps(this.props);
-		const dates = new DatesValidation(start, dateString, minDate, maxDate, disabledDates, disabledMonths);
-
-		if (dates.stopError) this.props.toastError(dates.stopError);
-		if (dates.gapWarning) this.props.toastWarning(dates.gapWarning);
-		this.props.updateDates(dates);
-	}
-
-	componentDidMount(){
-		// Add handler for emptying date picker input
-		const datePickerInputStart = this.datePickerInputStart;
-		const datePickerInputStop = this.datePickerInputStop;
-
-		this.startInput = datePickerInputStart.getDatePickerInput().firstChild.firstChild;
-		this.stopInput = datePickerInputStop.getDatePickerInput().firstChild.firstChild;
-
-		this.startInput.setAttribute('sender', 'start');
-		this.stopInput.setAttribute('sender', 'stop');
-
-		this.startInput.addEventListener('keyup', this.onKeyUpHandler);
-		this.stopInput.addEventListener('keyup', this.onKeyUpHandler);
-	}
-
-	onKeyUp(evt){
-		if (evt.target.value === '') {
-			const sender = evt.target.getAttribute('sender');
-
-			if (sender === 'start'){
-				this.onStartDateSelected();
-			} else if (sender === 'stop'){
-				this.onStopDateSelected();
-			}
-		}
-	}
-
-	componentWillUnmount(){
-		this.startInput.removeEventListener("keyup", this.onKeyUpHandler);
-		this.stopInput.removeEventListener("keyup", this.onKeyUpHandler);
-	}
-
 	render() {
-		const {startInvalid, stopInvalid} = this.state;
 		const props = this.props;
 		const formData = props.workerData.formData;
 		const errors = props.workerData.errors;
 		const errorStart = !!errors.start;
 		const errorStop = !!errors.stop;
-		const {start, stop, minDate, maxDate} = getDatesFromProps(props);
+		const {start, stop, minDate, maxDate, disabledDates, disabledMonths} = getDatesFromProps(props);
 		const isExisting = props.workerData.selectedStation.isExisting;
 		const selectedStation = props.workerData.isFormAndExistingStationDifferent
 			? new StationInfo(formData.lat, formData.lon)
@@ -183,34 +108,35 @@ export default class MapView extends Component {
 						</div>
 
 						<label style={labelStyle}>Start date (YYYY-MM-DD)</label>
-						<DatePickerInput
-							ref={dpi => this.datePickerInputStart = dpi}
+						<DatePickerWrapper
+							name="start"
 							minDate={minDate}
 							maxDate={maxDate}
-							defaultValue={start ? undefined : stop || minDate}
 							style={verticalMargin}
-							showOnInputClick={false}
 							value={start}
-							className={errorStart || startInvalid ? 'cp-dpi-error' : ''}
-							onChange={this.onStartDateSelected.bind(this)}
-							onClear={this.onStartDateSelected.bind(this)}
-							displayFormat="YYYY-MM-DD"
-							returnFormat="YYYY-MM-DD"
+							siblingValue={stop}
+							hasLogicError={errorStart}
+							updateDates={props.updateDates}
+							disabledDates={disabledDates}
+							disabledMonths={disabledMonths}
+							toastWarning={props.toastWarning}
+							toastError={props.toastError}
 						/>
 
 						<label style={labelStyle}>End date (YYYY-MM-DD)</label>
-						<DatePickerInput
-							ref={dpi => this.datePickerInputStop = dpi}
+						<DatePickerWrapper
+							name="stop"
 							minDate={minDate}
 							maxDate={maxDate}
-							defaultValue={stop ? undefined : start || maxDate}
-							showOnInputClick={false}
+							style={verticalMargin}
 							value={stop}
-							className={errorStop || stopInvalid ? 'cp-dpi-error' : ''}
-							onChange={this.onStopDateSelected.bind(this)}
-							onClear={this.onStopDateSelected.bind(this)}
-							displayFormat="YYYY-MM-DD"
-							returnFormat="YYYY-MM-DD"
+							siblingValue={start}
+							hasLogicError={errorStop}
+							updateDates={props.updateDates}
+							disabledDates={disabledDates}
+							disabledMonths={disabledMonths}
+							toastWarning={props.toastWarning}
+							toastError={props.toastError}
 						/>
 
 						<button style={buttonStyle}
