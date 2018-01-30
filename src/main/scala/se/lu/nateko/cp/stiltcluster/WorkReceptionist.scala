@@ -12,7 +12,7 @@ class WorkReceptionist(mainDirectory: Path) extends Actor with ActorLogging {
 	def receive = {
 		case job: Job =>
 			log.info("Receiving job, sending it to the jobarchiver")
-			jobArchiver ! PersistJob(job)
+			jobArchiver ! PersistJob(job.copySetStarted)
 
 		case beginning @ BeginJob(jdir) =>
 			log.info(s"Starting new job $jdir.job")

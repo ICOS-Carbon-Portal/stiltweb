@@ -93,7 +93,8 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 			trace(s"Job directory merged. Exposing the job results for the STILT viewer")
 			jobDir.markAsDone()
 			exposer.expose(jobDir)
-			dashboard ! JobFinished(JobInfo(jobDir.job, totalSlotsNum, totalSlotsNum))
+			dashboard ! JobFinished(JobInfo(jobDir.job.copySetStopped,
+											totalSlotsNum, totalSlotsNum))
 			trace(s"Results exposed, dashboard notified, terminating.")
 			context stop self
 	}

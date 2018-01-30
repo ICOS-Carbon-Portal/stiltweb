@@ -13,14 +13,10 @@ case class Job(
 	start: LocalDate,
 	stop: LocalDate,
 	userId: String,
-	timeEnqueued: Option[Instant] = None,
 	timeStarted: Option[Instant] = None,
-	timeStopped: Option[Instant] = None
+	timeStopped: Option[Instant] = None,
 ){
-	def id = "job_" + this.copy(timeEnqueued = None, timeStarted = None, timeStopped = None).hashCode()
-
-	def copySetEnqueued =
-		this.copy(timeEnqueued=Some(Instant.now()))
+	def id = "job_" + this.copy(timeStarted = None, timeStopped = None).hashCode()
 
 	def copySetStarted =
 		this.copy(timeStarted=(Some(Instant.now())))

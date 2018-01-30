@@ -39,13 +39,13 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
 	implicit object InstantFormat extends JsonFormat[Instant]{
 		def write(i: Instant) = JsString(i.toString)
-		// We never want to read the time{Enqueued,Started,Finished} fields from JSON
+		// We never want to read the time{Started,Stopped} from JSON
 		def read(value: JsValue) = throw new DeserializationException(
 			"JSON-parsing of Instant is not needed/accepted."
 		)
 	}
 
-	private val jobDefaultFormat = jsonFormat10(Job)
+	private val jobDefaultFormat = jsonFormat9(Job)
 
 	implicit object JobFormat extends RootJsonFormat[Job]{
 		def write(job: Job) = {
