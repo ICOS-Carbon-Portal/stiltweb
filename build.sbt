@@ -56,7 +56,7 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 	)
 
 val npmPublish = taskKey[Unit]("runs 'npm publish'")
-npmPublish := Process(Seq("bash", "-c", "npm install && npm run publish")).!
+npmPublish := scala.sys.process.Process(Seq("bash", "-c", "npm install && npm run publish")).!
 
 lazy val stiltweb = (project in file("."))
 	.dependsOn(stiltcluster)
