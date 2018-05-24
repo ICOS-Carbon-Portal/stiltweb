@@ -6,7 +6,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-import akka.actor.{Actor, ActorIdentity, ActorRef, ActorSelection, Identify, Props, Terminated}
+import akka.actor.{Actor, ActorIdentity, ActorRef, Identify, Props, Terminated}
 
 
 /* Tracks a remote SlotProducer actor.
