@@ -80,6 +80,7 @@ class WorkMaster(nCores: Int, prodAddr: String) extends Trace with TrackSlotProd
 	private def finishSlot(msg: Any): Unit = {
 		producer ! msg
 		freeCores += 1
+		producer ! myStatus
 	}
 
 	def producerFound() = {
