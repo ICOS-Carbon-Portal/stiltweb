@@ -28,18 +28,6 @@ class SlotCalculator extends Actor with ActorLogging {
 			}
 			log.info("Started slot calculation in separate future")
 
-		case MergeJobDir(jdir) =>
-			val origin = sender ()
-			Future {
-				log.info(s"Starting merge of $jdir.dir")
-				RunStilt.cmd_merge(jdir.dir)
-				log.info(s"Finished merge of $jdir.dir")
-				origin ! JobDirMerged
-			} onComplete {
-				// FIXME - Would like automatic logging of stacktraces in failed futures.
-				case Success(_) => ()
-				case Failure(e) => { log.error(e, "Could not run stilt") }
-			}
 	}
 
 	def parseCalcSlotString(job: Job, desc: String): StiltSlot = {

@@ -6,7 +6,6 @@ import java.nio.file.Path
 
 class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 
-	val exposer = new ResultsExposer(mainDirectory)
 	val slotCalculator = context.actorSelection("/user/slotcalculator")
 	val slotProducer = context.actorSelection("/user/slotproducer")
 	val dashboard = context.actorSelection("/user/dashboardmaker")
@@ -61,9 +60,11 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 		dashboard ! JobInfo(jobDir.job, totSlots, totSlots - remaining.length)
 
 		if(remaining.isEmpty){
-			trace(s"All slots computed, telling slot calculator to merge.")
-			slotCalculator ! MergeJobDir(jobDir)
-			context become merging
+			trace(s"All slots computed, finishing the job.")
+			jobDir.markAsDone()
+			dashboard ! JobFinished(JobInfo(jobDir.job.copySetStopped, totalSlotsNum, totalSlotsNum))
+			trace(s"Job done, dashboard notified, terminating.")
+			context stop self
 		} else
 			context become workingOn(remaining)
 	}
@@ -86,17 +87,6 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 
 		case StiltFailure(slot) =>
 			workOnRemaining(outstanding.filter(_ != slot))
-	}
-
-	def merging(): Receive = deletionHandler.orElse{
-		case JobDirMerged =>
-			trace(s"Job directory merged. Exposing the job results for the STILT viewer")
-			jobDir.markAsDone()
-			exposer.expose(jobDir)
-			dashboard ! JobFinished(JobInfo(jobDir.job.copySetStopped,
-											totalSlotsNum, totalSlotsNum))
-			trace(s"Results exposed, dashboard notified, terminating.")
-			context stop self
 	}
 
 }

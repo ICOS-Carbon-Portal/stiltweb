@@ -4,6 +4,7 @@ import java.nio.file.Paths
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.LocalDateTime
 import scala.collection.JavaConverters._
 import akka.stream.scaladsl.Source
 import scala.io.{Source => IoSource}
@@ -13,20 +14,10 @@ import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
 import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
 
 
-class StiltResultsFetcher(config: StiltWebConfig) {
+class StiltResultsPresenter(config: StiltWebConfig) {
 	import StiltResultFetcher._
 
-	val mainDirectory = config.mainDirectory
-
-	private def listSubdirectories(parent: String, child: String): Array[File] = {
-		new File(parent, child).listFiles() match {
-			// listFiles() will return null (!) if the directory doesn't exist.
-			case null  => Array.empty[File]
-			case files => files.filter(_.isDirectory)
-		}
-	}
-
-	def resFileName(year: Int): String = resFileGlob.replace("????", year.toString)
+	private val stationsDir = Paths.get(config.stateDirectory, stationsDirectory)
 
 	def getStationInfos: Seq[StiltStationInfo] = {
 		val stiltToIcos: Map[String, String] = config.stations.collect{
@@ -38,67 +29,79 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 		}.toMap
 
 		val stiltToYears: Map[String, Seq[Int]] = getStationYears
-		val stationFpDirectories = listSubdirectories(mainDirectory, footPrintsDirectory)
-		stationFpDirectories.map{directory =>
-			val stiltId = directory.getName
+
+		val stationDirectories = subdirectories(stationsDir)
+
+		stationDirectories.map{directory =>
+			val stiltId = directory.getFileName.toString
 			val (lat, lon, alt) = latLonAlt(directory)
 			val years = stiltToYears.get(stiltId).getOrElse(Nil)
 			StiltStationInfo(stiltId, lat, lon, alt, years, stiltToIcos.get(stiltId), stiltToWdcgg.get(stiltId))
 		}
 	}
 
-	private def getStationYears: Map[String, Seq[Int]] = {
-
-		def stationYears(dir: File): Seq[Int] = listFileNames(dir.toPath, resFileGlob).collect{
-			case resFilePattern(dddd) => dddd.toInt
-		}
-
-		val stationDirectories = listSubdirectories(mainDirectory, resDirectory)
-
-		stationDirectories.map(stFold => (stFold.getName, stationYears(stFold))).toMap
+	private def stationYears(dir: Path): Seq[Int] = subdirectories(dir).collect{
+		case yearDirPattern(dddd) => dddd.toInt
 	}
 
-	private def latLonAlt(footPrintsDirectory: File): (Double, Double, Int) = {
-		val fpFileNames = listFileNames(footPrintsDirectory.toPath, "foot*.nc", Some(5))
+	private def getStationYears: Map[String, Seq[Int]] = {
+		val stationDirs = subdirectories(stationsDir)
+		stationDirs.map(stDir => (stDir.getFileName.toString, stationYears(stDir))).toMap
+	}
 
-		val latLonAlts = fpFileNames.collect{
-			case fp @ fpnameRegex(latStr, latSignStr, lonStr, lonSignStr, altStr) =>
-				try{
+	private def latLonAlt(stationDir: Path): (Double, Double, Int) = {
+		val id = stationDir.toRealPath().getFileName.toString
+		try{
+			id match{
+
+				case siteIdRegex(latStr, latSignStr, lonStr, lonSignStr, altStr) =>
+
 					val lat = latStr.toDouble * (if(latSignStr == "N") 1 else -1)
 					val lon = lonStr.toDouble * (if(lonSignStr == "E") 1 else -1)
 					val alt = altStr.toInt
 					(lat, lon, alt)
-				}catch{
-					case err: Throwable => throw new Exception(
-						s"Could not parse footprint filename $fp to extract lat/lon/alt",
-						err
-					)
-				}
+			}
+		}catch{
+			case err: Throwable => throw new Exception(
+				s"Could not parse $id as stilt site id to extract lat/lon/alt",
+				err
+			)
 		}
-
-		latLonAlts.headOption.getOrElse(throw new Exception(
-			s"Could not find a parseable footprint file in directory ${footPrintsDirectory.getAbsolutePath}")
-		)
 	}
 
-	def getFootprintFiles(stationId: String, year: Int): Seq[String] = {
-		val stationPath = Paths.get(mainDirectory, footPrintsDirectory, stationId)
-		listFileNames(stationPath, "foot" + year + "*.nc")
+	def listFootprints(stationId: String, year: Int): Seq[LocalDateTime] = {
+		val yearPath = stationsDir.resolve(stationId)
+
+		subdirectories(yearPath).iterator.flatMap(subdirectories).map(_.getFileName.toString).collect{
+			case footDtPattern(yyyy, mm, dd, hh) =>
+				LocalDateTime.of(yyyy.toInt, mm.toInt, dd.toInt, hh.toInt, 0)
+		}.toSeq
 	}
 
 	def getStiltResultJson(stationId: String, year: Int, columns: Seq[String]): Source[ByteString, NotUsed] = {
-		val resultsPath = Paths.get(mainDirectory, resDirectory, stationId, resFileName(year))
-		val src = IoSource.fromFile(resultsPath.toFile)
-		NumericScv.getJsonSource(src, columns)
+//		val resultsPath = mainDirectory, resDirectory, stationId, resFileName(year))
+//		val src = IoSource.fromFile(resultsPath.toFile)
+//		NumericScv.getJsonSource(src, columns)
+		???
 	}
 
-	def getFootprintRaster(stationId: String, filename: String): Raster = {
+	private def footPrintDir(stationId: String, dt: LocalDateTime): Path = {
+		val y = dt.getYear
+		val m = "%02".format(dt.getMonth)
+		val d = "%02".format(dt.getDayOfMonth)
+		val h = "%02".format(dt.getHour)
+		val fpDir = Array(y, "x", m, "x", d, "x", h).mkString
+		stationsDir.resolve(stationId).resolve(fpDir)
+	}
+
+	def getFootprintRaster(stationId: String, dt: LocalDateTime): Raster = {
+
 		val factory = {
 			import config.netcdf._
-			val footprintsDirectories = Paths.get(mainDirectory, footPrintsDirectory, stationId).toString + File.separator
-			new ViewServiceFactoryImpl(footprintsDirectories, dateVars.asJava, latitudeVars.asJava, longitudeVars.asJava, elevationVars.asJava)
+			val footprintDir = footPrintDir(stationId, dt).toString + File.separator
+			new ViewServiceFactoryImpl(footprintDir, dateVars.asJava, latitudeVars.asJava, longitudeVars.asJava, elevationVars.asJava)
 		}
-		val service = factory.getNetCdfViewService(filename)
+		val service = factory.getNetCdfViewService("foot")
 		val date = service.getAvailableDates()(0)
 		service.getRaster(date, "foot", null)
 	}
@@ -135,12 +138,28 @@ class StiltResultsFetcher(config: StiltWebConfig) {
 
 object StiltResultFetcher{
 
-	val resFileGlob = "stiltresults????.csv"
-	val resFilePattern = resFileGlob.replace("????", "(\\d{4})").r
-	val resDirectory = "Results"
-	val footPrintsDirectory = "Footprints"
-	// ex: "foot2012x12x09x00x46.55Nx007.98Ex00720_aggreg.nc"
-	val fpnameRegex = """^foot\d{4}x\d\dx\d\dx\d\dx(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+).+$""".r
+	val stationsDirectory = "stations"
+	//val resFileGlob = "stiltresults????.csv"
+	//val resFilePattern = resFileGlob.replace("????", "(\\d{4})").r
+	// ex: 2007
+	val yearDirPattern = "(\\d{4})".r
+	// ex: 2007x02x03x06
+	val footDtPattern = """(\d{4})x(\d\d)x(\d\d)x(\d\d)""".r
+	// ex: 46.55Nx007.98Ex00720
+	val siteIdRegex = """^(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+)$""".r
+
+	def subdirectories(dir: Path): IndexedSeq[Path] = {
+		if(!Files.exists(dir) || !Files.isDirectory(dir)) IndexedSeq.empty else {
+			val ds = Files.newDirectoryStream(dir, p => Files.isDirectory(p))
+			try{
+				ds.iterator.asScala.toIndexedSeq
+			} finally{
+				ds.close()
+			}
+		}
+	}
+
+	//def resFileName(year: Int): String = resFileGlob.replace("????", year.toString)
 
 	def listFileNames(dir: Path, fileGlob: String, limit: Option[Int] = None): IndexedSeq[String] =
 		listFiles(dir, fileGlob, limit).map(_.getFileName.toString)

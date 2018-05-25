@@ -3,6 +3,7 @@ package se.lu.nateko.cp.stiltweb
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
+import java.time.LocalDateTime
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import se.lu.nateko.cp.stiltcluster.Job
 
@@ -12,12 +13,12 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 	val authRouting = new AuthRouting(config.auth)
 	import authRouting.user
 
-	private val service = new StiltResultsFetcher(config)
+	private val service = new StiltResultsPresenter(config)
 
 	def route: Route = pathPrefix("viewer") {
 		get {
 			path("footprint") {
-				parameters(("stationId", "footprint")) { (stationId, filename) =>
+				parameters(("stationId", "footprint".as[LocalDateTime])) { (stationId, filename) =>
 					complete(service.getFootprintRaster(stationId, filename))
 				}
 			} ~
@@ -26,7 +27,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			} ~
 			path("listfootprints") {
 				parameters(("stationId", "year".as[Int])) { (stationId, year) =>
-					complete(service.getFootprintFiles(stationId, year))
+					complete(service.listFootprints(stationId, year))
 				}
 			} ~
 			path("stationinfo") {
