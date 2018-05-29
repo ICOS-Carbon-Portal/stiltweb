@@ -13,6 +13,9 @@ import se.lu.nateko.cp.stiltcluster.WorkMasterStatus
 import se.lu.nateko.cp.stiltcluster.WorkerNodeInfo
 
 import spray.json._
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
+import akka.NotUsed
 
 object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -64,4 +67,13 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 	implicit val stiltTimeFormat = jsonFormat4(StiltTime.apply)
 	implicit val stiltPositionFormat = jsonFormat3(StiltPosition.apply)
 	implicit val stiltSlotFormat = jsonFormat2(StiltSlot.apply)
+
+	def jsonArraySource(iter: () => Iterator[String]): Source[ByteString, NotUsed] = Source.fromIterator(() => {
+		val ss = iter()
+		val elemsIter: Iterator[String] = if(ss.hasNext){
+			val head = ss.next()
+			Iterator("\"" + head + "\"") ++ ss.map(s => ",\n\"" + s + "\"")
+		} else Iterator.empty
+		Iterator("[\n") ++ elemsIter ++ Iterator("\n]") map ByteString.apply
+	})
 }

@@ -12,7 +12,6 @@ trait Trace {
 	protected def traceFile: Path
 
 	def trace(msg: String) = {
-		//if(!Files.exists(traceFile)) Files.createDirectories(traceFile.getParent)
 		val s = s"${LocalDateTime.now.toString()} - ${msg}\n"
 		Files.write(traceFile, s.getBytes, CREATE, APPEND)
 	}

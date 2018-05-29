@@ -1,11 +1,16 @@
 package se.lu.nateko.cp.stiltweb
 
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.Directives._
 import java.time.LocalDateTime
-import se.lu.nateko.cp.stiltcluster.StiltClusterApi
+
+import akka.NotUsed
+import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, HttpResponse, StatusCodes }
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.StandardRoute
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 import se.lu.nateko.cp.stiltcluster.Job
+import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 
 class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 
@@ -18,8 +23,9 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 	def route: Route = pathPrefix("viewer") {
 		get {
 			path("footprint") {
-				parameters(("stationId", "footprint".as[LocalDateTime])) { (stationId, filename) =>
-					complete(service.getFootprintRaster(stationId, filename))
+				parameters(("stationId", "footprint")) { (stationId, localDtStr) =>
+					val localDt = LocalDateTime.parse(localDtStr)
+					complete(service.getFootprintRaster(stationId, localDt))
 				}
 			} ~
 			path("viewer.js") {
@@ -27,7 +33,10 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			} ~
 			path("listfootprints") {
 				parameters(("stationId", "year".as[Int])) { (stationId, year) =>
-					complete(service.listFootprints(stationId, year))
+					val footsJsonSrc = jsonArraySource(
+						() => service.listFootprints(stationId, year).map(_.toString)
+					)
+					streamJson(footsJsonSrc)
 				}
 			} ~
 			path("stationinfo") {
@@ -45,9 +54,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		post {
 			path("stiltresult") {
 				entity(as[StiltResultsRequest]) { req =>
-					val src = service.getStiltResultJson(req.stationId, req.year, req.columns)
-					val respEntity = HttpEntity(ContentTypes.`application/json`, src)
-					complete(HttpResponse(entity = respEntity))
+					streamJson(service.getStiltResultJson(req))
 				}
 			}
 		}
@@ -121,4 +128,8 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		}
 	}
 
+	def streamJson(src: Source[ByteString, NotUsed]): StandardRoute = {
+		val respEntity = HttpEntity(ContentTypes.`application/json`, src)
+		complete(HttpResponse(entity = respEntity))
+	}
 }

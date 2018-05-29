@@ -7,7 +7,6 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 import scala.collection.JavaConverters._
 import akka.stream.scaladsl.Source
-import scala.io.{Source => IoSource}
 import akka.util.ByteString
 import akka.NotUsed
 import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
@@ -40,7 +39,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	private def stationYears(dir: Path): Seq[Int] = subdirectories(dir).collect{
+	private def stationYears(dir: Path): Seq[Int] = subdirectories(dir).map(_.getFileName.toString).collect{
 		case yearDirPattern(dddd) => dddd.toInt
 	}
 
@@ -69,20 +68,23 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	def listFootprints(stationId: String, year: Int): Seq[LocalDateTime] = {
-		val yearPath = stationsDir.resolve(stationId)
+	def listFootprints(stationId: String, year: Int): Iterator[LocalDateTime] = {
+		val yearPath = stationsDir.resolve(stationId).resolve(year.toString)
 
 		subdirectories(yearPath).iterator.flatMap(subdirectories).map(_.getFileName.toString).collect{
 			case footDtPattern(yyyy, mm, dd, hh) =>
 				LocalDateTime.of(yyyy.toInt, mm.toInt, dd.toInt, hh.toInt, 0)
-		}.toSeq
+		}
 	}
 
-	def getStiltResultJson(stationId: String, year: Int, columns: Seq[String]): Source[ByteString, NotUsed] = {
+	def getStiltResultJson(req: StiltResultsRequest): Source[ByteString, NotUsed] = {
 //		val resultsPath = mainDirectory, resDirectory, stationId, resFileName(year))
 //		val src = IoSource.fromFile(resultsPath.toFile)
 //		NumericScv.getJsonSource(src, columns)
 		???
+//		StiltJsonSupport.jsonArraySource(() => {
+//			
+//		})
 	}
 
 	private def footPrintDir(stationId: String, dt: LocalDateTime): Path = {
@@ -142,9 +144,9 @@ object StiltResultFetcher{
 	//val resFileGlob = "stiltresults????.csv"
 	//val resFilePattern = resFileGlob.replace("????", "(\\d{4})").r
 	// ex: 2007
-	val yearDirPattern = "(\\d{4})".r
+	val yearDirPattern = """^(\d{4})$""".r
 	// ex: 2007x02x03x06
-	val footDtPattern = """(\d{4})x(\d\d)x(\d\d)x(\d\d)""".r
+	val footDtPattern = """^(\d{4})x(\d\d)x(\d\d)x(\d\d)$""".r
 	// ex: 46.55Nx007.98Ex00720
 	val siteIdRegex = """^(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+)$""".r
 
@@ -152,7 +154,7 @@ object StiltResultFetcher{
 		if(!Files.exists(dir) || !Files.isDirectory(dir)) IndexedSeq.empty else {
 			val ds = Files.newDirectoryStream(dir, p => Files.isDirectory(p))
 			try{
-				ds.iterator.asScala.toIndexedSeq
+				ds.iterator.asScala.toIndexedSeq.sortBy(_.getFileName)
 			} finally{
 				ds.close()
 			}

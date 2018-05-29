@@ -27,7 +27,8 @@ object Main extends App {
 		case ex =>
 			val exMsg = ex.getMessage
 			val msg = if(exMsg == null || exMsg.isEmpty) ex.getClass.getName else exMsg
-			complete((StatusCodes.InternalServerError, msg))
+			val stack = ex.getStackTrace.map(_.toString).mkString("\n", "\n", "")
+			complete((StatusCodes.InternalServerError, msg + stack))
 	}
 
 	val route = {
