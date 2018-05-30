@@ -30,13 +30,15 @@ class ResultRawMakerTests extends FunSuite{
 	test("makeRow works as expected"){
 		val row = ResultRowMaker.makeRow(rawRow)
 		val expRow = expectedRow
-		val vnames = row.keySet ++ expRow.keySet.toSeq.sorted
+		val vnames = expRow.keySet.toSeq.sorted
 
-		for(vname <- vnames){
+		val maybeErrors: Seq[Option[String]] = for(vname <- vnames) yield{
 			val expValue = expRow.get(vname).getOrElse(Double.NaN)
 			val actValue = row.get(vname).getOrElse(Double.NaN)
 			if(!(actValue === (expValue +- 1e-8)) && !disregardedVals.contains(vname))
-				println(s"$vname: expected $expValue -- got $actValue")
+				Some(s"$vname: expected $expValue -- got $actValue")
+			else None
 		}
+		assert(maybeErrors.flatten === Nil)
 	}
 }

@@ -13,15 +13,23 @@ class RawRow private(vals: Map[Variable, Double]) {
 
 	val byFuelReport: Map[Gas, Map[Fuel, Double]] = vals.keys
 		.collect{
-			case fi: FuelInfoVariable => fi
+			case fi: FuelInfoVariable if fi.tracer != Gas.OtherGas => fi
 		}
 		.groupBy(_.tracer).mapValues(
 			_.groupBy(_.fuel).mapValues(_.map(vals.apply).sum)
 		)
 
+	val cementReport: Map[Gas, Double] = vals.keys
+		.collect{
+			case pcv: PlainCategoryVariable if pcv.isCement && pcv.tracer != Gas.OtherGas => pcv
+		}
+		.groupBy(_.tracer).mapValues(
+			_.map(vals.apply).sum
+		)
+
 	def byCategoryReport(filter: Category => Boolean): Map[Gas, Double] = vals.keys
 		.collect{
-			case cv: CategoryVariable => cv
+			case cv: CategoryVariable if cv.tracer != Gas.OtherGas => cv
 		}
 		.filter(fiv => filter(fiv.category))
 		.groupBy(_.tracer)

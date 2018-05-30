@@ -24,6 +24,8 @@ object ResultRowMaker {
 		def categoryAssignments(categName: String, filter: Category => Boolean): Vector[Assignment] =
 			for((gas, sum) <- in.byCategoryReport(filter).toVector) yield s"$gas.$categName" -> sum
 
+		val cementAssignments = for((gas, sum) <- in.cementReport) yield s"$gas.cement" -> sum
+
 		val co2FuelAssignments = fuelAssignments(Gas.CO2)
 		val coFuelAssignments = fuelAssignments(Gas.CO)
 
@@ -36,6 +38,7 @@ object ResultRowMaker {
 			categoryAssignments("industry", _.isIndustry) ++
 			categoryAssignments("transport", _.isTransport) ++
 			categoryAssignments("others", _.isOther) ++
+			cementAssignments ++
 			co2FuelAssignments ++
 			coFuelAssignments :+
 			"co2.fuel" -> co2FuelAssignments.map(_._2).sum :+
@@ -48,8 +51,8 @@ object ResultRowMaker {
 
 		val rowPostProcessingSummations: Vector[(Seq[String], String)] = Vector(
 			Seq("co2.bio.resp", "co2.bio.gee") -> "co2.bio",
-			Seq("co2.background", "co2.bio", "co2.fuel") -> "co2.stilt",
-			Seq("co.background", "co.fuel") -> "co.stilt"
+			Seq("co2.background", "co2.bio", "co2.fuel", "co2.cement") -> "co2.stilt",
+			Seq("co.background", "co.fuel", "co.cement") -> "co.stilt"
 		)
 
 		rowPostProcessingSummations.foldLeft(initialAssignments.toMap){

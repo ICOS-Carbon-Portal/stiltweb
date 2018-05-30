@@ -15,6 +15,7 @@ sealed trait CategoryVariable extends Variable{
 case class PlainVariable(name: String) extends Variable
 case class PlainCategoryVariable(tracer: Gas, category: Category, specifier: String) extends CategoryVariable{
 	def name = s"$tracer.$category.$specifier"
+	def isCement: Boolean = specifier == Variable.cementName
 }
 case class FuelInfoVariable(tracer: Gas, category: Category, fuel: Fuel, fuelSubtype: String) extends CategoryVariable{
 	def name = s"$tracer.$category.${fuel}_$fuelSubtype"
@@ -22,12 +23,18 @@ case class FuelInfoVariable(tracer: Gas, category: Category, fuel: Fuel, fuelSub
 
 object Variable{
 
-	val fuelVarPattern = s"""^([^.]+)\\.([^.]+)\\.([^_]+)_(.+)""".r
-	val categoryVarPattern = s"""^([^.]+)\\.([^.]+)\\.(.+)""".r
+	val cementName = "cement"
+	val fuelVarPattern = """^([^.]+)\.([^.]+)\.([^_]+)_(.+)$""".r
+	val categoryVarPattern = """^([^.]+)\.([^.]+)\.(.+)$""".r
 
 	def apply(name: String): Variable = name match{
 		case fuelVarPattern(Gas(gas), cat, Fuel(fuel), subFuel) =>
-			FuelInfoVariable(gas, Category(cat), fuel, subFuel)
+			if(fuel == Fuel.OtherFuel){
+				//need to use the full specifier instead of subFuel here to avoid duplicates
+				val categoryVarPattern(_, _, specifier) = name
+				FuelInfoVariable(gas, Category(cat), fuel, specifier)
+			}
+			else FuelInfoVariable(gas, Category(cat), fuel, subFuel)
 		case categoryVarPattern(Gas(gas), cat, specifier) =>
 			PlainCategoryVariable(gas, Category(cat), specifier)
 		case _ =>
