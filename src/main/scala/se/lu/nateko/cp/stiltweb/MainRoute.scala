@@ -34,7 +34,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			path("listfootprints") {
 				parameters(("stationId", "year".as[Int])) { (stationId, year) =>
 					val footsJsonSrc = jsonArraySource(
-						() => service.listFootprints(stationId, year).map(_.toString)
+						() => service.listFootprints(stationId, year).map{case (_, dt) => s""""$dt""""}
 					)
 					streamJson(footsJsonSrc)
 				}

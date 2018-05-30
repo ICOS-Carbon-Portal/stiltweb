@@ -4,7 +4,6 @@ export default class FootprintsRegistry{
 	constructor(filenames){
 		let dates = filenames.map(datetimeFromFile);
 		dates.sort((d1, d2) => d1 - d2);
-
 		let counts = {};
 		for(let i = 1; i < dates.length; i++){
 			let step = dates[i] - dates[i - 1];
@@ -16,7 +15,6 @@ export default class FootprintsRegistry{
 
 		this._dates = dates;
 		this._step = steps[0];
-		this._filenameSuffix = filenames[0].substr(17);
 	}
 
 	indexRange(dateRange){
@@ -66,12 +64,12 @@ export default class FootprintsRegistry{
 
 	constructFilename(date){
 		const d = new Date(date);
-		return `foot${d.getUTCFullYear()}x${pad2(d.getUTCMonth() + 1)}x${pad2(d.getUTCDate())}x${pad2(d.getUTCHours())}${this._filenameSuffix}`;
+		return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}T${pad2(d.getUTCHours())}:00`;
 	}
 }
 
 
-const fileRegex = /^foot(\d{4})x(\d\d)x(\d\d)x(\d\d)/;
+const fileRegex = /^(\d{4})-(\d\d)-(\d\d)T(\d\d).+/;
 
 function datetimeFromFile(filename){
 	const match = fileRegex.exec(filename);

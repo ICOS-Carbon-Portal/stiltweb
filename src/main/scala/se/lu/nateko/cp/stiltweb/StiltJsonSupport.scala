@@ -72,7 +72,7 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 		val ss = iter()
 		val elemsIter: Iterator[String] = if(ss.hasNext){
 			val head = ss.next()
-			Iterator("\"" + head + "\"") ++ ss.map(s => ",\n\"" + s + "\"")
+			Iterator(head) ++ ss.map(s => ",\n" + s)
 		} else Iterator.empty
 		Iterator("[\n") ++ elemsIter ++ Iterator("\n]") map ByteString.apply
 	})

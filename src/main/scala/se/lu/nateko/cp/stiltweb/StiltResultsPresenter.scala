@@ -5,12 +5,15 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import scala.collection.JavaConverters._
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import akka.NotUsed
 import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
 import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
+import se.lu.nateko.cp.stiltweb.csv.RawRow
+import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
 
 
 class StiltResultsPresenter(config: StiltWebConfig) {
@@ -68,32 +71,49 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	def listFootprints(stationId: String, year: Int): Iterator[LocalDateTime] = {
+	def listFootprints(stationId: String, year: Int): Iterator[(Path, LocalDateTime)] = {
 		val yearPath = stationsDir.resolve(stationId).resolve(year.toString)
 
-		subdirectories(yearPath).iterator.flatMap(subdirectories).map(_.getFileName.toString).collect{
-			case footDtPattern(yyyy, mm, dd, hh) =>
-				LocalDateTime.of(yyyy.toInt, mm.toInt, dd.toInt, hh.toInt, 0)
+		subdirectories(yearPath).iterator.flatMap(subdirectories).map(path => path -> path.getFileName.toString).collect{
+			case (path, footDtPattern(yyyy, mm, dd, hh)) =>
+				path -> LocalDateTime.of(yyyy.toInt, mm.toInt, dd.toInt, hh.toInt, 0)
 		}
 	}
 
-	def getStiltResultJson(req: StiltResultsRequest): Source[ByteString, NotUsed] = {
-//		val resultsPath = mainDirectory, resDirectory, stationId, resFileName(year))
-//		val src = IoSource.fromFile(resultsPath.toFile)
-//		NumericScv.getJsonSource(src, columns)
-		???
-//		StiltJsonSupport.jsonArraySource(() => {
-//			
-//		})
+	def getStiltResultJson(req: StiltResultsRequest): Source[ByteString, NotUsed] = StiltJsonSupport.jsonArraySource(
+		() => listFootprints(req.stationId, req.year).map{ case (fpFolder, dt) =>
+
+			val row = getCsvRow(fpFolder)
+
+			req.columns
+				.map{
+					case "isodate" =>
+						dt.toEpochSecond(ZoneOffset.UTC).toString
+					case col =>
+						row.get(col).fold("null")(_.toString)
+				}
+				.mkString("[", ", ", "]")
+		}
+	)
+
+	private def getCsvRow(footprintFolder: Path): Map[String, Double] = {
+		try{
+			val fpPath = footprintFolder.resolve(footprintCsvFilename)
+			val lines = Files.readAllLines(fpPath)
+			val rawRow = RawRow.parse(lines.get(0), lines.get(1))
+			ResultRowMaker.makeRow(rawRow)
+		}catch{
+			case err: Throwable => Map.empty
+		}
 	}
 
 	private def footPrintDir(stationId: String, dt: LocalDateTime): Path = {
-		val y = dt.getYear
-		val m = "%02".format(dt.getMonth)
-		val d = "%02".format(dt.getDayOfMonth)
-		val h = "%02".format(dt.getHour)
+		val y = dt.getYear.toString
+		val m = "%02d".format(dt.getMonthValue)
+		val d = "%02d".format(dt.getDayOfMonth)
+		val h = "%02d".format(dt.getHour)
 		val fpDir = Array(y, "x", m, "x", d, "x", h).mkString
-		stationsDir.resolve(stationId).resolve(fpDir)
+		stationsDir.resolve(stationId).resolve(y).resolve(m).resolve(fpDir)
 	}
 
 	def getFootprintRaster(stationId: String, dt: LocalDateTime): Raster = {
@@ -141,8 +161,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 object StiltResultFetcher{
 
 	val stationsDirectory = "stations"
-	//val resFileGlob = "stiltresults????.csv"
-	//val resFilePattern = resFileGlob.replace("????", "(\\d{4})").r
+	val footprintCsvFilename = "csv"
 	// ex: 2007
 	val yearDirPattern = """^(\d{4})$""".r
 	// ex: 2007x02x03x06

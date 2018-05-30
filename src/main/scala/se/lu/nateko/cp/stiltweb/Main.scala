@@ -18,6 +18,7 @@ object Main extends App {
 	val cluster = new StiltClusterApi
 
 	implicit val system = ActorSystem("stiltweb")
+	system.log
 	implicit val materializer = ActorMaterializer(namePrefix = Some("stiltweb_mat"))
 	implicit val dispatcher = system.dispatcher
 
