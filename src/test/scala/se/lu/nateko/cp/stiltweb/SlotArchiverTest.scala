@@ -47,6 +47,7 @@ class SlotArchiverTest extends TestKit(ActorSystem()) with FunSuiteLike with Imp
 							 |./slots/46.55Nx007.98Ex00720/2012
 							 |./slots/46.55Nx007.98Ex00720/2012/12
 							 |./slots/46.55Nx007.98Ex00720/2012/12/2012x12x08x18
+							 |./slots/46.55Nx007.98Ex00720/2012/12/2012x12x08x18/csv
 							 |./slots/46.55Nx007.98Ex00720/2012/12/2012x12x08x18/foot
 							 |./slots/46.55Nx007.98Ex00720/2012/12/2012x12x08x18/rdata
 							 |./slots/46.55Nx007.98Ex00720/2012/12/2012x12x08x18/rdatafoot""".stripMargin
@@ -62,7 +63,10 @@ class SlotArchiverTest extends TestKit(ActorSystem()) with FunSuiteLike with Imp
 								|./Footprints/XXX/.RDatafoot2012x12x08x18x46.55Nx007.98Ex00720
 								|./RData
 								|./RData/XXX
-								|./RData/XXX/.RData2012x12x08x18x46.55Nx007.98Ex00720""".stripMargin
+								|./RData/XXX/.RData2012x12x08x18x46.55Nx007.98Ex00720
+								|./Results
+								|./Results/XXX
+								|./Results/XXX/stiltresult2012x46.55Nx007.98Ex00720_1.csv""".stripMargin
 				assert(listDirTreeNoTrace(dst) == exp3)
 
 				Util.deleteTmpDirTree(tmp)

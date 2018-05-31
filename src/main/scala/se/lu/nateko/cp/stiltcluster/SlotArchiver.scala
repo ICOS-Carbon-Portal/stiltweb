@@ -24,9 +24,10 @@ class LocallyAvailableSlot private (val slot: StiltSlot, val slotDir: Path) {
 
 	assert(Files.isDirectory(slotDir))
 
-	final val names = Map(StiltResultFileType.Foot		-> "foot",
+	final val names = Map(StiltResultFileType.Foot      -> "foot",
 						  StiltResultFileType.RDataFoot -> "rdatafoot",
-						  StiltResultFileType.RData		-> "rdata")
+						  StiltResultFileType.RData     -> "rdata",
+						  StiltResultFileType.CSV       -> "csv")
 
 	final val files = names.map { case (typ, name) =>
 		new LocalStiltFile(slot, slotDir.resolve(name), typ) }
@@ -63,6 +64,7 @@ object LocallyAvailableSlot {
 					case StiltResultFileType.Foot	   => "foot"
 					case StiltResultFileType.RDataFoot => "rdatafoot"
 					case StiltResultFileType.RData	   => "rdata"
+					case StiltResultFileType.CSV	   => "csv"
 				}
 				Util.writeFileAtomically(tmpDir.resolve(name).toFile, f.data)
 			}

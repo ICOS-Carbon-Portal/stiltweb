@@ -40,7 +40,7 @@ class StiltResultTest extends FunSuite {
 		assert(r.slot.lon == 7.98)
 		assert(r.slot.alt == 720)
 
-		assert(r.files.length == 3)
+		assert(r.files.length == 4)
 		val foot = r.files.find(rf => rf.typ == StiltResultFileType.Foot).get
 		assert(foot.data.length == 29827)
 		assert(foot.slot == r.slot)
@@ -52,5 +52,10 @@ class StiltResultTest extends FunSuite {
 		val rdatafoot = r.files.find(rf => rf.typ == StiltResultFileType.RDataFoot).get
 		assert(rdatafoot.data.length == 13327)
 		assert(rdatafoot.slot == r.slot)
+
+		val csv = r.files.find(rf => rf.typ == StiltResultFileType.CSV).get
+		assert(csv.data.length == 109)
+		assert(csv.slot == r.slot)
+
 	}
 }

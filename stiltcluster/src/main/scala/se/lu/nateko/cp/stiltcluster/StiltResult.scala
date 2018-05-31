@@ -13,6 +13,7 @@ Footprints/XXX/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
 Results
 Results/XXX
 Results/XXX/stiltresult2012x56.10Nx013.42Ex00150.csv
+Results/XXX/stiltresult2012x56.10Nx013.42Ex00150_1.csv
 Results/XXX/.RData.XXX.2012.request
 RData
 RData/XXX
@@ -26,6 +27,7 @@ RData/XXX/.RData2012x12x01x00x56.10Nx013.42Ex00150
 Footprints/XXX/foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
 Footprints/XXX/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
 RData/XXX/.RData2012x12x01x00x56.10Nx013.42Ex00150
+Results/XXX/stiltresult2012x56.10Nx013.42Ex00150_1.csv
 
  The above files are those that are valuable to cache between runs of stilt.
  */
@@ -36,10 +38,10 @@ package se.lu.nateko.cp.stiltcluster
 import java.nio.file.{ Files, Path, Paths }
 
 
-/* One of the three output file types we're interested in. The types are named
+/* One of the four output file types we're interested in. The types are named
  * after the prefix in the file names */
 object StiltResultFileType extends Enumeration {
-	val Foot, RDataFoot, RData = Value
+	val Foot, RDataFoot, RData, CSV = Value
 }
 
 
@@ -68,6 +70,10 @@ object StiltResultFile {
 			case StiltResultFileType.RData =>
 				// RData/XXX/.RData2012x12x01x00x56.10Nx013.42Ex00150
 				Paths.get(f"RData/${jobId}/.RData${slot}")
+			case StiltResultFileType.CSV =>
+				// Results/XXX/stiltresult2012x56.10Nx013.42Ex00150_1.csv
+				Paths.get(f"Results/${jobId}/stiltresult${slot.year}x${slot.pos}_1.csv")
+
 		}
 	}
 }
@@ -75,7 +81,7 @@ object StiltResultFile {
 
 
 /* The result of a stilt computation for a single slot. It's just a slot and the
- * three valuable output files.
+ * four valuable output files.
  *
  * Instances of this are sent on the wire (as Akka messages) from the backend
  * (computation) nodes to the frontend (web).
@@ -86,11 +92,11 @@ case class StiltFailure(slot: StiltSlot)
 object StiltResult {
 
 	import StiltResultFileType._
-	val requiredFileTypes = Seq(Foot, RDataFoot, RData)
+	val requiredFileTypes = Seq(Foot, RDataFoot, RData, CSV)
 
 	/* Read the (valuable) output files from a stilt simulation.
 
-	 A stilt simulation produces many output files, but we only need three
+	 A stilt simulation produces many output files, but we only need four
 	 specific files, one of each type. The stilt simulation software allows you
 	 to specify a "job id", the original purpose was to separate several jobs
 	 since stilt used a single giant output directory. Since stiltweb uses
