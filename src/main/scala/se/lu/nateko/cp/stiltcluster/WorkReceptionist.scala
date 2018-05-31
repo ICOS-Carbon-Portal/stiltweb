@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorLogging}
 import java.nio.file.Path
 import akka.actor.Props
 
-class WorkReceptionist(mainDirectory: Path) extends Actor with ActorLogging {
+class WorkReceptionist(mainDirectory: Path, slotStepInMinutes: Integer) extends Actor with ActorLogging {
 
 	val jobArchiver = context.actorSelection("/user/jobarchiver")
 	val dashboard = context.actorSelection("/user/dashboardmaker")
@@ -16,7 +16,7 @@ class WorkReceptionist(mainDirectory: Path) extends Actor with ActorLogging {
 
 		case beginning @ BeginJob(jdir) =>
 			log.info(s"Starting new job $jdir.job")
-			context.actorOf(JobMonitor.props(jdir, mainDirectory))
+			context.actorOf(JobMonitor.props(jdir, mainDirectory, slotStepInMinutes))
 			dashboard ! beginning
 
 		case deletion: CancelJob =>
@@ -25,5 +25,5 @@ class WorkReceptionist(mainDirectory: Path) extends Actor with ActorLogging {
 }
 
 object WorkReceptionist{
-	def props(mainDirectory: Path) = Props.create(classOf[WorkReceptionist], mainDirectory)
+	def props(mainDirectory: Path, slotStepInMinutes: Integer) = Props.create(classOf[WorkReceptionist], mainDirectory, slotStepInMinutes)
 }

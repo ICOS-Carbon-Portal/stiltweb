@@ -30,28 +30,33 @@ class JobMonitorTest extends TestKit(ActorSystem()) with FunSuiteLike with Impli
 					  LocalDate.of(2012, 12, 8),
 					  LocalDate.of(2012, 12, 8), "nisse")
 
+		val slotStep = 180
+
 		val dir = new JobDir(job, tmp)
 
-		val sCalc = TestProbe()
-		system.actorOf(Props(new ForwardActor(sCalc.ref)), "slotcalculator")
+		val slots = JobMonitor.calculateSlots(job, slotStep)
 
 		val sProd = TestProbe()
 		system.actorOf(Props(new ForwardActor(sProd.ref)), "slotproducer")
-
-		val jobM = system.actorOf(JobMonitor.props(dir, tmp), name="jobmonitor")
-
-		sCalc.expectMsgPF() {
-			case (CalculateSlotList(_)) => ()
-		}
-
-		val slots = Seq("00", "03", "06", "09", "12", "15", "18", "21").map { t =>
-			StiltSlot.ofString(s"2012x12x08x${t}x46.55Nx007.98Ex00720")
-		}
-
-		jobM ! SlotListCalculated(slots)
+		system.actorOf(JobMonitor.props(dir, tmp, slotStep), name="jobmonitor")
 
 		sProd.expectMsgPF() {
-			case (RequestManySlots(reqs)) => assert(reqs == slots)
+			case (RequestManySlots(reqs)) => assert(reqs === slots)
 		}
+	}
+}
+
+class JobMonitorCalculateSlotsTests extends FunSuite{
+
+	test("two days have 17 3-hour slots"){
+		val pos = StiltPosition(50.0, 10.0, 100)
+		val job = Job("station", pos.lat, pos.lon, pos.alt, LocalDate.of(2012, 12, 7), LocalDate.of(2012, 12, 8), "username")
+		val slots = JobMonitor.calculateSlots(job, 180)
+
+		assert(slots.size === 17)
+		val s0 = slots.head
+		assert(s0.pos === pos)
+		assert(s0.time === StiltTime(2012, 12, 7, 0))
+		assert(slots.last.time === StiltTime(2012, 12, 9, 0))
 	}
 }
