@@ -16,7 +16,7 @@ object WorkMasterApp extends App {
 	private val coresForStilt: Int = {
 
 		val maxAllowedTry = Try{
-			val maxVal = conf.getInt("maxCores")
+			val maxVal = conf.getInt("stiltcluster.maxCores")
 			if(maxVal <= 0) Int.MaxValue
 			else maxVal
 		}
