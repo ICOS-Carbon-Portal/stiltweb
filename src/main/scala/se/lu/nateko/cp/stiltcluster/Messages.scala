@@ -29,10 +29,6 @@ case class Job(
 case class PersistJob(job: Job)
 case class BeginJob(jdir: JobDir)
 
-case class CalculateSlotList(job: Job)
-case class SlotListCalculated(slots: Seq[StiltSlot])
-
-case class MergeJobDir(jobDir: JobDir)
 case object JobDirMerged
 
 case class RequestManySlots(slots: Seq[StiltSlot])

@@ -53,7 +53,7 @@ object Util {
 
 	def ensureDirectory(d: Path): Path = {
 		if (! Files.isDirectory(d))
-			Files.createDirectory(d)
+			Files.createDirectories(d)
 		d
 	}
 

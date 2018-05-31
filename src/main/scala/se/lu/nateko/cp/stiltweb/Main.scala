@@ -18,6 +18,7 @@ object Main extends App {
 	val cluster = new StiltClusterApi
 
 	implicit val system = ActorSystem("stiltweb")
+	system.log
 	implicit val materializer = ActorMaterializer(namePrefix = Some("stiltweb_mat"))
 	implicit val dispatcher = system.dispatcher
 
@@ -27,7 +28,8 @@ object Main extends App {
 		case ex =>
 			val exMsg = ex.getMessage
 			val msg = if(exMsg == null || exMsg.isEmpty) ex.getClass.getName else exMsg
-			complete((StatusCodes.InternalServerError, msg))
+			val stack = ex.getStackTrace.map(_.toString).mkString("\n", "\n", "")
+			complete((StatusCodes.InternalServerError, msg + stack))
 	}
 
 	val route = {

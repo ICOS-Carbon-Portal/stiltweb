@@ -3,11 +3,11 @@ package se.lu.nateko.cp.stiltcluster
 import akka.actor.Actor
 import akka.actor.Props
 import java.nio.file.Path
+import java.time.LocalDateTime
+import java.time.LocalTime
 
-class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
+class JobMonitor(jobDir: JobDir, mainDirectory: Path, slotStepInMinutes: Integer) extends Actor with Trace {
 
-	val exposer = new ResultsExposer(mainDirectory)
-	val slotCalculator = context.actorSelection("/user/slotcalculator")
 	val slotProducer = context.actorSelection("/user/slotproducer")
 	val dashboard = context.actorSelection("/user/dashboardmaker")
 
@@ -17,12 +17,13 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 		trace(s"Starting up in ${jobDir.dir}")
 
 		if (jobDir.slots.isEmpty) {
-			trace("No slot list, requesting one.")
-			slotCalculator ! CalculateSlotList(jobDir.job)
-		} else {
+			trace("No slot list, calculating.")
+			val slots = JobMonitor.calculateSlots(jobDir.job, slotStepInMinutes)
+			jobDir.saveSlotList(slots)
+		} else
 			trace("Already have slot list")
-			requestRemainingSlots()
-		}
+
+		requestRemainingSlots()
 	}
 
 	private val deletionHandler: Receive = {
@@ -37,12 +38,7 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 			}
 	}
 
-	def receive = deletionHandler.orElse{
-		case SlotListCalculated(slots) =>
-			trace(s"Received a list of ${slots.length} slots")
-			jobDir.saveSlotList(slots)
-			requestRemainingSlots()
-	}
+	def receive = deletionHandler
 
 	def requestRemainingSlots() = {
 		val remaining = jobDir.missingSlots
@@ -61,9 +57,11 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 		dashboard ! JobInfo(jobDir.job, totSlots, totSlots - remaining.length)
 
 		if(remaining.isEmpty){
-			trace(s"All slots computed, telling slot calculator to merge.")
-			slotCalculator ! MergeJobDir(jobDir)
-			context become merging
+			trace(s"All slots computed, finishing the job.")
+			jobDir.markAsDone()
+			dashboard ! JobFinished(JobInfo(jobDir.job.copySetStopped, totalSlotsNum, totalSlotsNum))
+			trace(s"Job done, dashboard notified, terminating.")
+			context stop self
 		} else
 			context become workingOn(remaining)
 	}
@@ -88,19 +86,22 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path) extends Actor with Trace {
 			workOnRemaining(outstanding.filter(_ != slot))
 	}
 
-	def merging(): Receive = deletionHandler.orElse{
-		case JobDirMerged =>
-			trace(s"Job directory merged. Exposing the job results for the STILT viewer")
-			jobDir.markAsDone()
-			exposer.expose(jobDir)
-			dashboard ! JobFinished(JobInfo(jobDir.job.copySetStopped,
-											totalSlotsNum, totalSlotsNum))
-			trace(s"Results exposed, dashboard notified, terminating.")
-			context stop self
-	}
-
 }
 
 object JobMonitor{
-	def props(jdir: JobDir, mainDirectory: Path): Props = Props.create(classOf[JobMonitor], jdir, mainDirectory)
+	def props(jdir: JobDir, mainDirectory: Path, slotStepInMinutes: Integer): Props = Props.create(classOf[JobMonitor], jdir, mainDirectory, slotStepInMinutes)
+
+	def calculateSlots(job: Job, stepInMinutes: Int): Seq[StiltSlot] = {
+		val start = LocalDateTime.of(job.start, LocalTime.MIN)
+		val stop = LocalDateTime.of(job.stop, LocalTime.MIN).plusDays(1)
+
+		Iterator.iterate(start)(_.plusMinutes(stepInMinutes.toLong))
+			.takeWhile(_.compareTo(stop) <= 0)
+			.map{dt =>
+				val time = StiltTime(dt.getYear, dt.getMonthValue, dt.getDayOfMonth, dt.getHour)
+				val pos = StiltPosition(job.lat, job.lon, job.alt)
+				StiltSlot(time, pos)
+			}
+			.toIndexedSeq
+	}
 }

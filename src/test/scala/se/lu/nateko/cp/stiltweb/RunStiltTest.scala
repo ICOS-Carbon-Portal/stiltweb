@@ -28,7 +28,7 @@ class RunStiltTest extends FunSuite {
 	}
 
 
-	test("Calculate slots") {
+	ignore("Calculate slots") {
 		assert(RunStilt.cmd_calcslots(job.start, job.stop) == Seq(
 				   "2012010100", "2012010103",
 				   "2012010106", "2012010109",

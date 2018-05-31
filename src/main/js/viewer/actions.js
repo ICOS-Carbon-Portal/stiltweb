@@ -77,7 +77,7 @@ export const setSelectedYear = selectedYear => dispatch => {
 export const setDateRange = dateRange => (dispatch, getState) => {
 	const currRange = getState().dateRange;
 
-	if(currRange && currRange[0] == dateRange[0] && currRange[1] == dateRange[1]) return;
+	if(currRange && currRange[0] == dateRange[0] && currRange[1] == dateRange[1] || dateRange[0] >= dateRange[1]) return;
 
 	dispatch({
 		type: SET_DATE_RANGE,
