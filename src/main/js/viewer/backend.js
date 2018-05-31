@@ -98,6 +98,5 @@ function getStiltResults(resultsRequest){
 }
 
 function getFootprintsList(stationId, year){
-	return getJson('listfootprints', ['stationId', stationId], ['year', year]);
+	return getJson('listfootprints', ['stationId', stationId], ['year', year]).then(fpArray => fpArray.sort());
 }
-

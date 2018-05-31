@@ -108,12 +108,18 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	}
 
 	private def footPrintDir(stationId: String, dt: LocalDateTime): Path = {
-		val y = dt.getYear.toString
-		val m = "%02d".format(dt.getMonthValue)
-		val d = "%02d".format(dt.getDayOfMonth)
-		val h = "%02d".format(dt.getHour)
-		val fpDir = Array(y, "x", m, "x", d, "x", h).mkString
-		stationsDir.resolve(stationId).resolve(y).resolve(m).resolve(fpDir)
+		val yyyy = dt.getYear.toString
+		val mm = "%02d".format(dt.getMonthValue)
+		val dd = "%02d".format(dt.getDayOfMonth)
+		val hh = "%02d".format(dt.getHour)
+		val fpDir = Array(yyyy, "x", mm, "x", dd, "x", hh).mkString
+		val yyyyDir = stationsDir.resolve(stationId).resolve(yyyy)
+		val mmDir = yyyyDir.resolve(mm).resolve(fpDir)
+
+		if(Files.exists(mmDir)) mmDir else{
+			val m = dt.getMonthValue.toString
+			yyyyDir.resolve(m).resolve(fpDir)
+		}
 	}
 
 	def getFootprintRaster(stationId: String, dt: LocalDateTime): Raster = {

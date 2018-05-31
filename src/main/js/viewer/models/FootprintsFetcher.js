@@ -77,6 +77,8 @@ export default class FootprintsFetcher{
 		const [idxMin, idxMax] = this._options.indexRange;
 		const idxDiff = idxMax - idxMin + 1;
 
+		if(idxDiff < 1) throw new Error("Error in indexLooper, idxDiff = " + idxDiff);
+
 		return function(idx){
 			var step = idx - idxMin;
 			while(step < 0) step += idxDiff;
