@@ -5,13 +5,7 @@ import java.time.{ Instant, LocalDate }
 import akka.actor.Address
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
-import se.lu.nateko.cp.stiltcluster.DashboardInfo
-import se.lu.nateko.cp.stiltcluster.Job
-import se.lu.nateko.cp.stiltcluster.JobInfo
-import se.lu.nateko.cp.stiltcluster.{ StiltTime, StiltPosition, StiltSlot }
-import se.lu.nateko.cp.stiltcluster.WorkMasterStatus
-import se.lu.nateko.cp.stiltcluster.WorkerNodeInfo
-
+import se.lu.nateko.cp.stiltcluster.{DashboardInfo, Job, JobInfo, StiltPosition, StiltSlot, StiltTime, WorkMasterStatus, WorkerNodeInfo}
 import spray.json._
 
 object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
@@ -50,7 +44,9 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 	implicit object JobFormat extends RootJsonFormat[Job]{
 		def write(job: Job) = {
 			val basic = jobDefaultFormat.write(job).asJsObject
-			JsObject(basic.fields + ("id" -> JsString(job.id)))
+			JsObject(basic.fields.filterNot{
+						 t => t._1 == "timeStarted" || t._1 == "timeStopped"}
+						 + ("id" -> JsString(job.id)))
 		}
 		def read(value: JsValue) = jobDefaultFormat.read(value)
 	}
