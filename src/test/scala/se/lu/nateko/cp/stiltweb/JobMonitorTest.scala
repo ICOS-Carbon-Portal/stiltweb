@@ -38,6 +38,9 @@ class JobMonitorTest extends TestKit(ActorSystem()) with FunSuiteLike with Impli
 		val sProd = TestProbe()
 		system.actorOf(Props(new ForwardActor(sProd.ref)), "slotproducer")
 
+		val sDmak = TestProbe()
+		system.actorOf(Props(new ForwardActor(sDmak.ref)), "dashboardmaker")
+
 		val jobM = system.actorOf(JobMonitor.props(dir, tmp), name="jobmonitor")
 
 		sCalc.expectMsgPF() {
@@ -52,6 +55,12 @@ class JobMonitorTest extends TestKit(ActorSystem()) with FunSuiteLike with Impli
 
 		sProd.expectMsgPF() {
 			case (RequestManySlots(reqs)) => assert(reqs == slots)
+		}
+
+		sDmak.expectMsgPF() {
+			case(JobInfo(_, tot, rem)) => {
+				assert(tot == 8);
+				assert(rem == 0) }
 		}
 	}
 }
