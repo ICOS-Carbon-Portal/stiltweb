@@ -84,9 +84,9 @@ object LocallyAvailableSlot {
 	}
 
 	def getSlotDir(slotArchive: Path, slot: StiltSlot): Path = {
-		// /some/where/slots/20.01Sx150.01Wx01234/2012/3/2012x12x01x00
+		// /some/where/slots/20.01Sx150.01Wx01234/2012/03/2012x12x01x00
 		slotArchive.resolve(slot.pos.toString).resolve(
-			slot.year.toString).resolve(slot.month.toString).resolve(slot.time.toString)
+			slot.year.toString).resolve(f"${slot.month}%02d").resolve(slot.time.toString)
 	}
 }
 
