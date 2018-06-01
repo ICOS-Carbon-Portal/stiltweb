@@ -7,6 +7,7 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import scala.collection.JavaConverters._
+import scala.collection.parallel.availableProcessors
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import akka.NotUsed
@@ -81,19 +82,24 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	}
 
 	def getStiltResultJson(req: StiltResultsRequest): Source[ByteString, NotUsed] = StiltJsonSupport.jsonArraySource(
-		() => listFootprints(req.stationId, req.year).map{ case (fpFolder, dt) =>
+		() => listFootprints(req.stationId, req.year)
+			.sliding(availableProcessors * 5, availableProcessors * 5)
+			.flatMap{_.par
+				.map{ case (fpFolder, dt) =>
 
-			val row = getCsvRow(fpFolder)
+					val row = getCsvRow(fpFolder)
 
-			req.columns
-				.map{
-					case "isodate" =>
-						dt.toEpochSecond(ZoneOffset.UTC).toString
-					case col =>
-						row.get(col).fold("null")(_.toString)
+					req.columns
+						.map{
+							case "isodate" =>
+								dt.toEpochSecond(ZoneOffset.UTC).toString
+							case col =>
+								row.get(col).fold("null")(_.toString)
+						}
+						.mkString("[", ", ", "]")
 				}
-				.mkString("[", ", ", "]")
-		}
+				.seq
+			}
 	)
 
 	private def getCsvRow(footprintFolder: Path): Map[String, Double] = {

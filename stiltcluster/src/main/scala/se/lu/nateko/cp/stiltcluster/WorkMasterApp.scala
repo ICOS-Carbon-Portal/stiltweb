@@ -23,7 +23,7 @@ object WorkMasterApp extends App {
 
 		Math.min(
 			maxAllowedTry.getOrElse(Int.MaxValue),
-			2 * Runtime.getRuntime.availableProcessors
+			Runtime.getRuntime.availableProcessors
 		)
 	}
 
