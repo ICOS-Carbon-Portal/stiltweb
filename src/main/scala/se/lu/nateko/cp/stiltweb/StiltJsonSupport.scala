@@ -17,7 +17,8 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 	implicit val templateMarshaller = TemplatePageMarshalling.marshaller
 
 	implicit val stiltResultsWhoamiFormat = jsonFormat2(WhoamiResult)
-	implicit val stiltResultsRequestFormat = jsonFormat3(StiltResultsRequest)
+
+
 	implicit val stiltStationInfoFormat = jsonFormat7(StiltStationInfo)
 	implicit object LocalDateFormat extends JsonFormat[LocalDate]{
 		def write(d: LocalDate) = JsString(d.toString)
@@ -26,6 +27,7 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 			case _ => throw new DeserializationException("Expected a date string in format YYYY-MM-DD")
 		}
 	}
+	implicit val stiltResultsRequestFormat = jsonFormat4(StiltResultsRequest)
 
 	implicit object ActorAddressFormat extends JsonFormat[Address]{
 		def write(a: Address) = JsString(a.toString)

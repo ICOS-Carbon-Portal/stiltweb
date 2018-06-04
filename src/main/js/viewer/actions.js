@@ -1,11 +1,12 @@
 import {getInitialData, getStationData} from './backend';
 import {throttle} from 'icos-cp-utils';
+import config from './config';
 
 export const FETCHED_INITDATA = 'FETCHED_INITDATA';
 export const FETCHED_STATIONDATA = 'FETCHED_STATIONDATA';
 export const FETCHED_RASTER = 'FETCHED_RASTER';
 export const SET_SELECTED_STATION = 'SET_SELECTED_STATION';
-export const SET_SELECTED_YEAR = 'SET_SELECTED_YEAR';
+export const SET_SELECTED_SCOPE = 'SET_SELECTED_SCOPE';
 export const SET_DATE_RANGE = 'SET_DATE_RANGE';
 export const SET_VISIBILITY = 'SET_VISIBILITY';
 export const INCREMENT_FOOTPRINT = 'INCREMENT_FOOTPRINT';
@@ -16,7 +17,14 @@ export const ERROR = 'ERROR';
 
 export const fetchInitData = dispatch => {
 	getInitialData().then(
-		initData => dispatch(Object.assign({type: FETCHED_INITDATA}, initData)),
+		initData => {
+			dispatch(Object.assign({type: FETCHED_INITDATA}, initData));
+			if(config.viewerScope){
+				const {stationId, fromDate, toDate} = config.viewerScope;
+				dispatch(setSelectedStationById(stationId));
+				dispatch(setSelectedScope({fromDate, toDate}));
+			}
+		},
 		err => dispatch(failWithError(err))
 	);
 }
@@ -36,23 +44,24 @@ function failWithError(error){
 	};
 }
 
-function gotStationData(stationData, stationId, year){
+function gotStationData(stationData, stationId, fromDate, toDate){
 	return Object.assign({}, stationData, {
 		type: FETCHED_STATIONDATA,
 		stationId,
-		year
+		fromDate,
+		toDate
 	});
 }
 
 export const fetchStationData = (dispatch, getState) => {
 	const state = getState();
-	const year = state.selectedYear;
-	if(!year) return;
+	const scope = state.selectedScope;
+	if(!scope) return;
 	const stationId = state.selectedStation.id;
 
-	getStationData(stationId, year.year, year.dataObject, state.wdcggFormat).then(
+	getStationData(stationId, scope, state.wdcggFormat).then(
 		stationData => {
-			dispatch(gotStationData(stationData, stationId, year.year));
+			dispatch(gotStationData(stationData, stationId, scope.fromDate, scope.toDate));
 		},
 		err => dispatch(failWithError(err))
 	);
@@ -63,13 +72,18 @@ export const setSelectedStation = selectedStation => dispatch => {
 		type: SET_SELECTED_STATION,
 		selectedStation
 	});
-	dispatch(fetchStationData); //year might have been selected automatically
+	dispatch(fetchStationData); //date scope might have been selected automatically
 }
 
-export const setSelectedYear = selectedYear => dispatch => {
+const setSelectedStationById = stationId => (dispatch, getState) => {
+	const station = getState().stations.find(s => s.id == stationId);
+	if(station) dispatch(setSelectedStation(station));
+}
+
+export const setSelectedScope = selectedScope => dispatch => {
 	dispatch({
-		type: SET_SELECTED_YEAR,
-		selectedYear
+		type: SET_SELECTED_SCOPE,
+		selectedScope
 	});
 	dispatch(fetchStationData);
 }

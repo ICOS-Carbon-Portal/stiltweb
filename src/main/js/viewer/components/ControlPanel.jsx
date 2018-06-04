@@ -13,10 +13,10 @@ export default props => <div className="panel panel-default">
 			<div className="col-md-3"><StationSelectingMap {...props} /></div>
 			<div className="col-md-9">
 				<ul className="list-group">
-					<li className="list-group-item"><StationAndYearSelector {...props} /></li>
+					{config.viewerScope ? null : <li className="list-group-item"><StationAndYearSelector {...props} /></li>}
 					<li className="list-group-item"><FootprintState {...props} /></li>
 					<li className="list-group-item">
-						<AxisControl title="Primary Y-axis" components={config.primaryComponents(props.selectedYear)} {...props} />
+						<AxisControl title="Primary Y-axis" components={config.primaryComponents(props.selectedScope)} {...props} />
 					</li>
 					<li className="list-group-item">
 						<AxisControl title="Secondary Y-axis" components={config.secondaryComponents()} {...props} />
@@ -44,7 +44,7 @@ function yearInfoToLabel(info){
 	return info.year + (info.dataObject ? ' (+WDCGG)' : '');
 }
 
-const StationAndYearSelector = ({selectYear, selectStation, selectedYear, selectedStation, stations}) => {
+const StationAndYearSelector = ({selectYear, selectStation, selectedScope, selectedStation, stations}) => {
 	const yearInfos = selectedStation ? selectedStation.years : [];
 	const yearsDisabled = !yearInfos.length;
 
@@ -64,7 +64,7 @@ const StationAndYearSelector = ({selectYear, selectStation, selectedYear, select
 				selectValue={selectYear}
 				infoTxt={yearsDisabled ? "Select station first" : "Select year"}
 				availableValues={yearInfos}
-				value={selectedYear}
+				value={selectedScope}
 				presenter={yearInfoToLabel}
 				options={{disabled: yearsDisabled}}
 			/>

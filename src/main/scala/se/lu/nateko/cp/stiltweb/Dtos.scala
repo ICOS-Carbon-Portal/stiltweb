@@ -1,6 +1,13 @@
 package se.lu.nateko.cp.stiltweb
 
-case class StiltResultsRequest(stationId: String, year: Int, columns: Seq[String])
+import java.time.LocalDate
+
+case class StiltResultsRequest(
+	stationId: String,
+	columns: Seq[String],
+	fromDate: LocalDate,
+	toDate: LocalDate
+)
 
 case class StiltStationInfo(
 	id: String,

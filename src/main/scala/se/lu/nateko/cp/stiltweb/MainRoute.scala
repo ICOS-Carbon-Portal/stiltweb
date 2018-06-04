@@ -1,6 +1,7 @@
 package se.lu.nateko.cp.stiltweb
 
 import java.time.LocalDateTime
+import java.time.LocalDate
 
 import akka.NotUsed
 import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, HttpResponse, StatusCodes }
@@ -32,9 +33,11 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				getFromResource("www/viewer.js")
 			} ~
 			path("listfootprints") {
-				parameters(("stationId", "year".as[Int])) { (stationId, year) =>
+				parameters(("stationId", "fromDate", "toDate")) { (stationId, fromDateStr, toDateStr) =>
+					val fromDate = LocalDate.parse(fromDateStr)
+					val toDate = LocalDate.parse(toDateStr)
 					val footsJsonSrc = jsonArraySource(
-						() => service.listFootprints(stationId, year).map{case (_, dt) => s""""$dt""""}
+						() => service.listFootprints(stationId, fromDate, toDate).map{case (_, dt) => s""""$dt""""}
 					)
 					streamJson(footsJsonSrc)
 				}

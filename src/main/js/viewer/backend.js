@@ -64,13 +64,16 @@ export function getRaster(stationId, filename){
 	return getBinRaster(id, 'footprint', ['stationId', stationId], ['footprint', filename]);
 }
 
-export function getStationData(stationId, year, dataObjectInfo, wdcggFormat){
-	//stationId: String, year: Int, dataObjectInfo: {id: String, nRows: Int}, wdcggFormat: TableFormat
-	const footprintsListPromise = getFootprintsList(stationId, year);
-	const observationsPromise = getWdcggBinaryTable(dataObjectInfo, wdcggFormat);
+export function getStationData(stationId, scope, wdcggFormat){
+console.log(scope);
+	//stationId: String, scope: {fromDate: LocalDate(ISO), toDate: LocalDate(ISO), dataObjectInfo: {id: String, nRows: Int}}, wdcggFormat: TableFormat
+	const {fromDate, toDate, dataObject} = scope;
+	const footprintsListPromise = getFootprintsList(stationId, fromDate, toDate);
+	const observationsPromise = getWdcggBinaryTable(dataObject, wdcggFormat);
 	const modelResultsPromise = getStiltResults({
 		stationId,
-		year,
+		fromDate,
+		toDate,
 		columns: config.stiltResultColumns.map(series => series.label)
 	});
 
@@ -97,6 +100,6 @@ function getStiltResults(resultsRequest){
 	.then(response => response.json());
 }
 
-function getFootprintsList(stationId, year){
-	return getJson('listfootprints', ['stationId', stationId], ['year', year]).then(fpArray => fpArray.sort());
+function getFootprintsList(stationId, fromDate, toDate){
+	return getJson('listfootprints', ['stationId', stationId], ['fromDate', fromDate], ['toDate', toDate]).then(fpArray => fpArray.sort());
 }

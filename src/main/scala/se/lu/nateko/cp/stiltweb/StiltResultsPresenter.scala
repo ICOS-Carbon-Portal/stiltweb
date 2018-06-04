@@ -74,10 +74,23 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	def listFootprints(stationId: String, year: Int): Iterator[Footprint] =
-		listFootprints(stationId, year, None, None)
+	def listFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[Footprint] =
+		if(fromDate.compareTo(toDate) > 0) Iterator.empty else{
+			fromDate.getYear.to(toDate.getYear).distinct.toList match{
+				case year :: Nil =>
+					listFootprints(stationId, year, Some(fromDate), Some(toDate))
+				case year1 :: year2 :: Nil =>
+					listFootprints(stationId, year1, Some(fromDate), None) ++
+					listFootprints(stationId, year2, None, Some(toDate))
 
-	def listFootprints(stationId: String, year: Int, fromDate: Option[LocalDate], toDate: Option[LocalDate]): Iterator[Footprint] = {
+				case years =>
+					listFootprints(stationId, years.head, Some(fromDate), None) ++
+					years.tail.dropRight(1).iterator.flatMap(listFootprints(stationId, _, None, None)) ++
+					listFootprints(stationId, years.last, None, Some(toDate))
+			}
+		}
+
+	private def listFootprints(stationId: String, year: Int, fromDate: Option[LocalDate], toDate: Option[LocalDate]): Iterator[Footprint] = {
 		val yearPath = stationsDir.resolve(stationId).resolve(year.toString)
 
 		subdirectories(yearPath).iterator.filter{
@@ -117,7 +130,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	}
 
 	def getStiltResultJson(req: StiltResultsRequest): Source[ByteString, NotUsed] = StiltJsonSupport.jsonArraySource(
-		() => listFootprints(req.stationId, req.year)
+		() => listFootprints(req.stationId, req.fromDate, req.toDate)
 			.sliding(availableProcessors * 5, availableProcessors * 5)
 			.flatMap{_.par
 				.map{ case (fpFolder, dt) =>

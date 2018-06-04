@@ -1,10 +1,11 @@
-import {FETCHED_INITDATA, FETCHED_STATIONDATA, FETCHED_RASTER, SET_SELECTED_STATION, SET_SELECTED_YEAR,
+import {FETCHED_INITDATA, FETCHED_STATIONDATA, FETCHED_RASTER, SET_SELECTED_STATION, SET_SELECTED_SCOPE,
 	SET_DATE_RANGE, SET_VISIBILITY, INCREMENT_FOOTPRINT, PUSH_PLAY, SET_DELAY, ERROR} from './actions';
 import {makeTimeSeriesGraphData} from './models/timeSeriesHelpers';
 import FootprintsRegistry from './models/FootprintsRegistry';
 import FootprintsFetcher from './models/FootprintsFetcher';
 import {copyprops, deepUpdate} from 'icos-cp-utils';
 import * as Toaster from 'icos-cp-toaster';
+import config from './config';
 
 export default function(state, action){
 
@@ -12,6 +13,10 @@ export default function(state, action){
 
 		case FETCHED_INITDATA:
 			const stations = action.stations.map(s => {
+				s.years.forEach(yObj => Object.assign(yObj, {
+					fromDate: yObj.year + "-01-01",
+					toDate: yObj.year + "-12-31"
+				}));
 				return Object.assign(s, {siteId: s.id});
 			});
 			const newState = updateWith(['wdcggFormat', 'countriesTopo']);
@@ -28,16 +33,16 @@ export default function(state, action){
 
 			return keep(['wdcggFormat', 'stations', 'countriesTopo', 'options'], {
 				selectedStation: station,
-				selectedYear: station.years.length == 1
+				selectedScope: config.viewerScope ? null : station.years.length == 1
 					? station.years[0]
 					: station.years.find(({year}) => state.selectedYear && state.selectedYear.year == year)
 			});
 
-		case SET_SELECTED_YEAR:
-			return updateWith(['selectedYear']);
+		case SET_SELECTED_SCOPE:
+			return updateWith(['selectedScope']);
 
 		case FETCHED_STATIONDATA:
-			if(checkStationId(action.stationId) && checkYear(action.year)){
+			if(checkStationId(action.stationId) && checkScope(action)){
 
 				const footprints = new FootprintsRegistry(action.footprints);
 				const footprintsFetcher = new FootprintsFetcher(footprints, action.stationId);
@@ -79,8 +84,9 @@ export default function(state, action){
 			return state;
 	}
 
-	function checkYear(year){
-		return state.selectedYear && state.selectedYear.year == year;
+	function checkScope(scope){
+		const ss = state.selectedScope;
+		return ss && scope && ss.fromDate == scope.fromDate && ss.toDate == scope.toDate;
 	}
 
 	function checkStationId(id){

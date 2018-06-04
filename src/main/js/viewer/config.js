@@ -1,4 +1,5 @@
 import Dygraph from 'dygraphs';
+import {parseUrlQuery} from './utils';
 
 const dateSeries = {
 	label: 'isodate',
@@ -70,6 +71,8 @@ const wdcggColumns = [dateSeries, {
 	options: {axis: 'y1', color: 'rgb(0, 0, 0)', strokeWidth: 2}
 }];
 
+const urlQuery = parseUrlQuery();
+
 export default {
 	sparqlEndpoint: 'https://meta.icos-cp.eu/sparql',
 	cpmetaOntoUri: 'http://meta.icos-cp.eu/ontologies/cpmeta/',
@@ -78,13 +81,14 @@ export default {
 	wdcggSpec: 'http://meta.icos-cp.eu/resources/cpmeta/wdcggDataObject',
 	stiltResultColumns,
 	wdcggColumns,
-	primaryComponents(selectedYear){
-		const obsColumns = !selectedYear || selectedYear.dataObject ? wdcggColumns.slice(1) : [];
+	primaryComponents(selectedScope){
+		const obsColumns = !selectedScope || selectedScope.dataObject ? wdcggColumns.slice(1) : [];
 		return obsColumns.concat(stiltResultColumns.slice(1,3));
 	},
 	secondaryComponents(){
 		return stiltResultColumns.slice(3);
 	},
-	defaultDelay: 100 //ms
+	defaultDelay: 100, //ms
+	viewerScope: ["stationId", "fromDate", "toDate"].every(qpar => urlQuery.hasOwnProperty(qpar)) ? urlQuery : null
 }
 
