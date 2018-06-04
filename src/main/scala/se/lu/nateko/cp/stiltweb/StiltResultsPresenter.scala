@@ -5,6 +5,8 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
+import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneOffset
 import scala.collection.JavaConverters._
 import scala.collection.parallel.availableProcessors
@@ -72,13 +74,46 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	def listFootprints(stationId: String, year: Int): Iterator[(Path, LocalDateTime)] = {
+	def listFootprints(stationId: String, year: Int): Iterator[Footprint] =
+		listFootprints(stationId, year, None, None)
+
+	def listFootprints(stationId: String, year: Int, fromDate: Option[LocalDate], toDate: Option[LocalDate]): Iterator[Footprint] = {
 		val yearPath = stationsDir.resolve(stationId).resolve(year.toString)
 
-		subdirectories(yearPath).iterator.flatMap(subdirectories).map(path => path -> path.getFileName.toString).collect{
+		subdirectories(yearPath).iterator.filter{
+			val fromMonth = fromDate.map(_.getMonthValue).getOrElse(0)
+			val toMonth = toDate.map(_.getMonthValue).getOrElse(13)
+
+			monthPath => monthPath.getFileName.toString match{
+				case monthDirPattern(m) =>
+					val mNum = m.toInt
+					mNum >= fromMonth && mNum <= toMonth
+				case _ => false
+			}
+		}
+		.flatMap(subdirectories)
+		.map(path => path -> path.getFileName.toString)
+		.collect{
 			case (path, footDtPattern(yyyy, mm, dd, hh)) =>
 				path -> LocalDateTime.of(yyyy.toInt, mm.toInt, dd.toInt, hh.toInt, 0)
 		}
+		.filter{
+			val fromDt = fromDate.map(d => LocalDateTime.of(d, LocalTime.MIN)).getOrElse(LocalDateTime.of(year, 1, 1, 0, 0))
+			val toDt = toDate.map(d => LocalDateTime.of(d.plusDays(1), LocalTime.MIN)).getOrElse(LocalDateTime.of(year + 1, 1, 1, 0, 0))
+			foot => {
+				val dt = foot._2
+				dt.compareTo(fromDt) >=0 && dt.compareTo(toDt) < 0
+			}
+		}
+		.scanLeft(new Throttler(LocalDateTime.MIN, None)){(throttler, next) =>
+			val nextDt = next._2
+			val maxPrevDt = nextDt.minusMinutes(config.slotStepInMinutes)
+			if(throttler.lastEmitted.compareTo(maxPrevDt) <= 0)
+				new Throttler(nextDt, Some(next))
+			else
+				new Throttler(throttler.lastEmitted, None)
+		}
+		.flatMap(_.toEmit)
 	}
 
 	def getStiltResultJson(req: StiltResultsRequest): Source[ByteString, NotUsed] = StiltJsonSupport.jsonArraySource(
@@ -172,10 +207,14 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 
 object StiltResultFetcher{
 
+	type Footprint = (Path, LocalDateTime)
+
 	val stationsDirectory = "stations"
 	val footprintCsvFilename = "csv"
 	// ex: 2007
 	val yearDirPattern = """^(\d{4})$""".r
+	// ex: 07, 5
+	val monthDirPattern = """^(\d\d?)$""".r
 	// ex: 2007x02x03x06
 	val footDtPattern = """^(\d{4})x(\d\d)x(\d\d)x(\d\d)$""".r
 	// ex: 46.55Nx007.98Ex00720
@@ -209,4 +248,6 @@ object StiltResultFetcher{
 			dirStream.close()
 		}
 	}
+
+	class Throttler(val lastEmitted: LocalDateTime, val toEmit: Option[Footprint])
 }

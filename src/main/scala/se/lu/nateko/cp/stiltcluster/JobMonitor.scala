@@ -96,7 +96,7 @@ object JobMonitor{
 		val stop = LocalDateTime.of(job.stop, LocalTime.MIN).plusDays(1)
 
 		Iterator.iterate(start)(_.plusMinutes(stepInMinutes.toLong))
-			.takeWhile(_.compareTo(stop) <= 0)
+			.takeWhile(_.compareTo(stop) < 0)
 			.map{dt =>
 				val time = StiltTime(dt.getYear, dt.getMonthValue, dt.getDayOfMonth, dt.getHour)
 				val pos = StiltPosition(job.lat, job.lon, job.alt)
