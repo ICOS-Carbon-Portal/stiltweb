@@ -38,7 +38,7 @@ class JobMonitorTest extends TestKit(ActorSystem()) with FunSuiteLike with Impli
 
 		val sProd = TestProbe()
 		system.actorOf(Props(new ForwardActor(sProd.ref)), "slotproducer")
-		system.actorOf(JobMonitor.props(dir, tmp, slotStep), name="jobmonitor")
+		system.actorOf(JobMonitor.props(dir, slotStep), name="jobmonitor")
 		val sDmak = TestProbe()
 		system.actorOf(Props(new ForwardActor(sDmak.ref)), "dashboardmaker")
 		sProd.expectMsgPF() {

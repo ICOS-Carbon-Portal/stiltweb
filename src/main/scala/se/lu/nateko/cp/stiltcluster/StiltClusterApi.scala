@@ -26,7 +26,7 @@ class StiltClusterApi {
 
 	val mainDir = Paths.get(ConfigReader.default.mainDirectory)
 
-	val receptionist = system.actorOf(WorkReceptionist.props(mainDir, stiltConf.slotStepInMinutes), name = "receptionist")
+	val receptionist = system.actorOf(WorkReceptionist.props(stiltConf.slotStepInMinutes), name = "receptionist")
 
 	system.actorOf(Props(new SlotArchiver(stateDir)), name="slotarchiver")
 	system.actorOf(Props(new SlotProducer(stateDir.resolve("slotproducer.log"))),

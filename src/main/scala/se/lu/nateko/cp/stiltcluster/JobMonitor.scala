@@ -2,11 +2,11 @@ package se.lu.nateko.cp.stiltcluster
 
 import akka.actor.Actor
 import akka.actor.Props
-import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.nio.file.Files
 
-class JobMonitor(jobDir: JobDir, mainDirectory: Path, slotStepInMinutes: Integer) extends Actor with Trace {
+class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with Trace {
 
 	val slotProducer = context.actorSelection("/user/slotproducer")
 	val dashboard = context.actorSelection("/user/dashboardmaker")
@@ -59,6 +59,7 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path, slotStepInMinutes: Integer
 		if(remaining.isEmpty){
 			trace(s"All slots computed, finishing the job.")
 			jobDir.markAsDone()
+			JobMonitor.ensureStationIdLinkExists(jobDir)
 			dashboard ! JobFinished(JobInfo(jobDir.job.copySetStopped, totalSlotsNum, totalSlotsNum))
 			trace(s"Job done, dashboard notified, terminating.")
 			context stop self
@@ -89,7 +90,8 @@ class JobMonitor(jobDir: JobDir, mainDirectory: Path, slotStepInMinutes: Integer
 }
 
 object JobMonitor{
-	def props(jdir: JobDir, mainDirectory: Path, slotStepInMinutes: Integer): Props = Props.create(classOf[JobMonitor], jdir, mainDirectory, slotStepInMinutes)
+
+	def props(jdir: JobDir, slotStepInMinutes: Integer): Props = Props.create(classOf[JobMonitor], jdir, slotStepInMinutes)
 
 	def calculateSlots(job: Job, stepInMinutes: Int): Seq[StiltSlot] = {
 		val start = LocalDateTime.of(job.start, LocalTime.MIN)
@@ -103,5 +105,16 @@ object JobMonitor{
 				StiltSlot(time, pos)
 			}
 			.toIndexedSeq
+	}
+
+	def ensureStationIdLinkExists(jdir: JobDir): Unit = {
+		val stationIdLink = jdir.dir.resolve("../../stations/" + jdir.job.siteId).toAbsolutePath
+
+		if(!Files.exists(stationIdLink)){
+			jdir.slots.flatMap(_.headOption).foreach{slot =>
+				val target = jdir.dir.resolve("../../slots/" + slot.pos.toString).toAbsolutePath
+				Files.createSymbolicLink(stationIdLink, target)
+			}
+		}
 	}
 }

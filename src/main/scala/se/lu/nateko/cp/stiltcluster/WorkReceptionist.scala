@@ -1,10 +1,9 @@
 package se.lu.nateko.cp.stiltcluster
 
 import akka.actor.{Actor, ActorLogging}
-import java.nio.file.Path
 import akka.actor.Props
 
-class WorkReceptionist(mainDirectory: Path, slotStepInMinutes: Integer) extends Actor with ActorLogging {
+class WorkReceptionist(slotStepInMinutes: Integer) extends Actor with ActorLogging {
 
 	val jobArchiver = context.actorSelection("/user/jobarchiver")
 	val dashboard = context.actorSelection("/user/dashboardmaker")
@@ -16,7 +15,7 @@ class WorkReceptionist(mainDirectory: Path, slotStepInMinutes: Integer) extends 
 
 		case beginning @ BeginJob(jdir) =>
 			log.info(s"Starting new job $jdir.job")
-			context.actorOf(JobMonitor.props(jdir, mainDirectory, slotStepInMinutes))
+			context.actorOf(JobMonitor.props(jdir, slotStepInMinutes))
 			dashboard ! beginning
 
 		case deletion: CancelJob =>
@@ -25,5 +24,5 @@ class WorkReceptionist(mainDirectory: Path, slotStepInMinutes: Integer) extends 
 }
 
 object WorkReceptionist{
-	def props(mainDirectory: Path, slotStepInMinutes: Integer) = Props.create(classOf[WorkReceptionist], mainDirectory, slotStepInMinutes)
+	def props(slotStepInMinutes: Integer) = Props.create(classOf[WorkReceptionist], slotStepInMinutes)
 }
