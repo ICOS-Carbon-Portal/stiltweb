@@ -37,7 +37,7 @@ export function getStationInfo(){
 	return getJson('/viewer/stationinfo')
 		.then(sInfos => sInfos.map(
 			sInfo => {
-				const name = sInfo.wdcggId || sInfo.icosId || sInfo.id;
+				const name = sInfo.name || sInfo.wdcggId || sInfo.id;
 				return Object.assign(copyprops(sInfo, ['id', 'lat', 'lon', 'alt']), {name});
 			})
 		);

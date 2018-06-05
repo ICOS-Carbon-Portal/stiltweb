@@ -25,8 +25,8 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	private val stationsDir = Paths.get(config.stateDirectory, stationsDirectory)
 
 	def getStationInfos: Seq[StiltStationInfo] = {
-		val stiltToIcos: Map[String, String] = config.stations.collect{
-			case Seq(stilt, icos, _) if !icos.isEmpty => (stilt, icos)
+		val stiltToName: Map[String, String] = config.stations.collect{
+			case Seq(stilt, name, _) if !name.isEmpty => (stilt, name)
 		}.toMap
 
 		val stiltToWdcgg: Map[String, String] = config.stations.collect{
@@ -41,7 +41,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 			val stiltId = directory.getFileName.toString
 			val (lat, lon, alt) = latLonAlt(directory)
 			val years = stiltToYears.get(stiltId).getOrElse(Nil)
-			StiltStationInfo(stiltId, lat, lon, alt, years, stiltToIcos.get(stiltId), stiltToWdcgg.get(stiltId))
+			StiltStationInfo(stiltId, stiltToName.get(stiltId), lat, lon, alt, years, stiltToWdcgg.get(stiltId))
 		}
 	}
 

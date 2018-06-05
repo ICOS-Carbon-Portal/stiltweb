@@ -40,7 +40,7 @@ function getStationInfo(){
 			});
 
 			return stInfos.map(stInfo => {
-				const name = stInfo.wdcggId || stInfo.icosId || stInfo.id;
+				const name = stInfo.name || stInfo.wdcggId || stInfo.id;
 				const years = stInfo.years.map(year => {
 					return {year, dataObject: dobjByYear(dobjInfo, stInfo.wdcggId, year)};
 				});

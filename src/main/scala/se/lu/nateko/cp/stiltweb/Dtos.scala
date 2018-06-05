@@ -11,8 +11,8 @@ case class StiltResultsRequest(
 
 case class StiltStationInfo(
 	id: String,
+	name: Option[String],
 	lat: Double, lon: Double, alt: Int,
 	years: Seq[Int],
-	icosId: Option[String],
 	wdcggId: Option[String]
 )
