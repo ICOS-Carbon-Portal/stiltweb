@@ -13,7 +13,10 @@ export default props => <div className="panel panel-default">
 			<div className="col-md-3"><StationSelectingMap {...props} /></div>
 			<div className="col-md-9">
 				<ul className="list-group">
-					{config.viewerScope ? null : <li className="list-group-item"><StationAndYearSelector {...props} /></li>}
+					<li className="list-group-item">{config.viewerScope
+						? <ViewerScopeDisplay {...config.viewerScope} />
+						: <StationAndYearSelector {...props} />
+					}</li>
 					<li className="list-group-item"><FootprintState {...props} /></li>
 					<li className="list-group-item">
 						<AxisControl title="Primary Y-axis" components={config.primaryComponents(props.selectedScope)} {...props} />
@@ -38,6 +41,18 @@ const StationSelectingMap = ({stations, selectedStation, selectStation}) => {
 		/>
 	</div>;
 }
+
+const ViewerScopeDisplay = props => <div className="row">
+	<div className="col-md-4">
+		<strong>Pre-selected site:</strong> {props.stationId}
+	</div>
+	<div className="col-md-4">
+		<strong>Start date:</strong> {props.fromDate}
+	</div>
+	<div className="col-md-4">
+		<strong>End date:</strong> {props.toDate}
+	</div>
+</div>;
 
 function yearInfoToLabel(info){
 	if(!info) return info;

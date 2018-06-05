@@ -65,7 +65,6 @@ export function getRaster(stationId, filename){
 }
 
 export function getStationData(stationId, scope, wdcggFormat){
-console.log(scope);
 	//stationId: String, scope: {fromDate: LocalDate(ISO), toDate: LocalDate(ISO), dataObjectInfo: {id: String, nRows: Int}}, wdcggFormat: TableFormat
 	const {fromDate, toDate, dataObject} = scope;
 	const footprintsListPromise = getFootprintsList(stationId, fromDate, toDate);

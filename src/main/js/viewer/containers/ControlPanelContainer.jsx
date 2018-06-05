@@ -16,7 +16,9 @@ function stateToProps(state){
 function dispatchToProps(dispatch){
 	return {
 		updateVisibility: (name, visible) => dispatch(visibilityUpdate(name, visible)),
-		selectStation: station => dispatch(setSelectedStation(station)),
+		selectStation: station => {
+			if(!config.viewerScope) dispatch(setSelectedStation(station));
+		},
 		selectYear: year => dispatch(setSelectedScope(year)),
 		incrementFootprint: increment => dispatch(incrementFootprint(increment)),
 		pushPlay: () => dispatch(pushPlayButton),
