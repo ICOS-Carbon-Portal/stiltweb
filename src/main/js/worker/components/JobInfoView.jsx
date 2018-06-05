@@ -22,14 +22,22 @@ export default class JobInfoView extends Component {
 		const job = jinfo.job;
 		const allowCancel = !!props.cancelJob &&
 			(props.currUser.email === job.userId || props.currUser.isAdmin);
+		const showLink = (jinfo.nSlotsFinished == jinfo.nSlots);
+		const resultsLink = `/viewer/?stationId=${job.siteId}&fromDate=${job.start}&toDate=${job.stop}`;
 
 		return <div className="panel panel-default">
 			<div className="panel-heading">
 				{allowCancel
 					? <button className="btn btn-primary" onClick={this.toggleCancelJobDialog.bind(this)}>
-						<span className="glyphicon glyphicon-remove-sign" style={{marginRight: 10, top: 3, fontSize:'130%'}} />
+						<GlyphSign name="remove"/>
 						{this.state.showCancelJobDialog ? "Keep running" : "Cancel job"}
 					</button>
+					: null
+				}
+				{showLink
+					? <a href={resultsLink} target="_blank">
+						<button className="btn btn-primary"><GlyphSign name="info"/>View results</button>
+					</a>
 					: null
 				}
 				<span>
@@ -55,3 +63,7 @@ export default class JobInfoView extends Component {
 	}
 }
 
+const GlyphSign = props => <span
+	className={`glyphicon glyphicon-${props.name}-sign`}
+	style={{marginRight: 10, top: 3, fontSize:'130%'}}
+/>;
