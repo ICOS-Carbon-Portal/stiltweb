@@ -30,14 +30,8 @@ class LocallyAvailableSlot private (val slot: StiltSlot, val slotDir: Path) {
 
 	assert(Files.isDirectory(slotDir))
 
-	final val names = Map(StiltResultFileType.Foot      -> "foot",
-						  StiltResultFileType.RDataFoot -> "rdatafoot",
-						  StiltResultFileType.RData     -> "rdata",
-						  StiltResultFileType.CSV       -> "csv")
-
-	final val files = names.map { case (typ, name) =>
+	final val files = LocallyAvailableSlot.names.map { case (typ, name) =>
 		new LocalStiltFile(slot, slotDir.resolve(name), typ) }
-
 
 	override def toString() = s"LocallyAvailableslot(${slot}, ${slotDir})"
 
@@ -62,6 +56,12 @@ class LocallyAvailableSlot private (val slot: StiltSlot, val slotDir: Path) {
 
 
 object LocallyAvailableSlot {
+
+	final val names = Map(StiltResultFileType.Foot      -> "foot",
+						  StiltResultFileType.RDataFoot -> "rdatafoot",
+						  StiltResultFileType.RData     -> "rdata",
+						  StiltResultFileType.CSV       -> "csv")
+
 
 	def isLinked(jobDir: Path, slot: StiltSlot): Boolean = {
 		StiltResult.requiredFileTypes.forall { typ =>
@@ -111,9 +111,8 @@ object LocallyAvailableSlot {
 	def load(slotArchive: Path, slot: StiltSlot): Option[LocallyAvailableSlot] = {
 		val slotDir = getSlotDir(slotArchive, slot)
 		if (Files.exists(slotDir))
-			if (StiltResult.requiredFileTypes.forall { typ =>
-					val f = StiltResultFile.calcFileName(slot, typ)
-						Files.exists(slotDir.resolve(f))})
+			if (LocallyAvailableSlot.names.forall {
+					case (typ, name) =>	Files.exists(slotDir.resolve(name)) } )
 				Some(new LocallyAvailableSlot(slot, slotDir))
 			else
 				None
