@@ -35,7 +35,7 @@ export default function(state, action){
 				selectedStation: station,
 				selectedScope: config.viewerScope ? null : station.years.length == 1
 					? station.years[0]
-					: station.years.find(({year}) => state.selectedYear && state.selectedYear.year == year)
+					: station.years.find(({year}) => state.selectedScope && state.selectedScope.year == year)
 			});
 
 		case SET_SELECTED_SCOPE:
@@ -46,7 +46,7 @@ export default function(state, action){
 
 				const footprints = new FootprintsRegistry(action.footprints);
 				const footprintsFetcher = new FootprintsFetcher(footprints, action.stationId);
-				const seriesId = action.stationId + '_' + action.year;
+				const seriesId = action.stationId + '_' + action.fromDate + '_' + action.toDate;
 				const timeSeriesData = makeTimeSeriesGraphData(action.obsBinTable, action.modelResults, seriesId);
 
 				return update({timeSeriesData, footprints, footprintsFetcher});
