@@ -1,6 +1,5 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.nio.file.Path
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
 import scala.sys.process._
@@ -23,10 +22,6 @@ object RunStilt {
 		s"stilt run ${constSiteID} ${slot.lat.toString} ${slot.lon.toString} ${slot.alt} ${time} ${time}"
 	}
 
-	def build_merge_cmd(dir: Path): String = {
-		s"stilt merge $dir"
-	}
-
 	def run_cmd(cmd: String): Seq[String] = {
 		// FIXME: Currently this leaves the stiltrun directory on disk. That
 		// directory should be removed.
@@ -37,10 +32,6 @@ object RunStilt {
 
 	def cmd_run(slot: StiltSlot): String = {
 		run_cmd(build_run_cmd(slot))(0)
-	}
-
-	def cmd_merge(dir: Path): Unit = {
-		run_cmd(build_merge_cmd(dir))
 	}
 
 }

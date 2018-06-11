@@ -29,8 +29,6 @@ case class Job(
 case class PersistJob(job: Job)
 case class BeginJob(jdir: JobDir)
 
-case object JobDirMerged
-
 case class RequestManySlots(slots: Seq[StiltSlot])
 case class CancelSlots(slots: Seq[StiltSlot])
 case class RequestSingleSlot(slot: StiltSlot)
