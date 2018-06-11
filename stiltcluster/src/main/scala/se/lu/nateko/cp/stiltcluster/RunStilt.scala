@@ -18,11 +18,6 @@ object RunStilt {
 		s"${date.format(slot_date_fmt)}${hour}"
 	}
 
-	def build_calcslots_cmd(start: LocalDate, stop: LocalDate): String = {
-		// Example: "stilt calcslots 2012010100 2012010309"
-		s"stilt calcslots ${date_to_slot(start)} ${date_to_slot(stop)}"
-	}
-
 	def build_run_cmd(slot: StiltSlot): String = {
 		val time = f"""${slot.year}%04d${slot.month}%02d${slot.day}%02d${slot.hour}%02d"""
 		s"stilt run ${constSiteID} ${slot.lat.toString} ${slot.lon.toString} ${slot.alt} ${time} ${time}"
@@ -38,10 +33,6 @@ object RunStilt {
 		// Run the command and return a sequence
 		// of the nonempty lines of stdout.
 		cmd.!!.split("\n").map(_.trim).filter(! _.isEmpty)
-	}
-
-	def cmd_calcslots(start: LocalDate, stop: LocalDate): Seq[String] = {
-		run_cmd(build_calcslots_cmd(start, stop))
 	}
 
 	def cmd_run(slot: StiltSlot): String = {

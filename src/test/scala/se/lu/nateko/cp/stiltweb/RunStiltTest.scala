@@ -17,25 +17,10 @@ class RunStiltTest extends FunSuite {
 		assert(RunStilt.date_to_slot(job.stop, "21") == "2012010221")
 	}
 
-	test("Check building of stilt calcslots command") {
-		assert(RunStilt.build_calcslots_cmd(job.start, job.stop) ==
-				   "stilt calcslots 2012010100 2012010200")
-	}
-
-
 	test("Run command") {
 		assert(RunStilt.run_cmd("echo foobar") == Seq("foobar"))
 	}
 
-
-	ignore("Calculate slots") {
-		assert(RunStilt.cmd_calcslots(job.start, job.stop) == Seq(
-				   "2012010100", "2012010103",
-				   "2012010106", "2012010109",
-				   "2012010112", "2012010115",
-				   "2012010118", "2012010121",
-				   "2012010200"))
-	}
 
 	test("Build run command") {
 		assert(RunStilt.build_run_cmd(slot) == "stilt run XXX 56.1 13.42 150 2012120100 2012120100")
