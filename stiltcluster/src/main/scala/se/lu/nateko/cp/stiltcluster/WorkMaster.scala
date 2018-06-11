@@ -5,6 +5,7 @@ import java.nio.file.{Files, Paths}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.sys.process._
 
 import akka.actor.{Actor, ActorIdentity, ActorRef, Identify, Props, Terminated}
 
@@ -111,6 +112,8 @@ class WorkMaster(nCores: Int, prodAddr: String) extends Trace with TrackSlotProd
 
 			finishSlot(SlotCalculated(StiltResult(slot, d.resolve("output"))))
 
+			s"rm -rf -- ${d}".!!
+			trace(s"Removed the ${d} directory")
 			trace(s"Slot calculation for $slot was a success")
 		}
 
