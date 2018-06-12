@@ -1,10 +1,12 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.Actor
-import akka.actor.Props
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.nio.file.Files
+
+import akka.actor.Actor
+import akka.actor.Props
 
 class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with Trace {
 
@@ -108,11 +110,11 @@ object JobMonitor{
 	}
 
 	def ensureStationIdLinkExists(jdir: JobDir): Unit = {
-		val stationIdLink = jdir.dir.resolve("../../stations/" + jdir.job.siteId).toAbsolutePath
+		val stationIdLink = jdir.dir.resolve("../../stations/" + jdir.job.siteId).normalize
 
 		if(!Files.exists(stationIdLink)){
 			jdir.slots.flatMap(_.headOption).foreach{slot =>
-				val target = jdir.dir.resolve("../../slots/" + slot.pos.toString).toAbsolutePath
+				val target = Paths.get("../slots/" + slot.pos.toString)
 				Files.createSymbolicLink(stationIdLink, target)
 			}
 		}
