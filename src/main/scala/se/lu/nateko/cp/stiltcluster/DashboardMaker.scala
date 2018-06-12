@@ -92,6 +92,7 @@ class DashboardMaker extends Actor{
 
 	def addToDone(jinfo: JobInfo): Boolean = {
 		done = done :+ jinfo
+		if(done.size > 10) done = done.tail
 		true
 	}
 
