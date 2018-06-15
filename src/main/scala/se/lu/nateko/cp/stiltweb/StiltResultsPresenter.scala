@@ -10,6 +10,7 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import scala.collection.JavaConverters._
 import scala.collection.parallel.availableProcessors
+import scala.io.{Source => IoSource}
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import akka.NotUsed
@@ -25,12 +26,16 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	private val stationsDir = Paths.get(config.stateDirectory, stationsDirectory)
 
 	def getStationInfos: Seq[StiltStationInfo] = {
-		val stiltToName: Map[String, String] = config.stations.collect{
-			case Seq(stilt, name, _) if !name.isEmpty => (stilt, name)
+
+		val stations = IoSource.fromInputStream(getClass.getResourceAsStream("/stations.csv"), "UTF-8")
+			.getLines.map(_.split(",", -1).toSeq).toIndexedSeq
+
+		val stiltToName: Map[String, String] = stations.collect{
+			case Seq(stilt, name, _, _) if !name.isEmpty => (stilt, name)
 		}.toMap
 
-		val stiltToWdcgg: Map[String, String] = config.stations.collect{
-			case Seq(stilt, _, wdcgg) if !wdcgg.isEmpty => (stilt, wdcgg)
+		val stiltToWdcgg: Map[String, String] = stations.collect{
+			case Seq(stilt, _, _, wdcgg) if !wdcgg.isEmpty => (stilt, wdcgg)
 		}.toMap
 
 		val stiltToYears: Map[String, Seq[Int]] = getStationYears
