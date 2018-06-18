@@ -32,7 +32,7 @@ export default class AvailableMonths{
 	}
 
 	firstPossibleDate(date){
-		return new Date(date.setDate(date.getDate() + 10));
+		return new Date(date.setDate(date.getDate() + 11));
 	}
 
 	getNextMonth(date){
