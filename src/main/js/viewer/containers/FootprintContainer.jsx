@@ -73,11 +73,11 @@ function getMarkers(selectedStation, label){
 }
 
 function doReset(selectedStation, lastSelectedStation, raster){
-	return !!(selectedStation && selectedStation.id != lastSelectedStation.id && !raster);
+	return !!(selectedStation && selectedStation.id !== lastSelectedStation.id && !raster);
 }
 
 function getLatLngBounds(selectedStation, lastSelectedStation){
-	return selectedStation && selectedStation.id != lastSelectedStation.id
+	return selectedStation && selectedStation.id !== lastSelectedStation.id
 		? L.latLngBounds([L.latLng(selectedStation.lat, selectedStation.lon)])
 		: null;
 }

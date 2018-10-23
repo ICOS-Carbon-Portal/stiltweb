@@ -53,7 +53,7 @@ function getStationInfo(){
 
 function dobjByYear(dobjInfo, wdcggId, year){
 	const available = dobjInfo
-		.filter(dobj => dobj.year == year && dobj.wdcggId == wdcggId)
+		.filter(dobj => dobj.year === year && dobj.wdcggId === wdcggId)
 		.map(({dobj, nRows}) => {return {id: dobj, nRows};})
 		.sort((do1, do2) => do2.nRows - do1.nRows); //by number of points, descending
 	return available[0];

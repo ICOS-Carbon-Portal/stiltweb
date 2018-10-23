@@ -80,7 +80,7 @@ export default class FootprintsFetcher{
 		if(idxDiff < 1) throw new Error("Error in indexLooper, idxDiff = " + idxDiff);
 
 		return function(idx){
-			var step = idx - idxMin;
+			let step = idx - idxMin;
 			while(step < 0) step += idxDiff;
 			return idxMin + step % idxDiff;
 		}

@@ -35,16 +35,16 @@ export default class FootprintsRegistry{
 		const d = typeof date === 'object' ? date.valueOf() : date;
 
 		function improve(left, right){
-			if(right == left) return left;
+			if(right === left) return left;
 			const dmin = dates[left];
 			const dmax = dates[right];
-			if(right - left == 1) return (d - dmin > dmax - d) ? right : left;
+			if(right - left === 1) return (d - dmin > dmax - d) ? right : left;
 			if(d <= dmin + step / 2) return left;
 			if(d > dmax - step / 2) return right;
 
 			const slope = (right - left) / (dmax - dmin);
 			let guess = left + Math.round(slope * (d - dmin));
-			if(guess == left || guess == right) guess = Math.round((left + right) / 2);
+			if(guess === left || guess === right) guess = Math.round((left + right) / 2);
 
 			return dates[guess] > d ? improve(left, guess) : improve(guess, right);
 		}

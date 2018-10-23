@@ -1,7 +1,7 @@
 
 export function wdcggBinTableToDygraphData(binTable, series){
 	function rowGetter(i){
-		var row = binTable.row(i);
+		let row = binTable.row(i);
 		row[0] = new Date(row[0]);
 		return row;
 	}

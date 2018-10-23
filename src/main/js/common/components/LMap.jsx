@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import * as LCommon from 'icos-cp-leaflet-common';
 
@@ -124,14 +124,14 @@ export default class LMap extends Component{
 		} else if (selectedStation.hasPosition) {
 			const clickMarkerPos = this.app.clickMarker.getLatLng();
 
-			if (!clickMarkerPos || selectedStation.lat != clickMarkerPos.lat || selectedStation.lon != clickMarkerPos.lng) {
+			if (!clickMarkerPos || selectedStation.lat !== clickMarkerPos.lat || selectedStation.lon !== clickMarkerPos.lng) {
 				mapClick(map, L.latLng(selectedStation.lat, selectedStation.lon), this, false)
 			}
 		}
 	}
 
 	buildWarningCircles(workerMode, geoms){
-		if (!workerMode || geoms.length == 0) return;
+		if (!workerMode || geoms.length === 0) return;
 
 		const circles = this.app.circles;
 		circles.clearLayers();
@@ -162,7 +162,7 @@ export default class LMap extends Component{
 		markers.clearLayers();
 
 		//First all non selected
-		geoms.filter(geom => !selectedStation || geom.siteId != selectedStation.siteId).forEach(geom => {
+		geoms.filter(geom => !selectedStation || geom.siteId !== selectedStation.siteId).forEach(geom => {
 			const marker = L.circleMarker([geom.lat, geom.lon], LCommon.pointIcon(6, 1, 'rgb(255,100,100)', 'black'));
 
 			addPopup(marker, getPopupTxt(geom), {offset:[0,0], closeButton: false});
@@ -172,7 +172,7 @@ export default class LMap extends Component{
 		});
 
 		//Then the selected
-		const selected = geoms.find(geom => selectedStation && geom.siteId == selectedStation.siteId);
+		const selected = geoms.find(geom => selectedStation && geom.siteId === selectedStation.siteId);
 		if (selected){
 			const marker = L.circleMarker([selected.lat, selected.lon], LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
 
@@ -248,7 +248,7 @@ function isOutside(geoBoundary, pos){
 }
 
 function isTooClose(markers, clickedPosLatlng){
-	var proximityFail = false;
+	let proximityFail = false;
 
 	markers.eachLayer(marker => {
 		if (marker.getLatLng().distanceTo(clickedPosLatlng) < warningRadius(clickedPosLatlng.lat)){

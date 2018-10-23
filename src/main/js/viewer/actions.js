@@ -27,7 +27,7 @@ export const fetchInitData = dispatch => {
 		},
 		err => dispatch(failWithError(err))
 	);
-}
+};
 
 export function visibilityUpdate(name, visibility){
 	return {
@@ -65,7 +65,7 @@ export const fetchStationData = (dispatch, getState) => {
 		},
 		err => dispatch(failWithError(err))
 	);
-}
+};
 
 export const setSelectedStation = selectedStation => dispatch => {
 	dispatch({
@@ -73,12 +73,12 @@ export const setSelectedStation = selectedStation => dispatch => {
 		selectedStation
 	});
 	dispatch(fetchStationData); //date scope might have been selected automatically
-}
+};
 
 const setSelectedStationById = stationId => (dispatch, getState) => {
-	const station = getState().stations.find(s => s.id == stationId);
+	const station = getState().stations.find(s => s.id === stationId);
 	if(station) dispatch(setSelectedStation(station));
-}
+};
 
 export const setSelectedScope = selectedScope => dispatch => {
 	dispatch({
@@ -86,12 +86,12 @@ export const setSelectedScope = selectedScope => dispatch => {
 		selectedScope
 	});
 	dispatch(fetchStationData);
-}
+};
 
 export const setDateRange = dateRange => (dispatch, getState) => {
 	const currRange = getState().dateRange;
 
-	if(currRange && currRange[0] == dateRange[0] && currRange[1] == dateRange[1] || dateRange[0] >= dateRange[1]) return;
+	if(currRange && currRange[0] === dateRange[0] && currRange[1] === dateRange[1] || dateRange[0] >= dateRange[1]) return;
 
 	dispatch({
 		type: SET_DATE_RANGE,
@@ -99,14 +99,14 @@ export const setDateRange = dateRange => (dispatch, getState) => {
 	});
 
 	fetchFootprintThrottled(dispatch);
-}
+};
 
 const fetchFootprint = (dispatch, getState) => {
 	const state = getState();
 	const desired = state.desiredFootprint;
 	if(!desired) return;
 
-	if(state.footprint && desired.date == state.footprint.date) {
+	if(state.footprint && desired.date === state.footprint.date) {
 //		console.log('footprint already there, will increment if needed');
 		dispatch(incrementIfNeeded);
 	} else state.footprintsFetcher.fetch(desired).then(
@@ -120,7 +120,7 @@ const fetchFootprint = (dispatch, getState) => {
 		},
 		err => dispatch(failWithError(err))
 	);
-}
+};
 
 const fetchFootprintThrottled = throttle(dispatch => dispatch(fetchFootprint), 300);
 
@@ -131,7 +131,7 @@ export const incrementFootprint = increment => dispatch => {
 	});
 
 	dispatch(fetchFootprint);
-}
+};
 
 export const incrementIfNeeded = (dispatch, getState) => {
 //	var ts = Date.now();
@@ -145,17 +145,16 @@ export const incrementIfNeeded = (dispatch, getState) => {
 //			console.log('not incrementing after ', ts);
 		}
 	}, 5); //a tiny delay in hope to improve interface's responsiveness
-}
+};
 
 export const pushPlayButton = (dispatch, getState) => {
 	dispatch({type: PUSH_PLAY});
 	dispatch(incrementIfNeeded);
-}
+};
 
 export const setDelay = delay => {
 	return {
 		type: SET_DELAY,
 		delay
 	};
-}
-
+};

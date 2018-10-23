@@ -40,7 +40,7 @@ const StationSelectingMap = ({stations, selectedStation, selectStation}) => {
 			action={selectStation}
 		/>
 	</div>;
-}
+};
 
 const ViewerScopeDisplay = props => <div className="row">
 	<div className="col-md-4">
@@ -85,7 +85,7 @@ const StationAndYearSelector = ({selectYear, selectStation, selectedScope, selec
 			/>
 		</div>
 	</div>;
-}
+};
 
 
 const AxisControl = props => {
@@ -95,7 +95,7 @@ const AxisControl = props => {
 			(comp,i) => <StiltComponentSelector key={i} {...comp} {...props} />
 		)}
 	</div>;
-}
+};
 
 
 const StiltComponentSelector = ({label, comment, updateVisibility, options}) => {
@@ -103,7 +103,7 @@ const StiltComponentSelector = ({label, comment, updateVisibility, options}) => 
 		if(updateVisibility){
 			updateVisibility(label, event.target.checked);
 		}
-	}
+	};
 
 	const visibility = options.modelComponentsVisibility || {};
 
@@ -115,7 +115,7 @@ const StiltComponentSelector = ({label, comment, updateVisibility, options}) => 
 		/>
 		{label}
 	</span>;
-}
+};
 
 
 const FootprintState = ({footprint, options, updateStationVisibility}) => {
@@ -127,7 +127,7 @@ const FootprintState = ({footprint, options, updateStationVisibility}) => {
 			<strong>Footprint: </strong>{status}
 		</div>
 	</div>;
-}
+};
 
 
 const MovieControl = props => {
@@ -171,7 +171,7 @@ const MovieControl = props => {
 			/>
 		</div>
 	</div>;
-}
+};
 
 const delayValues = [0, 50, 100, 200, 500, 1000, 3000];
 function delayPresenter(delay){

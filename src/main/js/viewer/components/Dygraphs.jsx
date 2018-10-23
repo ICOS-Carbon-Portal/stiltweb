@@ -69,13 +69,13 @@ export default class Dygraphs extends React.Component {
 		if(nextRange){
 			const currRange = this.graph.xAxisRange();
 
-			if(!currRange || nextRange[0] != currRange[0] || nextRange[1] != currRange[1]){
+			if(!currRange || nextRange[0] !== currRange[0] || nextRange[1] !== currRange[1]){
 				Object.assign(update, {dateWindow: nextRange});
 			}
 		}
 
 		const nextData = nextProps.data;
-		if(nextData && nextData.id != this.dataId){
+		if(nextData && nextData.id !== this.dataId){
 			this.dataId = nextData.id;
 			Object.assign(update, {
 				file: nextProps.data.getData(),
@@ -131,11 +131,11 @@ function makeSeriesOpt(dyDataSeries){
 }
 
 function annotationsHaveBeenUpdated(oldAnno, newAnno){
-	if(!!oldAnno != !!newAnno) return true;
+	if(!!oldAnno !== !!newAnno) return true;
 	if(!newAnno) return false;
-	if(oldAnno.length != newAnno.length) return true;
-	if(newAnno.length == 0) return false;
+	if(oldAnno.length !== newAnno.length) return true;
+	if(newAnno.length === 0) return false;
 
-	return !oldAnno.every((oa, i) => oa.series == newAnno[i].series && oa.x == newAnno[i].x);
+	return !oldAnno.every((oa, i) => oa.series === newAnno[i].series && oa.x === newAnno[i].x);
 }
 

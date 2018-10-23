@@ -24,7 +24,7 @@ export default function(state, action){
 			return Object.assign(newState, {stations});
 
 		case FETCHED_RASTER:
-			return state.desiredFootprint.date == action.footprint.date
+			return state.desiredFootprint.date === action.footprint.date
 				? updateWith(['raster', 'footprint'])
 				: state;
 
@@ -33,9 +33,9 @@ export default function(state, action){
 
 			return keep(['wdcggFormat', 'stations', 'countriesTopo', 'options'], {
 				selectedStation: station,
-				selectedScope: config.viewerScope ? null : station.years.length == 1
+				selectedScope: config.viewerScope ? null : station.years.length === 1
 					? station.years[0]
-					: station.years.find(({year}) => state.selectedScope && state.selectedScope.year == year)
+					: station.years.find(({year}) => state.selectedScope && state.selectedScope.year === year)
 			});
 
 		case SET_SELECTED_SCOPE:
@@ -86,11 +86,11 @@ export default function(state, action){
 
 	function checkScope(scope){
 		const ss = state.selectedScope;
-		return ss && scope && ss.fromDate == scope.fromDate && ss.toDate == scope.toDate;
+		return ss && scope && ss.fromDate === scope.fromDate && ss.toDate === scope.toDate;
 	}
 
 	function checkStationId(id){
-		return state.selectedStation && state.selectedStation.id == id;
+		return state.selectedStation && state.selectedStation.id === id;
 	}
 
 	function keep(props, updatesObj){
@@ -107,6 +107,4 @@ export default function(state, action){
 			? deepUpdate(state, path, copyprops(action, actionProps))
 			: update(copyprops(action, actionProps));
 	}
-
 }
-
