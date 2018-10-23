@@ -4,6 +4,7 @@ import {AnimatedToasters} from 'icos-cp-toaster';
 import FootprintContainer from './FootprintContainer.jsx';
 import ControlPanelContainer from './ControlPanelContainer.jsx';
 import GraphsContainer from './GraphsContainer.jsx';
+import Spinner from '../components/Spinner.jsx';
 import config from '../config';
 
 const marginTop = 10;
@@ -17,6 +18,8 @@ class App extends Component {
 		const title = config.viewerScope
 			? "STILT single-site scoped viewer"
 			: "STILT results viewer";
+		const showSpinner = this.props.showSpinner;
+
 		return (
 			<div>
 				<AnimatedToasters toasterData={this.props.toasterData} autoCloseDelay={5000} />
@@ -27,6 +30,7 @@ class App extends Component {
 				<div className="row" style={{marginTop}}>
 
 					<div className="col-md-4">
+						{showSpinner ? <Spinner /> : null}
 						<FootprintContainer />
 					</div>
 

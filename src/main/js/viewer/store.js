@@ -5,6 +5,7 @@ import {fetchInitData} from './actions'
 //import config from './config';
 
 const initState = {
+	showSpinner: false,
 	wdcggFormat: null,
 	stations: [],
 	selectedStation: null,

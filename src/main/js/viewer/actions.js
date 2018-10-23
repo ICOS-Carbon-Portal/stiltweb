@@ -13,17 +13,22 @@ export const INCREMENT_FOOTPRINT = 'INCREMENT_FOOTPRINT';
 export const PUSH_PLAY = 'PUSH_PLAY';
 export const SET_DELAY = 'SET_DELAY';
 export const ERROR = 'ERROR';
+export const SHOW_SPINNER = 'SHOW_SPINNER';
+export const HIDE_SPINNER = 'HIDE_SPINNER';
 
 
 export const fetchInitData = dispatch => {
+	dispatch({type: SHOW_SPINNER});
+
 	getInitialData().then(
 		initData => {
 			dispatch(Object.assign({type: FETCHED_INITDATA}, initData));
-			if(config.viewerScope){
+			if (config.viewerScope){
 				const {stationId, fromDate, toDate} = config.viewerScope;
 				dispatch(setSelectedStationById(stationId));
 				dispatch(setSelectedScope({fromDate, toDate}));
 			}
+			dispatch({type: HIDE_SPINNER});
 		},
 		err => dispatch(failWithError(err))
 	);
@@ -59,9 +64,12 @@ export const fetchStationData = (dispatch, getState) => {
 	if(!scope) return;
 	const stationId = state.selectedStation.id;
 
+	dispatch({type: SHOW_SPINNER});
+
 	getStationData(stationId, scope, state.wdcggFormat).then(
 		stationData => {
 			dispatch(gotStationData(stationData, stationId, scope.fromDate, scope.toDate));
+			dispatch({type: HIDE_SPINNER});
 		},
 		err => dispatch(failWithError(err))
 	);

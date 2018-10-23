@@ -1,5 +1,6 @@
 import {FETCHED_INITDATA, FETCHED_STATIONDATA, FETCHED_RASTER, SET_SELECTED_STATION, SET_SELECTED_SCOPE,
-	SET_DATE_RANGE, SET_VISIBILITY, INCREMENT_FOOTPRINT, PUSH_PLAY, SET_DELAY, ERROR} from './actions';
+	SET_DATE_RANGE, SET_VISIBILITY, INCREMENT_FOOTPRINT, PUSH_PLAY, SET_DELAY, ERROR,
+	SHOW_SPINNER, HIDE_SPINNER} from './actions';
 import {makeTimeSeriesGraphData} from './models/timeSeriesHelpers';
 import FootprintsRegistry from './models/FootprintsRegistry';
 import FootprintsFetcher from './models/FootprintsFetcher';
@@ -10,6 +11,12 @@ import config from './config';
 export default function(state, action){
 
 	switch(action.type){
+
+		case SHOW_SPINNER:
+			return update({showSpinner: true});
+
+		case HIDE_SPINNER:
+			return update({showSpinner: false});
 
 		case FETCHED_INITDATA:
 			const stations = action.stations.map(s => {
