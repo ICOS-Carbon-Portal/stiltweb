@@ -9,7 +9,7 @@ import Dygraphs from '../components/Dygraphs.jsx';
 
 const GraphsContainer = props => props.timeSeriesData
 	? <Dygraphs data={props.timeSeriesData} {...props}/>
-	: <div></div>;
+	: <div />;
 
 function stateToProps(state){
 
@@ -45,7 +45,7 @@ function stateToProps(state){
 				}
 			}
 		},
-		copyprops(state, ['timeSeriesData', 'dateRange'])
+		copyprops(state, ['timeSeriesData', 'dateRange', 'selectedStation'])
 	);
 }
 

@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import Dygraph from 'dygraphs';
 import {deepMerge} from 'icos-cp-utils';
 
 
-export default class Dygraphs extends React.Component {
+export default class Dygraphs extends Component {
 	constructor(props) {
 		super(props);
 	}
@@ -15,16 +14,17 @@ export default class Dygraphs extends React.Component {
 		this.dataId = props.data.id;
 
 		this.graph = new Dygraph(
-			ReactDOM.findDOMNode(this.refs.graphDiv),
+			this.graphDiv,
 			props.data.getData(),
 			deepMerge({
+				title: `${props.selectedStation.name} (${props.selectedStation.alt} m)`,
 				drawCallback: this.rangeChangeHandler.bind(this),
 				dateWindow: props.dateRange,
 				strokeWidth: 1,
 				colorValue: 0.9,
 				labels: this.makeLabels(props),
 				legend: 'always',
-				labelsDiv: ReactDOM.findDOMNode(this.refs.labelsDiv),
+				labelsDiv: this.labelsDiv,
 				labelsSeparateLines: false,
 				connectSeparatedPoints: true,
 				labelsKMB: true,
@@ -32,9 +32,13 @@ export default class Dygraphs extends React.Component {
 				axes: {
 					x: {
 						drawGrid: false,
-						valueFormatter: this.formatDate.bind(this)
+						valueFormatter: this.formatDate.bind(this),
+						axisLabelWidth: 65
 					},
 					y: {
+						axisLabelWidth: 65
+					},
+					y2: {
 						axisLabelWidth: 65
 					}
 				},
@@ -105,8 +109,8 @@ export default class Dygraphs extends React.Component {
 	render(){
 		return (
 			<div>
-				<div ref="graphDiv" style={{width: '100%'}} />
-				<div ref="labelsDiv" style={{width: '100%', fontSize: '0.9em', marginTop: 5}}></div>
+				<div ref={div => this.graphDiv = div} style={{width: '100%'}} />
+				<div ref={div => this.labelsDiv = div} style={{width: '100%', fontSize: '1.1em', marginTop: 5}} />
 			</div>
 		);
 	}

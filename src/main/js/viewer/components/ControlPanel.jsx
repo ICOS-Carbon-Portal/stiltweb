@@ -72,7 +72,7 @@ const StationAndYearSelector = ({selectYear, selectStation, selectedScope, selec
 				infoTxt="Select station here or on the map"
 				availableValues={stations}
 				value={selectedStation}
-				presenter={station => station ? `${station.id} (${station.name})` : station}
+				presenter={station => station ? `${station.id} (${station.name}, ${station.alt} m)` : station}
 				sort={true}
 			/>
 		</div>
