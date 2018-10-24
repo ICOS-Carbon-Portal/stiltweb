@@ -1,5 +1,6 @@
 package se.lu.nateko.cp.stiltcluster
 
+import java.nio.file.attribute.PosixFilePermissions
 import java.nio.file.{Files, Path}
 
 import akka.actor.Actor
@@ -88,7 +89,9 @@ object LocallyAvailableSlot {
 				}
 				Util.writeFileAtomically(tmpDir.resolve(name).toFile, f.data)
 			}
+			Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rwxr-xr-x"));
 			Files.move(tmpDir, slotDir)
+
 		} else {
 			// Case 2 - the slot dir exists and is complete.
 			if (Files.exists(slotDir.resolve("csv"))) {
