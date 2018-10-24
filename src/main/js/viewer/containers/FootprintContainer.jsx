@@ -8,7 +8,7 @@ import {getLegend} from '../models/colorMaker';
 import {incrementIfNeeded} from '../actions';
 import {pointIcon, polygonMask} from 'icos-cp-leaflet-common';
 
-const containerHeight = 400;
+const containerHeight = 522;
 const legendWidth = 120;
 
 class FootprintContainer extends Component {

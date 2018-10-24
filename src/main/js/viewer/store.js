@@ -2,7 +2,7 @@ import { createStore, applyMiddleware } from 'redux'
 import thunkMiddleware from 'redux-thunk'
 import reducer from './reducer'
 import {fetchInitData} from './actions'
-//import config from './config';
+
 
 const initState = {
 	showSpinner: false,

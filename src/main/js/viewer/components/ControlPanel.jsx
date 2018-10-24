@@ -10,19 +10,21 @@ import StationsMap from '../../common/components/LMap.jsx';
 export default props => <div className="panel panel-default">
 	<div className="panel-body">
 		<div className="row">
-			<div className="col-md-3"><StationSelectingMap {...props} /></div>
+			<div className="col-md-3" style={{paddingRight:0}}>
+				<StationSelectingMap {...props} />
+			</div>
 			<div className="col-md-9">
-				<ul className="list-group">
+				<ul className="list-group" style={{marginBottom:0}}>
 					<li className="list-group-item">{config.viewerScope
 						? <ViewerScopeDisplay {...config.viewerScope} />
 						: <StationAndYearSelector {...props} />
 					}</li>
 					<li className="list-group-item"><FootprintState {...props} /></li>
 					<li className="list-group-item">
-						<AxisControl title="Primary Y-axis" components={config.primaryComponents(props.selectedScope)} {...props} />
+						<AxisControlPrimary title="Primary Y-axis" components={config.primaryComponents(props.selectedScope)} {...props} />
 					</li>
 					<li className="list-group-item">
-						<AxisControl title="Secondary Y-axis" components={config.secondaryComponents()} {...props} />
+						<AxisControlSecondary title="Secondary Y-axis" components={config.secondaryComponents} {...props} />
 					</li>
 					<li className="list-group-item"><MovieControl {...props} /></li>
 				</ul>
@@ -33,7 +35,7 @@ export default props => <div className="panel panel-default">
 
 
 const StationSelectingMap = ({stations, selectedStation, selectStation}) => {
-	return <div style={{height: 300}}>
+	return <div style={{height: 490}}>
 		<StationsMap
 			stations={stations}
 			selectedStation={selectedStation}
@@ -88,13 +90,35 @@ const StationAndYearSelector = ({selectYear, selectStation, selectedScope, selec
 };
 
 
-const AxisControl = props => {
+const AxisControlPrimary = props => {
 	return <div>
 		<strong>{props.title}:</strong>
-		{props.components.map(
+		<FanOutComponents fanOuts={props.components} {...props} />
+	</div>;
+};
+
+const FanOutComponents = props => {
+	return (
+		<div>
+		{props.fanOuts.map(
 			(comp,i) => <StiltComponentSelector key={i} {...comp} {...props} />
 		)}
-	</div>;
+		</div>
+	);
+};
+
+const AxisControlSecondary = props => {
+	return (
+		<div>
+			<strong>{props.title}:</strong>
+			{Object.keys(props.components).map((label, i) =>
+				<div key={'group' + i}>
+					<div style={{textDecoration:'underline'}}>{label}</div>
+					<FanOutComponents fanOuts={props.components[label]} {...props} />
+				</div>
+			)}
+		</div>
+	);
 };
 
 
@@ -147,13 +171,13 @@ const MovieControl = props => {
 		<div className="col-md-4">
 			<div className="btn-group" style={{minWidth: 120}}>
 				<button title="To previous footprint" type="button" className="btn btn-default" onClick={toPrevious} disabled={navDisabled}>
-					<span className="glyphicon glyphicon-triangle-left"></span>
+					<span className="glyphicon glyphicon-triangle-left" />
 				</button>
 				<button title={playTitle} type="button" className="btn btn-default" onClick={props.pushPlay} disabled={!props.footprint}>
-					<span className={playClass}></span>
+					<span className={playClass} />
 				</button>
 				<button  title="To next footprint" type="button" className="btn btn-default" onClick={toNext} disabled={navDisabled}>
-					<span className="glyphicon glyphicon-triangle-right"></span>
+					<span className="glyphicon glyphicon-triangle-right" />
 				</button>
 			</div>
 		</div>

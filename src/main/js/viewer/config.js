@@ -65,6 +65,19 @@ const stiltResultColumns = [dateSeries, {
 	options: {axis: 'y2', color: 'rgb(216,131,255)', strokePattern: Dygraph.DASHED_LINE}
 }];
 
+const stiltResultColumnGrouping = {
+	'Biosperic CO2': ['co2.bio'],
+	'Photosyntetic uptake and respiration': ['co2.bio.gee', 'co2.bio.resp'],
+	'Anthropogenic CO2': ['co2.fuel'],
+	'Fuel types': ['co2.fuel.coal', 'co2.fuel.oil', 'co2.fuel.gas', 'co2.fuel.bio'],
+	'Source categories': ['co2.energy', 'co2.transport', 'co2.industry', 'co2.others']
+};
+
+const secondaryComponents = Object.keys(stiltResultColumnGrouping).reduce((acc, key) => {
+	acc[key] = stiltResultColumnGrouping[key].map(label => stiltResultColumns.find(src => src.label === label));
+	return acc;
+}, {});
+
 const wdcggColumns = [dateSeries, {
 	label: 'co2.observed',
 	comment: 'observed atmospheric CO2 mole fraction available at WDCGG',
@@ -80,14 +93,13 @@ export default {
 	wdcggBaseUri: 'http://meta.icos-cp.eu/resources/wdcgg/',
 	wdcggSpec: 'http://meta.icos-cp.eu/resources/cpmeta/wdcggDataObject',
 	stiltResultColumns,
+	stiltResultColumnGrouping,
 	wdcggColumns,
 	primaryComponents(selectedScope){
 		const obsColumns = !selectedScope || selectedScope.dataObject ? wdcggColumns.slice(1) : [];
 		return obsColumns.concat(stiltResultColumns.slice(1,3));
 	},
-	secondaryComponents(){
-		return stiltResultColumns.slice(3);
-	},
+	secondaryComponents,
 	defaultDelay: 100, //ms
 	viewerScope: ["stationId", "fromDate", "toDate"].every(qpar => urlQuery.hasOwnProperty(qpar)) ? urlQuery : null
 }

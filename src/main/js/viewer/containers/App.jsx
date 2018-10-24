@@ -29,12 +29,12 @@ class App extends Component {
 				</div>
 				<div className="row" style={{marginTop}}>
 
-					<div className="col-md-4">
+					<div className="col-md-5" style={{paddingRight:0}}>
 						{showSpinner ? <Spinner /> : null}
 						<FootprintContainer />
 					</div>
 
-					<div className="col-md-8">
+					<div className="col-md-7" style={{paddingLeft:0}}>
 						<ControlPanelContainer />
 					</div>
 
