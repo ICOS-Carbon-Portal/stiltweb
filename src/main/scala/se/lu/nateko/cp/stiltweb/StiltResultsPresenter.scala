@@ -28,14 +28,14 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	def getStationInfos: Seq[StiltStationInfo] = {
 
 		val stations = IoSource.fromInputStream(getClass.getResourceAsStream("/stations.csv"), "UTF-8")
-			.getLines.map(_.split(",", -1).toSeq).toIndexedSeq
+			.getLines.drop(1).map(_.split(",", -1).toList).toIndexedSeq
 
 		val stiltToName: Map[String, String] = stations.collect{
-			case Seq(stilt, name, _, _) if !name.isEmpty => (stilt, name)
+			case stilt :: name :: _ if !name.isEmpty => (stilt, name)
 		}.toMap
 
 		val stiltToWdcgg: Map[String, String] = stations.collect{
-			case Seq(stilt, _, _, wdcgg) if !wdcgg.isEmpty => (stilt, wdcgg)
+			case stilt :: _ :: _ :: wdcgg :: _ if !wdcgg.isEmpty => (stilt, wdcgg)
 		}.toMap
 
 		val stiltToYears: Map[String, Seq[Int]] = getStationYears

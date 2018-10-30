@@ -1,4 +1,4 @@
-scalaVersion in ThisBuild := "2.12.6"
+scalaVersion in ThisBuild := "2.12.7"
 
 cancelable in Global := true
 
@@ -21,14 +21,8 @@ lazy val commonSettings = Seq(
 	)
 )
 
-val akkaVersion = "2.4.20"
-val akkaHttpVersion = "10.0.10"
-
-
-lazy val buildFrontend = taskKey[Unit]("Builds the front end projects")
-lazy val frontendThenAssembly = taskKey[File]("Builds the front end projects and then runs assembly")
-lazy val deploy = inputKey[Unit]("Deploys to production using Ansible (depends on 'infrastructure' project)")
-
+val akkaVersion = "2.5.17"
+val akkaHttpVersion = "10.1.5"
 
 lazy val stiltcluster = (project in file("stiltcluster"))
 	.settings(commonSettings: _*)
@@ -64,11 +58,12 @@ lazy val stiltweb = (project in file("."))
 	.settings(commonSettings: _*)
 	.settings(
 		name := "stiltweb",
-		version := "0.2.0",
+		version := "0.2.1",
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka"  %% "akka-http-spray-json"               % akkaHttpVersion,
+			"com.typesafe.akka"  %% "akka-stream"                        % akkaVersion,
 			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.5-SNAPSHOT",
-			"se.lu.nateko.cp"    %% "views-core"                         % "0.2-SNAPSHOT",
+			"se.lu.nateko.cp"    %% "views-core"                         % "0.3.8-SNAPSHOT",
 			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.0-SNAPSHOT",
 			"com.typesafe.akka"  %% "akka-testkit"                       % akkaVersion        % "test",
 			"org.scalatest"      %% "scalatest"                          % "3.0.1"            % "test"
