@@ -12,6 +12,8 @@ import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
+import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport
+import se.lu.nateko.cp.stiltweb.marshalling.StationInfoMarshalling
 
 class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 
@@ -43,6 +45,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				}
 			} ~
 			path("stationinfo") {
+				import StationInfoMarshalling.stationInfoMarshaller
 				complete(service.getStationInfos)
 			} ~
 			path("availablemonths") {

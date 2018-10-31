@@ -1,4 +1,4 @@
-package se.lu.nateko.cp.stiltweb
+package se.lu.nateko.cp.stiltweb.marshalling
 
 import akka.http.scaladsl.marshalling.Marshaller
 import akka.http.scaladsl.marshalling.Marshalling._

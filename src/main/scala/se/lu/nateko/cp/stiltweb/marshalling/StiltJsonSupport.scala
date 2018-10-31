@@ -1,7 +1,6 @@
-package se.lu.nateko.cp.stiltweb
+package se.lu.nateko.cp.stiltweb.marshalling
 
 import java.time.{ Instant, LocalDate }
-
 import akka.actor.Address
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
@@ -10,6 +9,11 @@ import spray.json._
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import akka.NotUsed
+import scala.Iterator
+import se.lu.nateko.cp.stiltweb.StiltResultsRequest
+import se.lu.nateko.cp.stiltweb.StiltStationInfo
+import se.lu.nateko.cp.stiltweb.WhoamiResult
+import se.lu.nateko.cp.stiltweb.StiltStationIds
 
 object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -18,8 +22,19 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
 	implicit val stiltResultsWhoamiFormat = jsonFormat2(WhoamiResult)
 
+	implicit object stiltStationInfoWriter extends RootJsonFormat[StiltStationInfo] {
+		private implicit val idsformat = jsonFormat5(StiltStationIds.apply)
+		private val simple = jsonFormat5(StiltStationInfo)
 
-	implicit val stiltStationInfoFormat = jsonFormat7(StiltStationInfo)
+		def write(si: StiltStationInfo): JsValue = {
+			val self = si.toJson(simple).asJsObject
+			val ids = si.id.toJson.asJsObject
+			JsObject(self.fields ++ ids.fields)
+		}
+
+		def read(json: JsValue): StiltStationInfo = ???
+	}
+
 	implicit object LocalDateFormat extends JsonFormat[LocalDate]{
 		def write(d: LocalDate) = JsString(d.toString)
 		def read(value: JsValue) = value match {

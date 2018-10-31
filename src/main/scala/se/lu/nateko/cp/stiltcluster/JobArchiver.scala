@@ -3,7 +3,7 @@ package se.lu.nateko.cp.stiltcluster
 import java.nio.file.{Files, Path}
 
 import akka.actor.Actor
-import se.lu.nateko.cp.stiltweb.StiltJsonSupport._
+import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport._
 import spray.json._
 
 class JobArchiver(dataDir: Path) extends Actor with Trace {

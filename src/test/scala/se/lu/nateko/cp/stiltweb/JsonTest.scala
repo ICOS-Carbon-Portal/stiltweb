@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 import se.lu.nateko.cp.stiltcluster.Job
 
 import spray.json._
-import StiltJsonSupport._
+import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport._
 
 class JsonTest extends FunSuite {
 

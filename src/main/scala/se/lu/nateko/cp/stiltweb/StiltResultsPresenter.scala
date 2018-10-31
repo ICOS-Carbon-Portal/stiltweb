@@ -18,6 +18,7 @@ import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
 import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
 import se.lu.nateko.cp.stiltweb.csv.RawRow
 import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
+import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport
 
 
 class StiltResultsPresenter(config: StiltWebConfig) {
@@ -26,27 +27,27 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	private val stationsDir = Paths.get(config.stateDirectory, stationsDirectory)
 
 	def getStationInfos: Seq[StiltStationInfo] = {
+		def opt(s: String): Option[String] = if(s.trim.isEmpty) None else Some(s.trim)
 
-		val stations = IoSource.fromInputStream(getClass.getResourceAsStream("/stations.csv"), "UTF-8")
-			.getLines.drop(1).map(_.split(",", -1).toList).toIndexedSeq
-
-		val stiltToName: Map[String, String] = stations.collect{
-			case stilt :: name :: _ if !name.isEmpty => (stilt, name)
-		}.toMap
-
-		val stiltToWdcgg: Map[String, String] = stations.collect{
-			case stilt :: _ :: _ :: wdcgg :: _ if !wdcgg.isEmpty => (stilt, wdcgg)
-		}.toMap
+		val idToIds: Map[String, StiltStationIds] = IoSource
+			.fromInputStream(getClass.getResourceAsStream("/stations.csv"), "UTF-8")
+			.getLines.drop(1).map(_.split(",", -1).toSeq)
+			.map{
+				case Seq(id, name, icosId, wdcggId, globalviewId) =>
+					id -> StiltStationIds(id, opt(name), opt(icosId), opt(wdcggId), opt(globalviewId))
+			}
+			.toMap
 
 		val stiltToYears: Map[String, Seq[Int]] = getStationYears
 
 		val stationDirectories = subdirectories(stationsDir)
 
 		stationDirectories.map{directory =>
-			val stiltId = directory.getFileName.toString
+			val id = directory.getFileName.toString
+			val ids = idToIds.get(id).getOrElse(StiltStationIds(id))
 			val (lat, lon, alt) = latLonAlt(directory)
-			val years = stiltToYears.get(stiltId).getOrElse(Nil)
-			StiltStationInfo(stiltId, stiltToName.get(stiltId), lat, lon, alt, years, stiltToWdcgg.get(stiltId))
+			val years = stiltToYears.get(id).getOrElse(Nil)
+			StiltStationInfo(ids, lat, lon, alt, years)
 		}
 	}
 
