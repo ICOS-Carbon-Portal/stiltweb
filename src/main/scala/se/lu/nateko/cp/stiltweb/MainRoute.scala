@@ -3,13 +3,9 @@ package se.lu.nateko.cp.stiltweb
 import java.time.LocalDateTime
 import java.time.LocalDate
 
-import akka.NotUsed
-import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, HttpResponse, StatusCodes }
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.StandardRoute
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport
@@ -38,10 +34,8 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				parameters(("stationId", "fromDate", "toDate")) { (stationId, fromDateStr, toDateStr) =>
 					val fromDate = LocalDate.parse(fromDateStr)
 					val toDate = LocalDate.parse(toDateStr)
-					val footsJsonSrc = jsonArraySource(
-						() => service.listFootprints(stationId, fromDate, toDate).map{case (_, dt) => s""""$dt""""}
-					)
-					streamJson(footsJsonSrc)
+					val footprintsList = service.listFootprints(stationId, fromDate, toDate)
+					complete(footprintsList.map(_.toString).toSeq)
 				}
 			} ~
 			path("stationinfo") {
@@ -60,7 +54,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		post {
 			path("stiltresult") {
 				entity(as[StiltResultsRequest]) { req =>
-					streamJson(service.getStiltResultJson(req))
+					complete(service.getStiltResults(req).toSeq)
 				}
 			}
 		}
@@ -132,10 +126,5 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			} ~
 			complete((StatusCodes.OK, WhoamiResult("")))
 		}
-	}
-
-	def streamJson(src: Source[ByteString, NotUsed]): StandardRoute = {
-		val respEntity = HttpEntity(ContentTypes.`application/json`, src)
-		complete(HttpResponse(entity = respEntity))
 	}
 }

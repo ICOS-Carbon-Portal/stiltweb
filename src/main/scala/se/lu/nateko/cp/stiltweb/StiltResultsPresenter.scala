@@ -6,23 +6,19 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneOffset
 import scala.collection.JavaConverters._
-import scala.collection.parallel.availableProcessors
 import scala.io.{Source => IoSource}
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
-import akka.NotUsed
 import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
 import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
-import se.lu.nateko.cp.stiltweb.csv.RawRow
-import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
-import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport
-
+import se.lu.nateko.cp.stiltweb.csv._
+import java.time.Year
+import java.time.MonthDay
+import java.time.LocalTime
+import scala.util.Try
 
 class StiltResultsPresenter(config: StiltWebConfig) {
-	import StiltResultFetcher._
+	import StiltResultsPresenter._
 
 	private val stationsDir = Paths.get(config.stateDirectory, stationsDirectory)
 
@@ -31,33 +27,28 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 
 		val idToIds: Map[String, StiltStationIds] = IoSource
 			.fromInputStream(getClass.getResourceAsStream("/stations.csv"), "UTF-8")
-			.getLines.drop(1).map(_.split(",", -1).toSeq)
+			.getLines
+			.drop(1) // header
+			.map(_.split(",", -1).toSeq)
 			.map{
 				case Seq(id, name, icosId, wdcggId, globalviewId) =>
 					id -> StiltStationIds(id, opt(name), opt(icosId), opt(wdcggId), opt(globalviewId))
 			}
 			.toMap
 
-		val stiltToYears: Map[String, Seq[Int]] = getStationYears
-
-		val stationDirectories = subdirectories(stationsDir)
-
-		stationDirectories.map{directory =>
+		subdirectories(stationsDir).map{directory =>
 			val id = directory.getFileName.toString
+
 			val ids = idToIds.get(id).getOrElse(StiltStationIds(id))
+
 			val (lat, lon, alt) = latLonAlt(directory)
-			val years = stiltToYears.get(id).getOrElse(Nil)
+
+			val years = subdirectories(directory).map(_.getFileName.toString).collect{
+				case yearDirPattern(dddd) => dddd.toInt
+			}
+
 			StiltStationInfo(ids, lat, lon, alt, years)
 		}
-	}
-
-	private def stationYears(dir: Path): Seq[Int] = subdirectories(dir).map(_.getFileName.toString).collect{
-		case yearDirPattern(dddd) => dddd.toInt
-	}
-
-	private def getStationYears: Map[String, Seq[Int]] = {
-		val stationDirs = subdirectories(stationsDir)
-		stationDirs.map(stDir => (stDir.getFileName.toString, stationYears(stDir))).toMap
 	}
 
 	private def latLonAlt(stationDir: Path): (Double, Double, Int) = {
@@ -80,28 +71,45 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	def listFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[Footprint] =
-		if(fromDate.compareTo(toDate) > 0) Iterator.empty else{
-			fromDate.getYear.to(toDate.getYear).distinct.toList match{
-				case year :: Nil =>
-					listFootprints(stationId, year, Some(fromDate), Some(toDate))
-				case year1 :: year2 :: Nil =>
-					listFootprints(stationId, year1, Some(fromDate), None) ++
-					listFootprints(stationId, year2, None, Some(toDate))
-
-				case years =>
-					listFootprints(stationId, years.head, Some(fromDate), None) ++
-					years.tail.dropRight(1).iterator.flatMap(listFootprints(stationId, _, None, None)) ++
-					listFootprints(stationId, years.last, None, Some(toDate))
+	def getStiltResults(req: StiltResultsRequest): Iterator[Seq[String]] =
+		reduceToSingleYearOp(listSlotRows(req.stationId, _, _, _))(req.fromDate, req.toDate)
+			.map{ case (dt, row) =>
+				req.columns
+					.map{
+						case "isodate" =>
+							dt.toEpochSecond(ZoneOffset.UTC).toString
+						case col =>
+							row.get(col).fold("null")(_.toString)
+					}
 			}
+
+	def listFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[LocalDateTime] =
+		reduceToSingleYearOp(listSlots(stationId, _, _, _))(fromDate, toDate).collect{
+			case (fpDir, dt) if Files.exists(fpDir.resolve(footprintNetcdfFilename)) => dt
 		}
 
-	private def listFootprints(stationId: String, year: Int, fromDate: Option[LocalDate], toDate: Option[LocalDate]): Iterator[Footprint] = {
-		val yearPath = stationsDir.resolve(stationId).resolve(year.toString)
+	private def yearPath(stationId: String, year: Year) = stationsDir.resolve(stationId).resolve(year.toString)
 
-		subdirectories(yearPath).iterator.filter{
-			val fromMonth = fromDate.map(_.getMonthValue).getOrElse(0)
-			val toMonth = toDate.map(_.getMonthValue).getOrElse(13)
+	private def listSlotRows(stationId: String, year: Year, from: Option[MonthDay], to: Option[MonthDay]): Iterator[SlotCsvRow] = {
+		val rowFactory = () => listSlots(stationId, year, None, None).flatMap{ case (fpDir, dt) =>
+			Try{
+				val fpPath = fpDir.resolve(footprintCsvFilename)
+				val lines = Files.readAllLines(fpPath)
+				val rawRow = RawRow.parse(lines.get(0), lines.get(1))
+				LocalDayTime(dt) -> ResultRowMaker.makeRow(rawRow)
+			}.toOption.iterator
+		}
+		val cache = new RowCache(rowFactory, yearPath(stationId, year), year.getValue, config.slotStepInMinutes)
+		cache.getRows(from.map(new LocalDayTime(_, LocalTime.MIN)), to.map(new LocalDayTime(_, LocalTime.MAX)))
+	}
+
+	private def listSlots(stationId: String, yearY: Year, from: Option[MonthDay], to: Option[MonthDay]): Iterator[Slot] = {
+		val year = yearY.getValue
+		def toDate(md: MonthDay) = md.atYear(year)
+
+		subdirectories(yearPath(stationId, yearY)).iterator.filter{
+			val fromMonth = from.map(_.getMonthValue).getOrElse(0)
+			val toMonth = to.map(_.getMonthValue).getOrElse(13)
 
 			monthPath => monthPath.getFileName.toString match{
 				case monthDirPattern(m) =>
@@ -117,10 +125,10 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 				path -> LocalDateTime.of(yyyy.toInt, mm.toInt, dd.toInt, hh.toInt, 0)
 		}
 		.filter{
-			val fromDt = fromDate.map(d => LocalDateTime.of(d, LocalTime.MIN)).getOrElse(LocalDateTime.of(year, 1, 1, 0, 0))
-			val toDt = toDate.map(d => LocalDateTime.of(d.plusDays(1), LocalTime.MIN)).getOrElse(LocalDateTime.of(year + 1, 1, 1, 0, 0))
-			foot => {
-				val dt = foot._2
+			val fromDt = from.map(toDate).map(d => LocalDateTime.of(d, LocalTime.MIN)).getOrElse(LocalDateTime.of(year, 1, 1, 0, 0))
+			val toDt = to.map(toDate).map(d => LocalDateTime.of(d.plusDays(1), LocalTime.MIN)).getOrElse(LocalDateTime.of(year + 1, 1, 1, 0, 0))
+			slot => {
+				val dt = slot._2
 				dt.compareTo(fromDt) >=0 && dt.compareTo(toDt) < 0
 			}
 		}
@@ -133,38 +141,6 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 				new Throttler(throttler.lastEmitted, None)
 		}
 		.flatMap(_.toEmit)
-	}
-
-	def getStiltResultJson(req: StiltResultsRequest): Source[ByteString, NotUsed] = StiltJsonSupport.jsonArraySource(
-		() => listFootprints(req.stationId, req.fromDate, req.toDate)
-			.sliding(availableProcessors * 5, availableProcessors * 5)
-			.flatMap{_.par
-				.map{ case (fpFolder, dt) =>
-
-					val row = getCsvRow(fpFolder)
-
-					req.columns
-						.map{
-							case "isodate" =>
-								dt.toEpochSecond(ZoneOffset.UTC).toString
-							case col =>
-								row.get(col).fold("null")(_.toString)
-						}
-						.mkString("[", ", ", "]")
-				}
-				.seq
-			}
-	)
-
-	private def getCsvRow(footprintFolder: Path): Map[String, Double] = {
-		try{
-			val fpPath = footprintFolder.resolve(footprintCsvFilename)
-			val lines = Files.readAllLines(fpPath)
-			val rawRow = RawRow.parse(lines.get(0), lines.get(1))
-			ResultRowMaker.makeRow(rawRow)
-		}catch{
-			case err: Throwable => Map.empty
-		}
 	}
 
 	private def footPrintDir(stationId: String, dt: LocalDateTime): Path = {
@@ -189,7 +165,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 			val footprintDir = footPrintDir(stationId, dt).toString + File.separator
 			new ViewServiceFactoryImpl(footprintDir, dateVars.asJava, latitudeVars.asJava, longitudeVars.asJava, elevationVars.asJava)
 		}
-		val service = factory.getNetCdfViewService("foot")
+		val service = factory.getNetCdfViewService(footprintNetcdfFilename)
 		val date = service.getAvailableDates()(0)
 		service.getRaster(date, "foot", null)
 	}
@@ -224,12 +200,15 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	}
 }
 
-object StiltResultFetcher{
-
-	type Footprint = (Path, LocalDateTime)
+object StiltResultsPresenter{
+	type Slot = (Path, LocalDateTime)
+	type CsvRow = Map[String, Double]
+	type SlotCsvRow = (LocalDateTime, CsvRow)
 
 	val stationsDirectory = "stations"
 	val footprintCsvFilename = "csv"
+	val footprintNetcdfFilename = "foot"
+
 	// ex: 2007
 	val yearDirPattern = """^(\d{4})$""".r
 	// ex: 07, 5
@@ -250,8 +229,6 @@ object StiltResultFetcher{
 		}
 	}
 
-	//def resFileName(year: Int): String = resFileGlob.replace("????", year.toString)
-
 	def listFileNames(dir: Path, fileGlob: String, limit: Option[Int] = None): IndexedSeq[String] =
 		listFiles(dir, fileGlob, limit).map(_.getFileName.toString)
 
@@ -268,5 +245,32 @@ object StiltResultFetcher{
 		}
 	}
 
-	class Throttler(val lastEmitted: LocalDateTime, val toEmit: Option[Footprint])
+	def reduceToSingleYearOp[T](
+		singleYearOp: (Year, Option[MonthDay], Option[MonthDay]) => Iterator[T]
+	)(fromDate: LocalDate, toDate: LocalDate): Iterator[T] = {
+
+		if(fromDate.compareTo(toDate) > 0) Iterator.empty else{
+
+			val fromMonthDay = Some(MonthDay.from(fromDate))
+			val toMonthDay = Some(MonthDay.from(toDate))
+
+			fromDate.getYear.to(toDate.getYear).distinct.map(Year.of).toList match{
+
+				case year :: Nil =>
+					singleYearOp(year, fromMonthDay, toMonthDay)
+
+				case year1 :: year2 :: Nil =>
+					singleYearOp(year1, fromMonthDay, None) ++
+					singleYearOp(year2, None, toMonthDay)
+
+				case years =>
+					singleYearOp(years.head, fromMonthDay, None) ++
+					years.tail.dropRight(1).iterator.flatMap(singleYearOp(_, None, None)) ++
+					singleYearOp(years.last, None, toMonthDay)
+			}
+		}
+	}
+
+	private class Throttler(val lastEmitted: LocalDateTime, val toEmit: Option[Slot])
+
 }
