@@ -75,14 +75,14 @@ class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with 
 
 			if (removed.isEmpty) {
 				trace(s"Received slot I'm not waiting for ${local}")
-			} else {
+			} /*else {
 				if (jobDir.slotPresent(local)) {
 					trace("Received a slot that is already present")
 				} else {
 					trace(s"Received new slot, ${remaining.length} remaining.")
 					jobDir.link(local)
 				}
-			}
+			}*/
 			workOnRemaining(remaining)
 
 		case StiltFailure(slot) =>

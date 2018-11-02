@@ -55,23 +55,23 @@ class SlotArchiverTest extends TestKit(ActorSystem()) with FunSuiteLike with Imp
 				assert(listDirTreeNoTrace(tmp) == exp2)
 
 				// Now we want to link that slot to a job directory.
-				val dst = Files.createTempDirectory("linkedslot")
-				local.link(dst)
-				val exp3 = """.
-								|./Footprints
-								|./Footprints/XXX
-								|./Footprints/XXX/foot2012x12x08x18x46.55Nx007.98Ex00720_aggreg.nc
-								|./Footprints/XXX/.RDatafoot2012x12x08x18x46.55Nx007.98Ex00720
-								|./RData
-								|./RData/XXX
-								|./RData/XXX/.RData2012x12x08x18x46.55Nx007.98Ex00720
-								|./Results
-								|./Results/XXX
-								|./Results/XXX/stiltresult2012x46.55Nx007.98Ex00720_1.csv""".stripMargin
-				assert(listDirTreeNoTrace(dst) == exp3)
+//				val dst = Files.createTempDirectory("linkedslot")
+//				local.link(dst)
+//				val exp3 = """.
+//								|./Footprints
+//								|./Footprints/XXX
+//								|./Footprints/XXX/foot2012x12x08x18x46.55Nx007.98Ex00720_aggreg.nc
+//								|./Footprints/XXX/.RDatafoot2012x12x08x18x46.55Nx007.98Ex00720
+//								|./RData
+//								|./RData/XXX
+//								|./RData/XXX/.RData2012x12x08x18x46.55Nx007.98Ex00720
+//								|./Results
+//								|./Results/XXX
+//								|./Results/XXX/stiltresult2012x46.55Nx007.98Ex00720_1.csv""".stripMargin
+//				assert(listDirTreeNoTrace(dst) == exp3)
 
 				Util.deleteTmpDirTree(tmp)
-				Util.deleteTmpDirTree(dst)
+//				Util.deleteTmpDirTree(dst)
 			}
 	}
 }

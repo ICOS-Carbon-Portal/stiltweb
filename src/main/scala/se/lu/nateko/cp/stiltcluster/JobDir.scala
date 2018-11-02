@@ -35,21 +35,21 @@ class JobDir(val job: Job, val dir: Path) {
 		Util.createEmptyFile(dir.toFile, "done")
 	}
 
-	def link(local: LocallyAvailableSlot) = {
-		local.link(this.slotsDir)
-	}
+//	def link(local: LocallyAvailableSlot) = {
+//		local.link(this.slotsDir)
+//	}
 
-	def slotPresent(s: StiltSlot): Boolean = {
-		LocallyAvailableSlot.isLinked(slotsDir, s)
-	}
+//	def slotPresent(s: StiltSlot): Boolean = {
+//		LocallyAvailableSlot.isLinked(slotsDir, s)
+//	}
 
-	def slotPresent(s: LocallyAvailableSlot): Boolean = {
-		slotPresent(s.slot)
-	}
+//	def slotPresent(s: LocallyAvailableSlot): Boolean = {
+//		slotPresent(s.slot)
+//	}
 
-	def missingSlots = {
-		_slots.get.filterNot { slotPresent(_) }
-	}
+//	def missingSlots = {
+//		_slots.get.filterNot { slotPresent(_) }
+//	}
 
 	def delete(): Unit =
 		try{
