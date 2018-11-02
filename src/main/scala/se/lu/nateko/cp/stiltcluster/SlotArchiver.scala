@@ -2,8 +2,14 @@ package se.lu.nateko.cp.stiltcluster
 
 import java.nio.file.attribute.PosixFilePermissions
 import java.nio.file.{Files, Path}
+import scala.io.Source
 
 import akka.actor.Actor
+import se.lu.nateko.cp.stiltweb.csv.RawRow
+import se.lu.nateko.cp.stiltweb.csv.LocalDayTime
+import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
+import se.lu.nateko.cp.stiltweb.csv.RowCache
+import akka.actor.Props
 
 case class CsvMissing() extends Exception
 
@@ -31,8 +37,8 @@ class LocallyAvailableSlot private (val slot: StiltSlot, val slotDir: Path) {
 
 	assert(Files.isDirectory(slotDir))
 
-	final val files = LocallyAvailableSlot.names.map { case (typ, name) =>
-		new LocalStiltFile(slot, slotDir.resolve(name), typ) }
+	final val files = StiltResultFileType.values.map { ftyp =>
+		new LocalStiltFile(slot, slotDir.resolve(ftyp.toString), ftyp) }
 
 	override def toString() = s"LocallyAvailableslot(${slot}, ${slotDir})"
 
@@ -58,12 +64,6 @@ class LocallyAvailableSlot private (val slot: StiltSlot, val slotDir: Path) {
 
 object LocallyAvailableSlot {
 
-	final val names = Map(StiltResultFileType.Foot      -> "foot",
-						  StiltResultFileType.RDataFoot -> "rdatafoot",
-						  StiltResultFileType.RData     -> "rdata",
-						  StiltResultFileType.CSV       -> "csv")
-
-
 	def isLinked(jobDir: Path, slot: StiltSlot): Boolean = {
 		StiltResult.requiredFileTypes.forall { typ =>
 			val f = StiltResultFile.calcFileName(slot, typ)
@@ -71,67 +71,54 @@ object LocallyAvailableSlot {
 		}
 	}
 
-	def save(slotArchive: Path, result: StiltResult)
-			(implicit trace: (String => Unit)): LocallyAvailableSlot = {
-		// /disk/data/stiltweb/slots/35.52Nx012.63Ex00010/2013/01/2013x01x25x00
+	def save(slotArchive: Path, result: StiltResult, slotStepInMinutes: Int): LocallyAvailableSlot = {
+
 		val slotDir = getSlotDir(slotArchive, result.slot)
 
-		// Case 1 - the slot directory does not exist.
 		if (! Files.exists(slotDir)) {
-			Files.createDirectories(slotDir.getParent())
-			val tmpDir = Files.createTempDirectory(slotDir.getParent(), ".newslot")
-			for (f <- result.files) {
-				val name = f.typ match {
-					case StiltResultFileType.Foot	   => "foot"
-					case StiltResultFileType.RDataFoot => "rdatafoot"
-					case StiltResultFileType.RData	   => "rdata"
-					case StiltResultFileType.CSV	   => "csv"
-				}
-				Util.writeFileAtomically(tmpDir.resolve(name).toFile, f.data)
-			}
-			Files.setPosixFilePermissions(tmpDir, PosixFilePermissions.fromString("rwxr-xr-x"));
-			Files.move(tmpDir, slotDir)
-
-		} else {
-			// Case 2 - the slot dir exists and is complete.
-			if (Files.exists(slotDir.resolve("csv"))) {
-				trace(s"received a stilt result I already have")
-			}
-			// Case 3 - the slot directory exists but the csv file is missing.
-			// This is a special case needed when we migrate from saving three
-			// files to saving four (the fourth being the csv file)
-			else {
-				for (f <- result.files) {
-					if (f.typ == StiltResultFileType.CSV) {
-						Util.writeFileAtomically(slotDir.resolve("csv").toFile, f.data)
-					}
-				}
-			}
+			Files.createDirectories(slotDir)
+			Files.setPosixFilePermissions(slotDir, PosixFilePermissions.fromString("rwxr-xr-x"))
 		}
+
+		for (f <- result.files) {
+			Util.writeFileAtomically(slotDir.resolve(f.typ.toString).toFile, f.data)
+		}
+
+		for(csvf <- result.files if csvf.typ == StiltResultFileType.CSV){
+			val yearDir = getYearDir(slotArchive, result.slot)
+			val year = result.slot.time.year
+			val cache = new RowCache(() => Iterator.empty, yearDir, year, slotStepInMinutes)
+			val lines = Source.fromBytes(csvf.data, "UTF-8").getLines.toIndexedSeq
+			val rawRow = RawRow.parse(lines(0), lines(1))
+			val csvRow = ResultRowMaker.makeRow(rawRow)
+			cache.writeRow(LocalDayTime(result.slot.time.toJava), csvRow)
+		}
+
 		new LocallyAvailableSlot(result.slot, slotDir)
 	}
 
 	def load(slotArchive: Path, slot: StiltSlot): Option[LocallyAvailableSlot] = {
 		val slotDir = getSlotDir(slotArchive, slot)
-		if (Files.exists(slotDir))
-			if (LocallyAvailableSlot.names.forall {
-					case (typ, name) =>	Files.exists(slotDir.resolve(name)) } )
-				Some(new LocallyAvailableSlot(slot, slotDir))
-			else
-				None
+		if (
+			Files.exists(slotDir) &&
+			StiltResultFileType.values.forall { ftype => Files.exists(slotDir.resolve(ftype.toString)) }
+		)
+			Some(new LocallyAvailableSlot(slot, slotDir))
 		else
 			None
 	}
 
-	def getSlotDir(slotArchive: Path, slot: StiltSlot): Path = {
-		// /some/where/slots/20.01Sx150.01Wx01234/2012/03/2012x12x01x00
-		slotArchive.resolve(slot.pos.toString).resolve(
-			slot.year.toString).resolve(f"${slot.month}%02d").resolve(slot.time.toString)
-	}
+	// /some/where/slots/20.01Sx150.01Wx01234/2012/
+	def getYearDir(slotArchive: Path, slot: StiltSlot): Path =
+		slotArchive.resolve(slot.pos.toString).resolve(slot.year.toString)
+
+	// /some/where/slots/20.01Sx150.01Wx01234/2012/03/2012x12x01x00
+	def getSlotDir(slotArchive: Path, slot: StiltSlot): Path =
+		getYearDir(slotArchive, slot).resolve(f"${slot.month}%02d").resolve(slot.time.toString)
 }
 
 
-class SlotArchiver(stateDir: Path) extends Actor with Trace{
+class SlotArchiver(stateDir: Path, slotStepInMinutes: Integer) extends Actor with Trace{
 
 	val slotsDir = Util.ensureDirectory(stateDir.resolve("slots"))
 	protected val traceFile = slotsDir.resolve("trace.log")
@@ -140,7 +127,7 @@ class SlotArchiver(stateDir: Path) extends Actor with Trace{
 
 	def receive = {
 		case SlotCalculated(result) =>
-			val local = LocallyAvailableSlot.save(slotsDir, result)(trace)
+			val local = LocallyAvailableSlot.save(slotsDir, result, slotStepInMinutes)
 			trace(s"Slot ${local.slotDir} saved.")
 			sender() ! SlotAvailable(local)
 
@@ -150,4 +137,8 @@ class SlotArchiver(stateDir: Path) extends Actor with Trace{
 				case Some(local) => sender ! SlotAvailable(local)
 			}
 	}
+}
+
+object SlotArchiver{
+	def props(stateDir: Path, slotStepInMinutes: Integer) = Props.create(classOf[SlotArchiver], slotStepInMinutes)
 }

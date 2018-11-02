@@ -28,7 +28,7 @@ class StiltClusterApi {
 
 	val receptionist = system.actorOf(WorkReceptionist.props(stiltConf.slotStepInMinutes), name = "receptionist")
 
-	system.actorOf(Props(new SlotArchiver(stateDir)), name="slotarchiver")
+	system.actorOf(SlotArchiver.props(stateDir, stiltConf.slotStepInMinutes), name="slotarchiver")
 	system.actorOf(Props(new SlotProducer(stateDir.resolve("slotproducer.log"))),
 						 name="slotproducer")
 	system.actorOf(Props(new JobArchiver(stateDir)), name="jobarchiver")

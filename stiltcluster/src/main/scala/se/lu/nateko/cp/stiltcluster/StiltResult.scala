@@ -38,10 +38,12 @@ package se.lu.nateko.cp.stiltcluster
 import java.nio.file.{ Files, Path, Paths }
 
 
-/* One of the four output file types we're interested in. The types are named
- * after the prefix in the file names */
+/** STILT output file types, named after the corresponding file names */
 object StiltResultFileType extends Enumeration {
-	val Foot, RDataFoot, RData, CSV = Value
+	val Foot = Value("foot")
+	val RDataFoot = Value("rdatafoot")
+	val RData = Value("rdata")
+	val CSV = Value("csv")
 }
 
 

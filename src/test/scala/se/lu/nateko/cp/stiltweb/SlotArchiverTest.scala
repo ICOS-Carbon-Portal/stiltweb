@@ -23,7 +23,7 @@ class SlotArchiverTest extends TestKit(ActorSystem()) with FunSuiteLike with Imp
 	test("sending/receiving slots") {
 
 		val tmp = Files.createTempDirectory("slotarchiver")
-		val sla = system.actorOf(Props(new SlotArchiver(tmp)), name="slotarchiver")
+		val sla = system.actorOf(Props(new SlotArchiver(tmp, 180)), name="slotarchiver")
 		val slot = StiltResultTest.sampleSlot
 
 		// The SlotArchiver have just started in an empty directory, it
