@@ -9,47 +9,7 @@ import spray.json._
 
 class JobDir(val job: Job, val dir: Path) {
 
-	private val slotsFile = dir.resolve("slots.json")
-	private val slotsDir = dir.resolve("slots")
-
-	Util.ensureDirectory(slotsDir)
-
-	private var _slots:Option[Seq[StiltSlot]] = loadSlots
-	def slots = _slots
-
-	private def loadSlots(): Option[Seq[StiltSlot]] = {
-		if (Files.exists(slotsFile)) {
-			val json = scala.io.Source.fromFile(slotsFile.toFile).mkString.parseJson
-			Some(json.convertTo[Seq[StiltSlot]])
-		} else {
-			None
-		}
-	}
-
-	def saveSlotList(slots: Seq[StiltSlot]): Unit = {
-		Util.writeFileAtomically(slotsFile.toFile, slots.toJson.prettyPrint)
-		this._slots = Some(slots)
-	}
-
-	def markAsDone() = {
-		Util.createEmptyFile(dir.toFile, "done")
-	}
-
-//	def link(local: LocallyAvailableSlot) = {
-//		local.link(this.slotsDir)
-//	}
-
-//	def slotPresent(s: StiltSlot): Boolean = {
-//		LocallyAvailableSlot.isLinked(slotsDir, s)
-//	}
-
-//	def slotPresent(s: LocallyAvailableSlot): Boolean = {
-//		slotPresent(s.slot)
-//	}
-
-//	def missingSlots = {
-//		_slots.get.filterNot { slotPresent(_) }
-//	}
+	def markAsDone(): Unit = Files.createFile(dir.resolve(JobDir.DoneFile))
 
 	def delete(): Unit =
 		try{
@@ -59,4 +19,26 @@ class JobDir(val job: Job, val dir: Path) {
 		}catch{
 			case _: Throwable =>
 		}
+}
+
+object JobDir{
+
+	val JobFile = "job.json"
+	val DoneFile = "done"
+
+	def isJobDir(f: Path) = Files.isDirectory(f) && Files.exists(f.resolve(JobFile))
+	def isUnfinishedJobDir(f: Path) = isJobDir(f) && ! Files.exists(f.resolve(DoneFile))
+
+	def apply(dir: Path) = {
+		val jobFile = dir.resolve(JobFile)
+		val job = scala.io.Source.fromFile(jobFile.toFile).mkString.parseJson.convertTo[Job]
+		new JobDir(job, dir)
+	}
+
+	def save(job: Job, dir: Path) = {
+		if (!Files.isDirectory(dir)) Files.createDirectory(dir)
+		val f = dir.resolve(JobFile)
+		Util.writeFileAtomically(f, job.toJson.prettyPrint)
+		new JobDir(job, dir)
+	}
 }

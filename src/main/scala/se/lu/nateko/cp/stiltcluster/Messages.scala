@@ -18,6 +18,8 @@ case class Job(
 ){
 	def id = "job_" + this.copy(timeStarted = None, timeStopped = None).hashCode()
 
+	def pos = StiltPosition(lat, lon, alt)
+
 	def copySetStarted =
 		this.copy(timeStarted=(Some(Instant.now())))
 

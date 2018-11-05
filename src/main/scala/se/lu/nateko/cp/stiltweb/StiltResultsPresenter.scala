@@ -16,6 +16,7 @@ import java.time.Year
 import java.time.MonthDay
 import java.time.LocalTime
 import scala.util.Try
+import se.lu.nateko.cp.stiltcluster.StiltResultFileType
 
 class StiltResultsPresenter(config: StiltWebConfig) {
 	import StiltResultsPresenter._
@@ -85,7 +86,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 
 	def listFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[LocalDateTime] =
 		reduceToSingleYearOp(listSlots(stationId, _, _, _))(fromDate, toDate).collect{
-			case (fpDir, dt) if Files.exists(fpDir.resolve(footprintNetcdfFilename)) => dt
+			case (fpDir, dt) if Files.exists(fpDir.resolve(StiltResultFileType.Foot.toString)) => dt
 		}
 
 	private def yearPath(stationId: String, year: Year) = stationsDir.resolve(stationId).resolve(year.toString)
@@ -93,7 +94,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	private def listSlotRows(stationId: String, year: Year, from: Option[MonthDay], to: Option[MonthDay]): Iterator[SlotCsvRow] = {
 		val rowFactory = () => listSlots(stationId, year, None, None).flatMap{ case (fpDir, dt) =>
 			Try{
-				val fpPath = fpDir.resolve(footprintCsvFilename)
+				val fpPath = fpDir.resolve(StiltResultFileType.CSV.toString)
 				val lines = Files.readAllLines(fpPath)
 				val rawRow = RawRow.parse(lines.get(0), lines.get(1))
 				LocalDayTime(dt) -> ResultRowMaker.makeRow(rawRow)
@@ -165,7 +166,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 			val footprintDir = footPrintDir(stationId, dt).toString + File.separator
 			new ViewServiceFactoryImpl(footprintDir, dateVars.asJava, latitudeVars.asJava, longitudeVars.asJava, elevationVars.asJava)
 		}
-		val service = factory.getNetCdfViewService(footprintNetcdfFilename)
+		val service = factory.getNetCdfViewService(StiltResultFileType.Foot.toString)
 		val date = service.getAvailableDates()(0)
 		service.getRaster(date, "foot", null)
 	}
@@ -206,8 +207,6 @@ object StiltResultsPresenter{
 	type SlotCsvRow = (LocalDateTime, CsvRow)
 
 	val stationsDirectory = "stations"
-	val footprintCsvFilename = "csv"
-	val footprintNetcdfFilename = "foot"
 
 	// ex: 2007
 	val yearDirPattern = """^(\d{4})$""".r

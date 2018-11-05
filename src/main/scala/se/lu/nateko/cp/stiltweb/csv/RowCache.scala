@@ -43,7 +43,6 @@ class RowCache(rowFactory: () => Iterator[CachedRow], parentFolder: Path, year: 
 		fetchFromCache(from, to)
 	}
 
-	//TODO Use this after slot computation completion
 	def writeRow(dt: LocalDayTime, row: CsvRow): Unit = {
 		ensureCacheInitialized()
 		val js = ByteBuffer.wrap(row.toJson.compactPrint.getBytes)

@@ -81,7 +81,7 @@ object LocallyAvailableSlot {
 		}
 
 		for (f <- result.files) {
-			Util.writeFileAtomically(slotDir.resolve(f.typ.toString).toFile, f.data)
+			Util.writeFileAtomically(slotDir.resolve(f.typ.toString), f.data)
 		}
 
 		for(csvf <- result.files if csvf.typ == StiltResultFileType.CSV){

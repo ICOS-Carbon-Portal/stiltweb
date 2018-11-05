@@ -13,50 +13,34 @@ class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with 
 	val slotProducer = context.actorSelection("/user/slotproducer")
 	val dashboard = context.actorSelection("/user/dashboardmaker")
 
+	val allSlots = JobMonitor.calculateSlots(jobDir.job, slotStepInMinutes)
+
 	protected val traceFile = jobDir.dir.resolve("trace.log")
 
 	override def preStart(): Unit = {
-		trace(s"Starting up in ${jobDir.dir}")
 
-		if (jobDir.slots.isEmpty) {
-			trace("No slot list, calculating.")
-			val slots = JobMonitor.calculateSlots(jobDir.job, slotStepInMinutes)
-			jobDir.saveSlotList(slots)
-		} else
-			trace("Already have slot list")
+		trace(s"Starting up the job, ${allSlots.size} slots in total, sending request.")
 
-		requestRemainingSlots()
+		slotProducer ! RequestManySlots(allSlots)
+		workOnRemaining(allSlots)
 	}
 
-	private val deletionHandler: Receive = {
+	private def deletionHandler(slots: Seq[StiltSlot]): Receive = {
 		case deletion @ CancelJob(id) =>
 			if(id == jobDir.job.id){
-				jobDir.slots.foreach{slots =>
-					slotProducer ! CancelSlots(slots)
-				}
+				slotProducer ! CancelSlots(slots)
 				dashboard ! deletion
 				jobDir.delete()
 				context stop self
 			}
 	}
 
-	def receive = deletionHandler
-
-	def requestRemainingSlots() = {
-		val remaining = jobDir.missingSlots
-
-		trace(s"$totalSlotsNum slots in total. ${remaining.length} remaining, sending request.")
-
-		slotProducer ! RequestManySlots(remaining)
-		workOnRemaining(remaining)
-	}
-
-	def totalSlotsNum = jobDir.slots.fold(0)(_.length)
+	def receive = deletionHandler(allSlots)
 
 	def workOnRemaining(remaining: Seq[StiltSlot]): Unit = {
 
-		val totSlots = totalSlotsNum
-		dashboard ! JobInfo(jobDir.job, totSlots, totSlots - remaining.length)
+		val totalSlotsNum = allSlots.size
+		dashboard ! JobInfo(jobDir.job, totalSlotsNum, totalSlotsNum - remaining.length)
 
 		if(remaining.isEmpty){
 			trace(s"All slots computed, finishing the job.")
@@ -69,20 +53,11 @@ class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with 
 			context become workingOn(remaining)
 	}
 
-	def workingOn(outstanding: Seq[StiltSlot]): Receive = deletionHandler.orElse{
+	def workingOn(outstanding: Seq[StiltSlot]): Receive = deletionHandler(outstanding).orElse{
 		case SlotAvailable(local) =>
 			val (removed, remaining) = outstanding.partition(local.equals(_))
 
-			if (removed.isEmpty) {
-				trace(s"Received slot I'm not waiting for ${local}")
-			} /*else {
-				if (jobDir.slotPresent(local)) {
-					trace("Received a slot that is already present")
-				} else {
-					trace(s"Received new slot, ${remaining.length} remaining.")
-					jobDir.link(local)
-				}
-			}*/
+			if (removed.isEmpty) trace(s"Received slot I'm not waiting for ${local}")
 			workOnRemaining(remaining)
 
 		case StiltFailure(slot) =>
@@ -103,8 +78,7 @@ object JobMonitor{
 			.takeWhile(_.compareTo(stop) < 0)
 			.map{dt =>
 				val time = StiltTime(dt.getYear, dt.getMonthValue, dt.getDayOfMonth, dt.getHour)
-				val pos = StiltPosition(job.lat, job.lon, job.alt)
-				StiltSlot(time, pos)
+				StiltSlot(time, job.pos)
 			}
 			.toIndexedSeq
 	}
@@ -113,10 +87,8 @@ object JobMonitor{
 		val stationIdLink = jdir.dir.resolve("../../stations/" + jdir.job.siteId).normalize
 
 		if(!Files.exists(stationIdLink)){
-			jdir.slots.flatMap(_.headOption).foreach{slot =>
-				val target = Paths.get("../slots/" + slot.pos.toString)
-				Files.createSymbolicLink(stationIdLink, target)
-			}
+			val target = Paths.get("../slots/" + jdir.job.pos.toString)
+			Files.createSymbolicLink(stationIdLink, target)
 		}
 	}
 }
