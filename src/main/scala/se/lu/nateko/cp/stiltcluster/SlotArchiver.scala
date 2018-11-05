@@ -140,5 +140,5 @@ class SlotArchiver(stateDir: Path, slotStepInMinutes: Integer) extends Actor wit
 }
 
 object SlotArchiver{
-	def props(stateDir: Path, slotStepInMinutes: Integer) = Props.create(classOf[SlotArchiver], slotStepInMinutes)
+	def props(stateDir: Path, slotStepInMinutes: Integer) = Props.create(classOf[SlotArchiver], stateDir, slotStepInMinutes)
 }

@@ -25,8 +25,6 @@ class StiltResultTest extends FunSuite {
 	import StiltResultTest.{sampleSlotDir, sampleResult}
 
 	test("Read output directory") {
-		val g = sampleSlotDir.resolve("Footprints/XXX/stiltresult2012x46.55Nx007.98Ex00720_1.csv")
-		assert(Files.exists(g))
 
 		val h = sampleSlotDir.resolve("Footprints/XXX/.RDatastiltresult2012x46.55Nx007.98Ex00720_1")
 		assert(Files.exists(h))
@@ -54,7 +52,7 @@ class StiltResultTest extends FunSuite {
 		assert(rdatafoot.slot == r.slot)
 
 		val csv = r.files.find(rf => rf.typ == StiltResultFileType.CSV).get
-		assert(csv.data.length == 109)
+		assert(csv.data.length == 18530)
 		assert(csv.slot == r.slot)
 
 	}
