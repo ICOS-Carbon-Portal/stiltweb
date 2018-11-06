@@ -28,22 +28,14 @@ case class Job(
 }
 
 
-case class PersistJob(job: Job)
 case class BeginJob(jdir: JobDir)
 
 case class RequestManySlots(slots: Seq[StiltSlot])
 case class CancelSlots(slots: Seq[StiltSlot])
-case class RequestSingleSlot(slot: StiltSlot)
-case class SlotAvailable(slot: LocallyAvailableSlot)
-case class SlotUnAvailable(slot: StiltSlot)
 
 case object Subscribe
-case object JobMonitorRegistering
-case object SendSlotRequest
-case object AllDone
 
 case class JobFinished(jinfo: JobInfo)
-
 
 case class JobInfo(job: Job, nSlots: Int, nSlotsFinished: Int) {
 	def id = job.id

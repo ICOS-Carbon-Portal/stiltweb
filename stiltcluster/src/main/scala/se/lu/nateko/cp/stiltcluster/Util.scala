@@ -36,6 +36,11 @@ object Util {
 		d
 	}
 
+	def iterateChildren(dir: Path): Iterator[Path] = {
+		import scala.collection.JavaConverters.asScalaIteratorConverter
+		Files.list(dir).iterator.asScala
+	}
+
 	def listDirTree(dir: Path): String = {
 		val cmd = Seq("bash", "-c", s"cd '${dir}' && find | sort")
 		cmd.!!

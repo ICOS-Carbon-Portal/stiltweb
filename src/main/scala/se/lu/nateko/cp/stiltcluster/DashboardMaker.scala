@@ -8,7 +8,7 @@ import scala.collection.mutable.Map
 import akka.actor.Terminated
 import akka.actor.Address
 
-class DashboardMaker extends Actor{
+class DashboardMaker extends Actor {
 
 	val resources = Map.empty[Address, WorkMasterStatus]
 	var queue = Seq.empty[Job]

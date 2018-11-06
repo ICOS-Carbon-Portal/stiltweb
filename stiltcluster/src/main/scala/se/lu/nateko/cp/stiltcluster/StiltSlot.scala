@@ -80,6 +80,8 @@ case class StiltSlot(time: StiltTime, pos: StiltPosition) {
 	def lon = pos.lon
 	def alt = pos.alt
 
+	def ===(other: StiltSlot) = this == other
+
 	override def toString(): String = {
 		time.toString + "x" + pos.toString // "2012x12x01x00x56.10Nx013.42Ex00150"
 	}

@@ -4,72 +4,20 @@ import java.nio.file.attribute.PosixFilePermissions
 import java.nio.file.{Files, Path}
 import scala.io.Source
 
-import akka.actor.Actor
 import se.lu.nateko.cp.stiltweb.csv.RawRow
 import se.lu.nateko.cp.stiltweb.csv.LocalDayTime
 import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
 import se.lu.nateko.cp.stiltweb.csv.RowCache
-import akka.actor.Props
-
-case class CsvMissing() extends Exception
-
-class LocalStiltFile (slot: StiltSlot, src: Path, typ: StiltResultFileType.Value) {
-
-	if (! Files.exists(src)) {
-		if (typ == StiltResultFileType.CSV)
-			throw new CsvMissing()
-		else
-			throw new AssertionError(s"${src} is missing from slot directory")
-	}
-
-	def link(dir: Path): Unit = {
-		val relPath = StiltResultFile.calcFileName(slot, typ)
-		val absPath = dir.resolve(relPath)
-		// Create leading directories, e.g 'Footprints/XXX'
-		Files.createDirectories(absPath.getParent)
-		if (! Files.exists(absPath))
-			Files.createSymbolicLink(absPath, src)
-	}
-}
-
 
 class LocallyAvailableSlot private (val slot: StiltSlot, val slotDir: Path) {
 
 	assert(Files.isDirectory(slotDir))
 
-	final val files = StiltResultFileType.values.map { ftyp =>
-		new LocalStiltFile(slot, slotDir.resolve(ftyp.toString), ftyp) }
-
 	override def toString() = s"LocallyAvailableslot(${slot}, ${slotDir})"
-
-	def link(dir: Path) = {
-		files.foreach { f =>
-			try {
-				f.link(dir)
-			} catch {
-				// TODO. Wte catch this error for now. The reason is that we
-				// have a lot of slots for which we have three of the four
-				// files, only the csv is missing. Once all slots have four
-				// files we can remove this clause again.
-				case _: java.nio.file.FileAlreadyExistsException => ()
-			}
-		}
-	}
-
-	def equals(o: StiltSlot) = {
-		this.slot == o
-	}
 }
 
 
 object LocallyAvailableSlot {
-
-	def isLinked(jobDir: Path, slot: StiltSlot): Boolean = {
-		StiltResult.requiredFileTypes.forall { typ =>
-			val f = StiltResultFile.calcFileName(slot, typ)
-			Files.exists(jobDir.resolve(f))
-		}
-	}
 
 	def save(slotArchive: Path, result: StiltResult, slotStepInMinutes: Int): LocallyAvailableSlot = {
 
@@ -118,27 +66,11 @@ object LocallyAvailableSlot {
 }
 
 
-class SlotArchiver(stateDir: Path, slotStepInMinutes: Integer) extends Actor with Trace{
+class SlotArchiver(stateDir: Path, slotStepInMinutes: Integer) {
 
 	val slotsDir = Util.ensureDirectory(stateDir.resolve("slots"))
-	protected val traceFile = slotsDir.resolve("trace.log")
 
-	trace(s"Starting up in ${slotsDir}")
+	def save(result: StiltResult) = LocallyAvailableSlot.save(slotsDir, result, slotStepInMinutes)
 
-	def receive = {
-		case SlotCalculated(result) =>
-			val local = LocallyAvailableSlot.save(slotsDir, result, slotStepInMinutes)
-			trace(s"Slot ${local.slotDir} saved.")
-			sender() ! SlotAvailable(local)
-
-		case RequestSingleSlot(slot) =>
-			LocallyAvailableSlot.load(slotsDir, slot) match {
-				case None => sender() ! SlotUnAvailable(slot)
-				case Some(local) => sender ! SlotAvailable(local)
-			}
-	}
-}
-
-object SlotArchiver{
-	def props(stateDir: Path, slotStepInMinutes: Integer) = Props.create(classOf[SlotArchiver], stateDir, slotStepInMinutes)
+	def load(slot: StiltSlot) = LocallyAvailableSlot.load(slotsDir, slot)
 }

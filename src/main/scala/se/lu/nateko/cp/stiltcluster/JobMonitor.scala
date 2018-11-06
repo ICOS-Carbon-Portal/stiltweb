@@ -54,8 +54,8 @@ class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with 
 	}
 
 	def workingOn(outstanding: Seq[StiltSlot]): Receive = deletionHandler(outstanding).orElse{
-		case SlotAvailable(local) =>
-			val (removed, remaining) = outstanding.partition(local.equals(_))
+		case local: LocallyAvailableSlot =>
+			val (removed, remaining) = outstanding.partition(local.slot === _)
 
 			if (removed.isEmpty) trace(s"Received slot I'm not waiting for ${local}")
 			workOnRemaining(remaining)
