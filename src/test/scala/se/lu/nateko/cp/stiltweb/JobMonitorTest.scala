@@ -20,12 +20,16 @@ class ForwardActor(to: ActorRef) extends Actor {
 }
 
 
-class JobMonitorTest extends TestKit(ActorSystem()) with FunSuiteLike with ImplicitSender {
+class JobMonitorTest extends TestKit(ActorSystem()) with FunSuiteLike with ImplicitSender with BeforeAndAfterAll{
 
-	def afterAll = system.terminate()
+	val tmp = Files.createTempDirectory("jobmonitor")
+
+	override def afterAll() = {
+		system.terminate()
+		Util.deleteDirRecursively(tmp)
+	}
 
 	test("send/receive") {
-		val tmp = Files.createTempDirectory("jobmonitor")
 		val job = Job("XXX", 46.55, 7.98, 720,
 					  LocalDate.of(2012, 12, 8),
 					  LocalDate.of(2012, 12, 8), "nisse")

@@ -12,11 +12,6 @@ class RunStiltTest extends FunSuite {
 				  "user")
 	val slot = StiltSlot.ofString("2012x12x01x00x56.10Nx013.42Ex00150")
 
-	test("Check date to slot conversion") {
-		assert(RunStilt.date_to_slot(job.start) == "2012010100")
-		assert(RunStilt.date_to_slot(job.stop, "21") == "2012010221")
-	}
-
 	test("Run command") {
 		assert(RunStilt.run_cmd("echo foobar") == Seq("foobar"))
 	}

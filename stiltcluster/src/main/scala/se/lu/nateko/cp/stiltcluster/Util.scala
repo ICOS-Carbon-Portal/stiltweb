@@ -4,23 +4,9 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Path, Paths }
 import java.nio.file.StandardCopyOption._
 import java.nio.file.StandardOpenOption._
-import java.time.LocalDateTime
-
-
-trait Trace {
-
-	protected def traceFile: Path
-
-	def trace(msg: String) = {
-		val s = s"${LocalDateTime.now.toString()} - ${msg}\n"
-		Files.write(traceFile, s.getBytes, CREATE, APPEND)
-	}
-}
-
-
+import java.util.Comparator
 
 object Util {
-	import scala.sys.process._
 
 	def writeFileAtomically(f: Path, data: Array[Byte]): Unit = {
 		val tmp = Paths.get(f.toAbsolutePath.toString + ".tmp")
@@ -31,8 +17,7 @@ object Util {
 	def writeFileAtomically(f: Path, data: String): Unit = writeFileAtomically(f, data.getBytes(StandardCharsets.UTF_8))
 
 	def ensureDirectory(d: Path): Path = {
-		if (! Files.isDirectory(d))
-			Files.createDirectories(d)
+		if (! Files.isDirectory(d)) Files.createDirectories(d)
 		d
 	}
 
@@ -41,15 +26,7 @@ object Util {
 		Files.list(dir).iterator.asScala
 	}
 
-	def listDirTree(dir: Path): String = {
-		val cmd = Seq("bash", "-c", s"cd '${dir}' && find | sort")
-		cmd.!!
-	}
-
-	def deleteTmpDirTree(dir: Path): Unit = {
-		assert(dir.getParent.toString == "/tmp")
-		val cmd = Seq("rm", "-rf", "--", dir.toString)
-		cmd.!!
-	}
-
+	def deleteDirRecursively(dir: Path): Unit = Files.walk(dir)
+		.sorted(Comparator.reverseOrder[Path])
+		.forEach(_.toFile.delete())
 }

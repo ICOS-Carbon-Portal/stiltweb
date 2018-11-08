@@ -1,7 +1,6 @@
 package se.lu.nateko.cp.stiltcluster
 
 import java.nio.file.{Files, Path}
-import java.util.Comparator
 
 import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport._
 import spray.json._
@@ -13,9 +12,7 @@ class JobDir(val job: Job, val dir: Path) {
 
 	def delete(): Unit =
 		try{
-			Files.walk(dir)
-				.sorted(Comparator.reverseOrder[Path])
-				.forEach(_.toFile.delete())
+			Util.deleteDirRecursively(dir)
 		}catch{
 			case _: Throwable =>
 		}
