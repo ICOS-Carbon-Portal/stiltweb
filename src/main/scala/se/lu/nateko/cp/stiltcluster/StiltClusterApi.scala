@@ -18,7 +18,7 @@ class StiltClusterApi {
 
 	private val conf = ConfigLoader.frontNode()
 
-	private val system = ActorSystem("StiltCluster", conf)
+	private val system = ActorSystem("StiltBoss", conf)
 
 	val stiltConf = ConfigReader.default
 
@@ -66,4 +66,6 @@ class StiltClusterApi {
 		Flow.fromSinkAndSourceMat(Sink.ignore, source)(Keep.right)
 			.keepAlive(30 seconds, () => Strict(""))
 	}
+
+	def terminate() = system.terminate()
 }

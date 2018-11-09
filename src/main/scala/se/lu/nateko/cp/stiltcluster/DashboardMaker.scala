@@ -23,7 +23,7 @@ class DashboardMaker extends Actor {
 
 	def getInfo = {
 		val infra = resources.map{
-			case (addr, wms) => WorkerNodeInfo(addr, wms.nCpusFree, wms.nCpusTotal)
+			case (addr, wms) => WorkerNodeInfo(addr, wms.nCpusTotal - wms.work.size, wms.nCpusTotal)
 		}.toSeq.sortBy(_.address.toString)
 		DashboardInfo(running, done, queue, infra)
 	}
