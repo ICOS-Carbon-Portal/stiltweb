@@ -47,7 +47,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			} ~
 			redirectToTrailingSlashIfMissing(StatusCodes.Found){
 				pathSingleSlash {
-					complete(views.html.ViewerPage())
+					complete(views.html.ViewerPage(config.auth))
 				}
 			}
 		} ~
@@ -63,7 +63,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		get {
 			pathEnd{redirect("worker/", StatusCodes.Found)} ~
 			pathSingleSlash {
-				complete(views.html.WorkerPage())
+				complete(views.html.WorkerPage(config.auth))
 			} ~
 			path("worker.js"){
 				getFromResource("www/worker.js")
@@ -125,6 +125,11 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 						  WhoamiResult(userId.email, config.admins.exists(_ == userId.email))))
 			} ~
 			complete((StatusCodes.OK, WhoamiResult("")))
+		} ~
+		path("logout") {
+			deleteCookie(config.auth.authCookieName, domain = config.auth.authCookieDomain, path = "/"){
+				complete(StatusCodes.OK)
+			}
 		}
 	}
 }

@@ -50,11 +50,6 @@ class App extends Component {
 			/>
 
 			<div className="page-header">
-				<div className="pull-right">{
-					props.currUser && props.currUser.email
-						? <span>{"Logged in as " + props.currUser.email}</span>
-						: <a href={"https://cpauth.icos-cp.eu/login/?targetUrl=" + window.location.toString()}>Log in</a>
-				}</div>
 					<h1>STILT calculation service <small>{subtitle}</small></h1>
 			</div>
 
