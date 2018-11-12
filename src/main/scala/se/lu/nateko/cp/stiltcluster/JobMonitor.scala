@@ -6,20 +6,19 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 import akka.actor.Actor
+import akka.actor.ActorLogging
 import akka.actor.Props
 
-class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with Trace {
+class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with ActorLogging {
 
 	val slotProducer = context.actorSelection("/user/slotproducer")
 	val dashboard = context.actorSelection("/user/dashboardmaker")
 
 	val allSlots = JobMonitor.calculateSlots(jobDir.job, slotStepInMinutes)
 
-	protected val traceFile = jobDir.dir.resolve("trace.log")
-
 	override def preStart(): Unit = {
 
-		trace(s"Starting up the job, ${allSlots.size} slots in total, sending request.")
+		log.info(s"Starting up job ${jobDir.job}, ${allSlots.size} slots in total, sending request.")
 
 		slotProducer ! RequestManySlots(allSlots)
 		workOnRemaining(allSlots)
@@ -43,11 +42,10 @@ class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with 
 		dashboard ! JobInfo(jobDir.job, totalSlotsNum, totalSlotsNum - remaining.length)
 
 		if(remaining.isEmpty){
-			trace(s"All slots computed, finishing the job.")
 			jobDir.markAsDone()
 			JobMonitor.ensureStationIdLinkExists(jobDir)
 			dashboard ! JobFinished(JobInfo(jobDir.job.copySetStopped, totalSlotsNum, totalSlotsNum))
-			trace(s"Job done, dashboard notified, terminating.")
+			log.info(s"Job ${jobDir.job} done, dashboard notified, terminating.")
 			context stop self
 		} else
 			context become workingOn(remaining)
@@ -57,7 +55,7 @@ class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with 
 		case local: LocallyAvailableSlot =>
 			val (removed, remaining) = outstanding.partition(local.slot === _)
 
-			if (removed.isEmpty) trace(s"Received slot I'm not waiting for ${local}")
+			if (removed.isEmpty) log.warning(s"Received slot I'm not waiting for ${local}")
 			workOnRemaining(remaining)
 
 		case StiltFailure(slot) =>

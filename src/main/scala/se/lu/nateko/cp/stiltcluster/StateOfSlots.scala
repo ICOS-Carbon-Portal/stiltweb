@@ -15,7 +15,7 @@ class StateOfSlots {
 
 	private val beingWorkedOn: WorkLevels = noWork
 
-	private def noWork: WorkLevels = Map.empty[Worker, Set[StiltSlot]]
+	private def noWork: WorkLevels = Map.empty
 
 	private def business(worker: Worker, levels: WorkLevels): Int = levels.get(worker).map(_.size).getOrElse(0)
 
@@ -24,7 +24,7 @@ class StateOfSlots {
 
 	def usedCores(worker: Worker): Int = business(worker, sentToWorkers) + business(worker, beingWorkedOn)
 
-	def sendToWorker(worker: Worker, totalCores: Int): Seq[StiltSlot] = {
+	def sendSlotsToWorker(worker: Worker, totalCores: Int): Seq[StiltSlot] = {
 
 		val freeCores = totalCores - usedCores(worker)
 

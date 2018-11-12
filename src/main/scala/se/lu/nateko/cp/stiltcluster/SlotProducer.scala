@@ -24,12 +24,14 @@ class SlotProducer(archiver: SlotArchiver) extends Actor with ActorLogging{
 	}
 
 	def basicReceive: Receive = {
-		case wms @ WorkMasterStatus(totalCores, _) =>
-			if (! workmasters.contains(sender)) {
-				log.info(s"Seeing new computational node $sender with $totalCores CPUs")
-				workmasters.update(sender, totalCores)
-				context.watch(sender)
+		case wms @ WorkMasterStatus(totalCores, slots) =>
+			val wm = sender()
+			if (! workmasters.contains(wm)) {
+				log.info(s"Seeing new computational node $wm with $totalCores CPUs")
+				workmasters.update(wm, totalCores)
+				context.watch(wm)
 			}
+			state.registerBeingWorkedOn(wm, slots)
 			dashboard ! WorkMasterUpdate(sender.path.address, wms)
 
 		case Terminated(dead) =>
@@ -43,14 +45,19 @@ class SlotProducer(archiver: SlotArchiver) extends Actor with ActorLogging{
 		case RequestManySlots(slots) =>
 			log.debug(s"Received a request for ${slots.length} slots.")
 
-			val toCalculate = slots.map{slot => archiver.load(slot) match {
-				case Some(local) =>
-					sender() ! local
-					None
-				case None =>
-					requests.update(slot, requests.getOrElse(slot, List()) :+ sender())
-					Some(slot)
-			}}.flatten
+			val byAvailability: Seq[Either[StiltSlot, LocallyAvailableSlot]] = slots.map{
+				slot => archiver.load(slot) match {
+					case Some(local) => Right(local)
+					case None => Left(slot)
+				}
+			}
+			byAvailability.collect{case Right(local) => sender() ! local}
+
+			val toCalculate = byAvailability.collect{case Left(slot) => slot}
+			toCalculate.foreach{slot =>
+				val jobMonitors = requests.getOrElse(slot, Nil) :+ sender()
+				requests.update(slot, jobMonitors)
+			}
 			state.enqueue(toCalculate)
 
 		case CancelSlots(slots) =>
@@ -73,16 +80,16 @@ class SlotProducer(archiver: SlotArchiver) extends Actor with ActorLogging{
 	private def removeRequests(slot: StiltSlot, msg: Any): Unit = {
 		requests.remove(slot) match {
 			case None => log.warning(s"$msg with no requests to match!")
-			case Some(actors) => {
-				actors.foreach { _ ! msg }
-				log.debug(s"$msg passed on to ${actors.size} actors")
+			case Some(jobMonitors) => {
+				jobMonitors.foreach { _ ! msg }
+				log.debug(s"$msg passed on to ${jobMonitors.size} job monitor(s)")
 			}
 		}
 	}
 
 	private def sendSomeSlots(): Unit = for((wm, nCores) <- workmasters){
 
-		val slots = state.sendToWorker(wm, nCores)
+		val slots = state.sendSlotsToWorker(wm, nCores)
 
 		if(!slots.isEmpty){
 			wm ! CalculateSlots(slots)
