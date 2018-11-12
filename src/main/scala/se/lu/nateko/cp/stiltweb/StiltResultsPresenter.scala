@@ -1,22 +1,30 @@
 package se.lu.nateko.cp.stiltweb
 
-import java.nio.file.Paths
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.LocalDateTime
+import java.nio.file.Paths
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.MonthDay
+import java.time.Year
 import java.time.ZoneOffset
+
 import scala.collection.JavaConverters._
-import scala.io.{Source => IoSource}
+import scala.io.{ Source => IoSource }
+import scala.util.Try
+
 import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
 import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
-import se.lu.nateko.cp.stiltweb.csv._
-import java.time.Year
-import java.time.MonthDay
-import java.time.LocalTime
-import scala.util.Try
 import se.lu.nateko.cp.stiltcluster.StiltResultFileType
+import se.lu.nateko.cp.stiltweb.csv.LocalDayTime
+import se.lu.nateko.cp.stiltweb.csv.RawRow
+import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
+import se.lu.nateko.cp.stiltweb.csv.RowCache
+import spray.json.JsNull
+import spray.json.JsNumber
+import spray.json.JsValue
 
 class StiltResultsPresenter(config: StiltWebConfig) {
 	import StiltResultsPresenter._
@@ -72,15 +80,15 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	def getStiltResults(req: StiltResultsRequest): Iterator[Seq[String]] =
+	def getStiltResults(req: StiltResultsRequest): Iterator[Seq[JsValue]] =
 		reduceToSingleYearOp(listSlotRows(req.stationId, _, _, _))(req.fromDate, req.toDate)
 			.map{ case (dt, row) =>
 				req.columns
 					.map{
 						case "isodate" =>
-							dt.toEpochSecond(ZoneOffset.UTC).toString
+							JsNumber(dt.toEpochSecond(ZoneOffset.UTC))
 						case col =>
-							row.get(col).fold("null")(_.toString)
+							row.get(col).fold[JsValue](JsNull)(n => JsNumber(n))
 					}
 			}
 
