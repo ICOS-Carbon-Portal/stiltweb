@@ -1,6 +1,5 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.Props
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 import scala.util.Try
@@ -11,7 +10,7 @@ import akka.pattern.gracefulStop
 object WorkMasterApp extends App {
 
 	val conf = ConfigLoader.workerNode()
-	val system = ActorSystem("StiltCluster", conf)
+	val system = ActorSystem("WorkMaster", conf)
 
 	private val coresForStilt: Int = {
 
@@ -27,9 +26,10 @@ object WorkMasterApp extends App {
 		)
 	}
 
-	val wm = system.actorOf(Props(new WorkMaster(coresForStilt,
-												 conf.getString("stiltcluster.producerAddress"))),
-							name = "workmaster")
+	val wm = system.actorOf(
+		WorkMaster.props(coresForStilt, conf.getString("stiltcluster.producerAddress")),
+		name = "workmaster"
+	)
 
 	sys.addShutdownHook{
 		val done = gracefulStop(wm, 2.seconds, WorkMaster.Stop).transformWith{

@@ -9,10 +9,18 @@ case class StiltResultsRequest(
 	toDate: LocalDate
 )
 
-case class StiltStationInfo(
+case class StiltStationIds(
 	id: String,
 	name: Option[String],
-	lat: Double, lon: Double, alt: Int,
-	years: Seq[Int],
-	wdcggId: Option[String]
+	icosId: Option[String],
+	wdcggId: Option[String],
+	globalviewId: Option[String]
 )
+
+object StiltStationIds{
+	def apply(id: String): StiltStationIds = StiltStationIds(id, None, None, None, None)
+}
+
+case class StiltStationInfo(id: StiltStationIds, lat: Double, lon: Double, alt: Int, years: Seq[Int])
+
+case class WhoamiResult(email: String, isAdmin: Boolean = false)

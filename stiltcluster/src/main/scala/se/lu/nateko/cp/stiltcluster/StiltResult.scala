@@ -1,4 +1,4 @@
-/* Handle the output files from a stilt simulation.
+/** Handle the output files from a stilt simulation.
 
  The original stilt simulation software produces a lot of output files.  Below
  is a listing of a stilt simulation output directory.
@@ -38,10 +38,12 @@ package se.lu.nateko.cp.stiltcluster
 import java.nio.file.{ Files, Path, Paths }
 
 
-/* One of the four output file types we're interested in. The types are named
- * after the prefix in the file names */
+/** STILT output file types, named after the corresponding final (i.e. long-term storage) file names */
 object StiltResultFileType extends Enumeration {
-	val Foot, RDataFoot, RData, CSV = Value
+	val Foot = Value("foot")
+	val RDataFoot = Value("rdatafoot")
+	val RData = Value("rdata")
+	val CSV = Value("csv")
 }
 
 
@@ -61,15 +63,19 @@ object StiltResultFile {
 					 typ: StiltResultFileType.Value,
 					 jobId: String = "XXX"): Path = {
 		typ match {
+
 			case StiltResultFileType.Foot =>
 				// Footprints/XXX/foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
 				Paths.get(f"Footprints/${jobId}/foot${slot}_aggreg.nc")
+
 			case StiltResultFileType.RDataFoot =>
 				// Footprints/XXX/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
 				Paths.get(f"Footprints/${jobId}/.RDatafoot${slot}")
+
 			case StiltResultFileType.RData =>
 				// RData/XXX/.RData2012x12x01x00x56.10Nx013.42Ex00150
 				Paths.get(f"RData/${jobId}/.RData${slot}")
+
 			case StiltResultFileType.CSV =>
 				// Results/XXX/stiltresult2012x56.10Nx013.42Ex00150_1.csv
 				Paths.get(f"Results/${jobId}/stiltresult${slot.year}x${slot.pos}_1.csv")

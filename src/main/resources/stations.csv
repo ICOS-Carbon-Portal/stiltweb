@@ -1,98 +1,98 @@
-STILT id,STILT name,ICOS id,WDCGG
-ARR,Andoya,,
-BAL,Baltic Sea,,Baltic Sea
-BG1,,,
-BG2,,,
-BG3,Freinsheim,,
-BG4,,,
-BGU,Begur,,Begur
-BIK005,Bialystok 5m,,
-BIK030,Bialystok 30m,,
-BIK090,Bialystok 90m,,
-BIK180,Bialystok 180m,,
-BIK300,Bialystok 300m,,
-BIR,Birkenes,BIR,
-BIS,Biscarrosse,,
-BSC,Black Sea Coast,,
-CB020,Cabauw 20m,CES,Cabauw 20m
-CB060,Cabauw 60m,CES,Cabauw 60m
-CB120,Cabauw 120m,CES,Cabauw 120m
-CB200,Cabauw 200m,CES,Cabauw 200m
-CCO,Cap Corse,,
-CMN,Monte Cimone,CMN,
-CSP,Cansore Point,,
-DEB,Delta Ebre,,
-EGH,Egham,,
-F3P,North Sea Platform,,
-FIK,Finokalia,,Finokalia
-FZJ,Forschungszentrum Jülich,JUE,
-GAR100,Gartow 100m,GAT,
-GAR030,Gartow 30m,GAT,
-GAR060,Gartow 60m,GAT,
-GAR132,Gartow 132m,GAT,
-GAR344,Gartow 344m,GAT,
-GIF,Gif-sur-Yvette,,
-GOE,Goes,,
-HEI,Heidelberg,,
-HEL,Helgoland,HEL,
-HEN,Hengelo,,
-HFD,Heathfield,,
-HOV,Hovsore,,
-HPB010,Hohenpeissenberg 10m,HPB,Hohenpeissenberg
-HPB093,Hohenpeissenberg 93m,HPB,Hohenpeissenberg
-HPB131,Hohenpeissenberg 131m,HPB,Hohenpeissenberg
-HTM,Hyltemossa 150m,HTM,
-HUN096,Hegyhatsal 96 m,,Hegyhatsal
-HYY127,SMEAR/Hyytiälä 127m,SMR,
-HYY125,SMEAR/Hyytiälä 125m,SMR,
-IPR,Ispra,IPR,
-IZN,Iznajar,,
-JEM,Jemiolow,,
-JFJ,Jungfraujoch,JFJ,Jungfraujoch
-KAS,Kasprowy Wierch,,
-KIT030,KIT Karlsruhe 30m,KIT,
-KIT050,KIT Karlsruhe 50m,KIT,
-KIT100,KIT Karlsruhe 100m,KIT,
-KIT200,KIT Karlsruhe 200m,KIT,
-KRE,Kresin,KRE,
-LIN,Lindenberg,LIN,
-LMP,Lampedusa,LMP,Lampedusa
-LMU,La Muela,,
-LPO,Ile Grande,,
-LUT,Lutjewad 60m,LUT,
-MAH,Malin Head,,
-MHD,Mace Head,,Mace Head
-NOR,Norunda,NOR,
-OHP,Observatoire HauteProvence,,
-OPE050,OPE 50m,OPE,
-OPE120,OPE 120m,OPE,
-OPE120,OPE 120m,OPE,
-OST,Østerild,,
-OXK023,Ochsenkopf 23m,OXK,
-OXK090,Ochsenkopf 90m,OXK,
-OXK163,Ochsenkopf 163m,OXK,Ochsenkopf
-PAL,Pallas-Sammaltunturi,PAL,Pallas-Sammaltunturi
-PDM,Pic du Midi,,Pic du Midi
-PEE,Peel,,
-PRW,Pila Rusinowo,,
-PTR,Plateau Rosa,PRS,Plateau Rosa
-PUI,Puijo,PUI,
-PUY,Puy de Dome,PUY,Puy de Dome
-RHL,Ridge Hill,,
-RIS,Risø,,
-RTR,Roc Tredudon,,
-SIL,Schauinsland,,Schauinsland
-SKK,Selkirk,,
-SVA,Svartberget,SVB,
-TAC,Tacolneston Tall Tower,,Tacolneston Tall Tower
-TRN005,Trainou 5m,TRN,
-TRN050,Trainou 50m,TRN,
-TRN100,Trainou 100m,TRN,
-TRN180,Trainou 180m,TRN,
-TSE,Turm Schleptruper,,
-TTA222,Angus 222m,,
-TTA050,Angus 50m,,
-UTO,Utö,UTO,
-VOI,Voeikovo,,
-WES,Westerland,,Westerland
-WEY,Weybourne,WAO,
+STILT id,STILT name,ICOS id,WDCGG,GLOBALVIEW
+ARR,Andoya,,,
+BAL,Baltic Sea,,Baltic Sea,BAL
+BG1,,,,
+BG2,,,,
+FRE,Freinsheim,,,
+BG4,,,,
+BGU,Begur,,Begur,
+BIK005,Bialystok 5m,,,BIK
+BIK030,Bialystok 30m,,,
+BIK090,Bialystok 90m,,,
+BIK180,Bialystok 180m,,,
+BIK300,Bialystok 300m,,,
+BIR,Birkenes,BIR,,BIR
+BIS,Biscarrosse,,,
+BSC,Black Sea Coast,,,BSC
+CES020,Cabauw 20m,CES,Cabauw 20m,CES
+CES060,Cabauw 60m,CES,Cabauw 60m,CES
+CES120,Cabauw 120m,CES,Cabauw 120m,CES
+CES200,Cabauw 200m,CES,Cabauw 200m,CES
+CCO,Cap Corse,,,
+CMN,Monte Cimone,CMN,,CMN
+CRP,Cansore Point,,,CRP
+DEC,Delta Ebre,,,DEC
+EGH,Egham,,,
+F3P,North Sea Platform,,,
+FIK,Finokalia,,Finokalia,
+JUE,Forschungszentrum Jülich,JUE,,
+GAT100,Gartow 100m,GAT,,
+GAT030,Gartow 30m,GAT,,
+GAT060,Gartow 60m,GAT,,
+GAT132,Gartow 132m,GAT,,
+GAT344,Gartow 344m,GAT,,
+GIF,Gif-sur-Yvette,,,
+GOE,Goes,,,
+HEI,Heidelberg,,,HEI
+HEL,Helgoland,HEL,,
+HEN,Hengelo,,,
+HFD,Heathfield,,,
+HOV,Hovsore,,,
+HPB010,Hohenpeissenberg 10m,HPB,Hohenpeissenberg,HPB
+HPB093,Hohenpeissenberg 93m,HPB,Hohenpeissenberg,HPB
+HPB131,Hohenpeissenberg 131m,HPB,Hohenpeissenberg,HPB
+HTM150,Hyltemossa 150m,HTM,,HTM
+HUN096,Hegyhatsal 96 m,,Hegyhatsal,HUN
+SMR127,SMEAR/Hyytiälä 127m,SMR,,SMR
+SMR125,SMEAR/Hyytiälä 125m,SMR,,SMR
+IPR015,Ispra,IPR,,
+IZN,Iznajar,,,
+JEM,Jemiolow,,,
+JFJ,Jungfraujoch,JFJ,Jungfraujoch,
+KAS,Kasprowy Wierch,,,
+KIT030,KIT Karlsruhe 30m,KIT,,
+KIT050,KIT Karlsruhe 50m,KIT,,
+KIT100,KIT Karlsruhe 100m,KIT,,
+KIT200,KIT Karlsruhe 200m,KIT,,
+KRE100,Kresin 100m,KRE,,
+LIN099,Lindenberg 99m,LIN,,LIN
+LMP,Lampedusa,LMP,Lampedusa,LMP
+LMU,La Muela,,,LMU
+LPO,Ile Grande,,,
+LUT,Lutjewad 60m,LUT,,LUT
+MAH,Malin Head,,,
+MHD,Mace Head,,Mace Head,MHD
+NOR100,Norunda,NOR,,NOR
+OHP,Observatoire HauteProvence,,,
+OPE050,OPE 50m,OPE,,OPE
+OPE120,OPE 120m,OPE,,OPE
+OPE120,OPE 120m,OPE,,OPE
+OST,Østerild,,,
+OXK023,Ochsenkopf 23m,OXK,,OXK
+OXK090,Ochsenkopf 90m,OXK,,
+OXK163,Ochsenkopf 163m,OXK,Ochsenkopf,
+PAL,Pallas-Sammaltunturi,PAL,Pallas-Sammaltunturi,PAL
+PDM,Pic du Midi,,Pic du Midi,
+PEE,Peel,,,
+PRW,Pila Rusinowo,,,
+PRS,Plateau Rosa,PRS,Plateau Rosa,PRS
+PUI,Puijo,PUI,,PUI
+PUY,Puy de Dome,PUY,Puy de Dome,PUY
+RGL,Ridge Hill,,,RGL
+RIS,Risø,,,
+RTR,Roc Tredudon,,,
+SSL,Schauinsland,,Schauinsland,SSL
+SKK,Selkirk,,,
+SVB150,Svartberget,SVB,,
+TAC191,Tacolneston Tall Tower,,Tacolneston Tall Tower,TAC
+TRN005,Trainou 5m,TRN,,TRN
+TRN050,Trainou 50m,TRN,,TRN
+TRN100,Trainou 100m,TRN,,
+TRN180,Trainou 180m,TRN,,
+TSE,Turm Schleptruper,,,
+TTA222,Angus 222m,,,TTA
+TTA050,Angus 50m,,,TTA
+UTO,Utö,UTO,,
+VOI,Voeikovo,,,
+WES,Westerland,,Westerland,
+WAO,Weybourne,WAO,,WAO

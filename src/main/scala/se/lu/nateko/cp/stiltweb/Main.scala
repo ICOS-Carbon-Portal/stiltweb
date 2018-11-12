@@ -44,9 +44,13 @@ object Main extends App {
 			case Success(binding) =>
 				sys.addShutdownHook{
 					val ctxt = scala.concurrent.ExecutionContext.Implicits.global
-					val doneFuture = binding.unbind().flatMap{
-						_ => system.terminate()
-					}(ctxt)
+					val doneFuture = binding.unbind()
+						.flatMap{
+							_ => system.terminate()
+						}(ctxt)
+						.flatMap{
+							_ => cluster.terminate()
+						}(ctxt)
 					Await.result(doneFuture, 3 seconds)
 				}
 				println(binding)

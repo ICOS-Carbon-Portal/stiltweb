@@ -18,6 +18,8 @@
 
 package se.lu.nateko.cp.stiltcluster
 
+import java.time.LocalDateTime
+
 case class StiltPosition(lat: Double, lon: Double, alt: Int) {
 
 	// This is the format used by the (output files) original stilt software
@@ -50,6 +52,8 @@ case class StiltTime(year: Int, month: Int, day: Int, hour: Int) {
 	override def toString() = {
 		f"${year}x${month}%02dx${day}%02dx${hour}%02d" // "2012x12x01x06"
 	}
+
+	def toJava = LocalDateTime.of(year, month, day, hour, 0)
 }
 
 object StiltTime {
@@ -75,6 +79,8 @@ case class StiltSlot(time: StiltTime, pos: StiltPosition) {
 	def lat = pos.lat
 	def lon = pos.lon
 	def alt = pos.alt
+
+	def ===(other: StiltSlot) = this == other
 
 	override def toString(): String = {
 		time.toString + "x" + pos.toString // "2012x12x01x00x56.10Nx013.42Ex00150"

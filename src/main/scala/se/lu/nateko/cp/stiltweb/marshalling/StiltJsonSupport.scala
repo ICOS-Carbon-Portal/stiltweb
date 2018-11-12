@@ -1,15 +1,15 @@
-package se.lu.nateko.cp.stiltweb
+package se.lu.nateko.cp.stiltweb.marshalling
 
 import java.time.{ Instant, LocalDate }
-
 import akka.actor.Address
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
 import se.lu.nateko.cp.stiltcluster.{DashboardInfo, Job, JobInfo, StiltPosition, StiltSlot, StiltTime, WorkMasterStatus, WorkerNodeInfo}
 import spray.json._
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
-import akka.NotUsed
+import se.lu.nateko.cp.stiltweb.StiltResultsRequest
+import se.lu.nateko.cp.stiltweb.StiltStationInfo
+import se.lu.nateko.cp.stiltweb.WhoamiResult
+import se.lu.nateko.cp.stiltweb.StiltStationIds
 
 object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -18,8 +18,19 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
 	implicit val stiltResultsWhoamiFormat = jsonFormat2(WhoamiResult)
 
+	implicit object stiltStationInfoWriter extends RootJsonFormat[StiltStationInfo] {
+		private implicit val idsformat = jsonFormat5(StiltStationIds.apply)
+		private val simple = jsonFormat5(StiltStationInfo)
 
-	implicit val stiltStationInfoFormat = jsonFormat7(StiltStationInfo)
+		def write(si: StiltStationInfo): JsValue = {
+			val self = si.toJson(simple).asJsObject
+			val ids = si.id.toJson.asJsObject
+			JsObject(self.fields ++ ids.fields)
+		}
+
+		def read(json: JsValue): StiltStationInfo = ???
+	}
+
 	implicit object LocalDateFormat extends JsonFormat[LocalDate]{
 		def write(d: LocalDate) = JsString(d.toString)
 		def read(value: JsValue) = value match {
@@ -56,22 +67,15 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 		def read(value: JsValue) = jobDefaultFormat.read(value)
 	}
 
+	implicit val stiltTimeFormat = jsonFormat4(StiltTime.apply)
+	implicit val stiltPositionFormat = jsonFormat3(StiltPosition.apply)
+	implicit val stiltSlotFormat = jsonFormat2(StiltSlot.apply)
+
 	implicit val jobInfoFormat = jsonFormat3(JobInfo)
 	implicit val workMasterStatusFormat = jsonFormat2(WorkMasterStatus)
 	implicit val workerNodeInfoFormat = jsonFormat3(WorkerNodeInfo)
 
 	implicit val dashboardInfoFormat = jsonFormat4(DashboardInfo)
 
-	implicit val stiltTimeFormat = jsonFormat4(StiltTime.apply)
-	implicit val stiltPositionFormat = jsonFormat3(StiltPosition.apply)
-	implicit val stiltSlotFormat = jsonFormat2(StiltSlot.apply)
 
-	def jsonArraySource(iter: () => Iterator[String]): Source[ByteString, NotUsed] = Source.fromIterator(() => {
-		val ss = iter()
-		val elemsIter: Iterator[String] = if(ss.hasNext){
-			val head = ss.next()
-			Iterator(head) ++ ss.map(s => ",\n" + s)
-		} else Iterator.empty
-		Iterator("[\n") ++ elemsIter ++ Iterator("\n]") map ByteString.apply
-	})
 }

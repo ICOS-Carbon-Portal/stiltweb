@@ -1,4 +1,4 @@
-package se.lu.nateko.cp.stiltweb
+package se.lu.nateko.cp.stiltweb.marshalling
 
 import akka.http.scaladsl.marshalling.Marshaller
 import akka.http.scaladsl.marshalling.Marshalling._
@@ -17,7 +17,7 @@ object TemplatePageMarshalling {
 	)
 
 	def marshaller: ToResponseMarshaller[Html] = Marshaller(
-		implicit exeCtxt => html => Future.successful(
+		_ => html => Future.successful(
 			WithOpenCharset(MediaTypes.`text/html`, getHtml(html, _)) :: Nil
 		)
 	)

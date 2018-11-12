@@ -1,143 +1,99 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.nio.file.Path
-
-import scala.collection.mutable.{Map, Set}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import scala.collection.mutable.Map
 
 import akka.actor.{Actor, ActorRef, Terminated}
+import akka.actor.Props
+import akka.actor.ActorLogging
+
+object SlotProducer{
+	def props(archiver: SlotArchiver) = Props.create(classOf[SlotProducer], archiver)
+}
 
 
-class SlotProducer (protected val traceFile: Path) extends Actor with Trace {
+class SlotProducer(archiver: SlotArchiver) extends Actor with ActorLogging{
 
-	case object Tick
-	final val tickInterval = 5 seconds
-	//TODO Replace timeout with DeathWatch on work masters
-	final val calcTimeout = 400 seconds
-
-	val slotArchiver = context.actorSelection("/user/slotarchiver")
 	val dashboard = context.actorSelection("/user/dashboardmaker")
 
-	val workmasters = Map[ActorRef, Int]()
-	val requests = Map[StiltSlot, Seq[ActorRef]]()
-	var waiting = Array.empty[StiltSlot]
-	val sent = Set[(Deadline, StiltSlot)]()
+	val workmasters = Map[ActorRef, Int]()         //workmaster -> totalCores
+	val requests = Map[StiltSlot, Seq[ActorRef]]() //slot       -> job monitors that want it
+	val state = new StateOfSlots
 
-	var previousStatus = getStatus
+	def receive: Receive = basicReceive.andThen{_ =>
+		sendSomeSlots()
+	}
 
-	def getStatus =
-		(workmasters.size, workmasters.values.sum, requests.size, waiting.size, sent.size)
-
-	scheduleTick
-
-	def receive = {
-		case wms @ WorkMasterStatus(freeCores, _) =>
-			if (! workmasters.contains(sender)) {
-				trace(s"New WorkMaster ${sender}, ${freeCores} free cores")
-				context.watch(sender)
+	def basicReceive: Receive = {
+		case wms @ WorkMasterStatus(totalCores, slots) =>
+			val wm = sender()
+			if (! workmasters.contains(wm)) {
+				log.info(s"Seeing new computational node $wm with $totalCores CPUs")
+				workmasters.update(wm, totalCores)
+				context.watch(wm)
 			}
-			trace(s"Updating WorkMaster status for ${sender} to ${freeCores} free cores")
-			workmasters.update(sender, freeCores)
+			state.registerBeingWorkedOn(wm, slots)
 			dashboard ! WorkMasterUpdate(sender.path.address, wms)
 
 		case Terminated(dead) =>
 			if (workmasters.contains(dead)) {
-				trace(s"WorkMaster ${sender.path} terminated")
+				log.info(s"Computational node at ${sender.path} terminated")
 				workmasters.remove(dead)
+				state.handleDeadWorker(dead)
 				dashboard ! WorkMasterDown(dead.path.address)
 			}
 
 		case RequestManySlots(slots) =>
-			trace(s"Received a request for ${slots.length} slots.")
-			for (slot <- slots) {
-				requests.update(slot, requests.getOrElse(slot, List()) :+ sender())
-				slotArchiver ! RequestSingleSlot(slot)
+			log.debug(s"Received a request for ${slots.length} slots.")
+
+			val byAvailability: Seq[Either[StiltSlot, LocallyAvailableSlot]] = slots.map{
+				slot => archiver.load(slot) match {
+					case Some(local) => Right(local)
+					case None => Left(slot)
+				}
 			}
-			trace(s"Passed ${slots.length} requests on to the slot archiver")
+			byAvailability.collect{case Right(local) => sender() ! local}
+
+			val toCalculate = byAvailability.collect{case Left(slot) => slot}
+			toCalculate.foreach{slot =>
+				val jobMonitors = requests.getOrElse(slot, Nil) :+ sender()
+				requests.update(slot, jobMonitors)
+			}
+			state.enqueue(toCalculate)
 
 		case CancelSlots(slots) =>
-			trace(s"Received a request for cancelling ${slots.length} slots.")
-			val toCancel = slots.toSet
-			waiting = waiting.filterNot(toCancel.contains)
+			log.debug(s"Received a request for cancelling ${slots.length} slots.")
+			state.cancelSlots(slots)
 
-		case msg @ SlotCalculated(result) => {
-			trace("Got SlotCalculated, sending on to slot archive")
-			slotArchiver ! msg
-			removeSlot(result.slot)
+		case SlotCalculated(result) => {
+			log.debug("Got SlotCalculated, saving to the slot archive")
+			val local = archiver.save(result)
+			state.registerCompletion(sender(), result.slot)
+			removeRequests(result.slot, local)
 		}
 
 		case msg @ StiltFailure(slot) =>
-			removeSlot(slot)
+			state.registerCompletion(sender(), slot)
 			removeRequests(slot, msg)
 
-		case msg @ SlotAvailable(local) =>
-			removeRequests(local.slot, msg)
-
-		case SlotUnAvailable(slot) =>
-			waiting = waiting :+ slot
-
-		case Tick =>
-			val status = getStatus
-			if (status != previousStatus) {
-				val (nWm, nCpus, nR, nW, nS) = status
-				// Only trace when something has changed, to avoid spamming the log
-				trace(s"Tick - $nWm workmasters (${nCpus} cpus), $nR requests, $nW waiting, $nS sent")
-				previousStatus = status
-			}
-			checkTimeouts
-			sendSomeSlots
-			scheduleTick
 	}
 
 	private def removeRequests(slot: StiltSlot, msg: Any): Unit = {
 		requests.remove(slot) match {
-			case None => trace(s"$msg with no requests to match!")
-			case Some(actors) => {
-				actors.foreach { _ ! msg }
-				trace(s"$msg passed on to ${actors.size} actors")
+			case None => log.warning(s"$msg with no requests to match!")
+			case Some(jobMonitors) => {
+				jobMonitors.foreach { _ ! msg }
+				log.debug(s"$msg passed on to ${jobMonitors.size} job monitor(s)")
 			}
 		}
 	}
 
-	private def removeSlot(slot: StiltSlot): Unit = {
-		waiting = waiting.filter { _ != slot }
-		sent.retain { case (_, sentSlot) => sentSlot != slot }
-	}
+	private def sendSomeSlots(): Unit = for((wm, nCores) <- workmasters){
 
-	private def scheduleTick() = {
-		context.system.scheduler.scheduleOnce(tickInterval, self, Tick)
-	}
+		val slots = state.sendSlotsToWorker(wm, nCores)
 
-	private def checkTimeouts() = {
-		val overdue = sent.filter { case (deadline, slot) => deadline.isOverdue }
-		overdue.foreach { case elem @ (deadline, slot) =>
-			sent.remove(elem)
-			if (! requests.contains(slot)) {
-				trace(s"Overdue slot ${slot} no longer requested")
-			} else {
-				trace(s"Overdue slot ${slot} still requested, bouncing off slot archiver")
-				// Before requeueing the slot, check (again) that it isn't archived.
-				slotArchiver ! RequestSingleSlot(slot)
-			}
-		}
-	}
-
-	private def sendSomeSlots():Unit = {
-		for ((wm, freeCores) <- workmasters) {
-			for (i <- freeCores-1 to 0 by -1) {
-				if (waiting.isEmpty)
-					return
-				val slot = waiting.head
-				waiting = waiting.drop(1)
-				sent.add((calcTimeout.fromNow, slot))
-				wm ! CalculateSlot(slot)
-				trace(s"Sent slot to ${wm} (timeout in ${calcTimeout})")
-				// Keep track of the number of available slot ourselves.
-				// This will get overwritten once the workmaster reports in
-				// again.
-				workmasters.update(wm, i)
-			}
+		if(!slots.isEmpty){
+			wm ! CalculateSlots(slots)
+			log.debug(s"Sent ${slots.size} slots to ${wm}")
 		}
 	}
 }

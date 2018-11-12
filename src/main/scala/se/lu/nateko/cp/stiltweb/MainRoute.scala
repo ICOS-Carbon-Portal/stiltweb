@@ -3,15 +3,13 @@ package se.lu.nateko.cp.stiltweb
 import java.time.LocalDateTime
 import java.time.LocalDate
 
-import akka.NotUsed
-import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, HttpResponse, StatusCodes }
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.StandardRoute
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
+import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport
+import se.lu.nateko.cp.stiltweb.marshalling.StationInfoMarshalling
 
 class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 
@@ -36,13 +34,12 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				parameters(("stationId", "fromDate", "toDate")) { (stationId, fromDateStr, toDateStr) =>
 					val fromDate = LocalDate.parse(fromDateStr)
 					val toDate = LocalDate.parse(toDateStr)
-					val footsJsonSrc = jsonArraySource(
-						() => service.listFootprints(stationId, fromDate, toDate).map{case (_, dt) => s""""$dt""""}
-					)
-					streamJson(footsJsonSrc)
+					val footprintsList = service.listFootprints(stationId, fromDate, toDate)
+					complete(footprintsList.map(_.toString).toSeq)
 				}
 			} ~
 			path("stationinfo") {
+				import StationInfoMarshalling.stationInfoMarshaller
 				complete(service.getStationInfos)
 			} ~
 			path("availablemonths") {
@@ -50,14 +47,14 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			} ~
 			redirectToTrailingSlashIfMissing(StatusCodes.Found){
 				pathSingleSlash {
-					complete(views.html.ViewerPage())
+					complete(views.html.ViewerPage(config.auth))
 				}
 			}
 		} ~
 		post {
 			path("stiltresult") {
 				entity(as[StiltResultsRequest]) { req =>
-					streamJson(service.getStiltResultJson(req))
+					complete(service.getStiltResults(req).toSeq)
 				}
 			}
 		}
@@ -66,7 +63,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		get {
 			pathEnd{redirect("worker/", StatusCodes.Found)} ~
 			pathSingleSlash {
-				complete(views.html.WorkerPage())
+				complete(views.html.WorkerPage(config.auth))
 			} ~
 			path("worker.js"){
 				getFromResource("www/worker.js")
@@ -128,11 +125,11 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 						  WhoamiResult(userId.email, config.admins.exists(_ == userId.email))))
 			} ~
 			complete((StatusCodes.OK, WhoamiResult("")))
+		} ~
+		path("logout") {
+			deleteCookie(config.auth.authCookieName, domain = config.auth.authCookieDomain, path = "/"){
+				complete(StatusCodes.OK)
+			}
 		}
-	}
-
-	def streamJson(src: Source[ByteString, NotUsed]): StandardRoute = {
-		val respEntity = HttpEntity(ContentTypes.`application/json`, src)
-		complete(HttpResponse(entity = respEntity))
 	}
 }
