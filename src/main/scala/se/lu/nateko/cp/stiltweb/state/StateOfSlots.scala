@@ -1,7 +1,8 @@
-package se.lu.nateko.cp.stiltcluster
+package se.lu.nateko.cp.stiltweb.state
 
 import scala.collection.mutable.{Map, Queue, Set}
 import akka.actor.ActorRef
+import se.lu.nateko.cp.stiltcluster.StiltSlot
 
 class StateOfSlots {
 
@@ -44,20 +45,14 @@ class StateOfSlots {
 
 	def registerBeingWorkedOn(worker: Worker, slots: Seq[StiltSlot]): Unit = {
 		sentToWorkers.get(worker).foreach{
-			currentWork =>
-				currentWork --= slots
-				enqueue(currentWork.toSeq) //what was sent but did not become worked on; that is, the rejected work
-				currentWork.clear()
+			sentWork =>
+				sentWork --= slots
+				//TODO Adjust the protocol to ensure against racing conditions
+				enqueue(sentWork.toSeq) //what was sent but did not become worked on; that is, the rejected work
+				sentWork.clear()
 		}
 
-		val currentWork = beingWorkedOn.getOrElseUpdate(worker, Set.empty[StiltSlot])
-		currentWork ++= slots
-	}
-
-	def registerCompletion(worker: Worker, slot: StiltSlot): Unit = {
-		beingWorkedOn.get(worker).foreach{
-			currentWork => currentWork -= slot
-		}
+		beingWorkedOn.update(worker, Set(slots:_*))
 	}
 
 	def handleDeadWorker(worker: Worker): Unit = {

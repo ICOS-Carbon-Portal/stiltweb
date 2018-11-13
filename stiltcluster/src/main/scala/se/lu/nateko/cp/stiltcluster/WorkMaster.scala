@@ -12,24 +12,24 @@ import akka.actor.ActorLogging
 import akka.util.Timeout
 
 
-class WorkMaster(nCores: Int, prodAddr: String) extends Actor with ActorLogging {
+class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with ActorLogging {
 
-	var producer: ActorRef = context.system.deadLetters
+	var receptionist: ActorRef = context.system.deadLetters
 	val work = Set.empty[StiltSlot]
 
 	log.info("WorkMaster starting up")
 
-	override def preStart(): Unit = findSlotProducer()
+	override def preStart(): Unit = findReceptionist()
 
-	def findSlotProducer(): Unit = {
+	def findReceptionist(): Unit = {
 		implicit val timeout = Timeout(3.seconds)
 		import context.dispatcher
 
-		def findIt(): Unit = context.actorSelection(prodAddr).resolveOne().onComplete{
+		def findIt(): Unit = context.actorSelection(receptionistAddr).resolveOne().onComplete{
 			case Success(ref) =>
 				context.watch(ref)
 				log.info(s"Found a slot producer $ref")
-				producer = ref
+				receptionist = ref
 				ref ! myStatus
 			case _ =>
 				context.system.scheduler.scheduleOnce(1.second)(findIt())
@@ -38,10 +38,10 @@ class WorkMaster(nCores: Int, prodAddr: String) extends Actor with ActorLogging 
 	}
 
 	def receive: Receive = {
-		case Terminated(ref) => if(ref == producer){
-			producer = context.system.deadLetters
-			log.info(s"Slot producer $ref terminated")
-			findSlotProducer()
+		case Terminated(ref) => if(ref == receptionist){
+			receptionist = context.system.deadLetters
+			log.info(s"Receptionist $ref terminated")
+			findReceptionist()
 		}
 
 		case CalculateSlots(slots: Seq[StiltSlot]) =>
@@ -56,9 +56,9 @@ class WorkMaster(nCores: Int, prodAddr: String) extends Actor with ActorLogging 
 	}
 
 	private def finishSlot(slot: StiltSlot, msg: Any): Unit = {
-		producer ! msg
+		receptionist ! msg
 		work -= slot
-		producer ! myStatus
+		receptionist ! myStatus
 	}
 
 	private def myStatus = WorkMasterStatus(nCores, work.toSeq)
@@ -95,7 +95,7 @@ class WorkMaster(nCores: Int, prodAddr: String) extends Actor with ActorLogging 
 }
 
 object WorkMaster{
-	def props(nCores: Int, producerAddress: String) = Props.create(classOf[WorkMaster], Int.box(nCores), producerAddress)
+	def props(nCores: Int, receptionistAddress: String) = Props.create(classOf[WorkMaster], Int.box(nCores), receptionistAddress)
 
 	case object Stop
 }
