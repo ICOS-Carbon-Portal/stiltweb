@@ -3,70 +3,110 @@ package se.lu.nateko.cp.stiltweb.state
 import java.nio.file.Path
 
 import scala.collection.mutable.Map
+import scala.collection.mutable.Queue
 import scala.collection.mutable.Set
 
 import akka.actor.ActorRef
 import se.lu.nateko.cp.stiltcluster._
 
 /**
- * Mutable state to be used from an actor.
- * By design, this class itself is not supposed to write anything or send any messages,
- * however, JobState instances that it contains mark jobs as done on the file system.
+ * Mutable state to be used from an actor (so, needs not be thread-safe).
+ * By design, this class is not supposed to write to "outer world" or send any messages,
+ * but can mutate itself and its members.
  */
 class State(stateDir: Path, slotStepInMinutes: Int) {
 
 	type Worker = ActorRef
 	type JobId = String
 
-	private val slots = new StateOfSlots
-	private val cores: Map[Worker, Int] = Map.empty
-	private val jobs: Map[JobId, JobState] = Map.empty
+	private val slots = Queue.empty[StiltSlot]
+	private val workers = Map.empty[Worker, WorkmasterState]
+	private val jobs = Map.empty[JobId, JobState]
 
 	val slotArchiver = new SlotArchiver(stateDir, slotStepInMinutes)
 
-	def isKnownWorker(w: Worker): Boolean = cores.contains(w)
+	def isKnownWorker(w: Worker): Boolean = workers.contains(w)
 
-	def handleWorkerUpdate(w: Worker, wms: WorkMasterStatus): Unit = {
-		cores.update(w, wms.nCpusTotal)
-		slots.registerBeingWorkedOn(w, wms.work)
+	/**
+	 * returns the lost work
+	 */
+	def handleWorkerUpdate(w: Worker, wms: WorkMasterStatus): Seq[StiltSlot] = workers.get(w) match {
+		case Some(state) =>
+			val lostWork = state.updateAndGetLostWork(wms)
+			enqueue(lostWork)
+			lostWork
+		case None =>
+			workers.update(w, new WorkmasterState(wms))
+			Nil
 	}
 
-	def removeWorker(w: Worker): Unit = {
-		cores.remove(w)
-		slots.handleDeadWorker(w)
+	def removeWorker(w: Worker): Unit = workers.remove(w).foreach{wstate =>
+		enqueue(wstate.unfinishedWork)
 	}
 
-	def startJob(jdir: JobDir): Unit = {
-		val allSlots = JobMonitor.calculateSlots(jdir.job, slotStepInMinutes)
+	/**
+	 * returns true if there is actual work to do, false otherwise
+	 */
+	def startJob(job: Job): Boolean = {
+		val allSlots = JobMonitor.calculateSlots(job, slotStepInMinutes)
 
 		val toCalculate: Seq[StiltSlot] = allSlots.filterNot(slotIsAvailable)
 
-		val jstate = new JobState(jdir, allSlots.size, Set(toCalculate:_*))
-		jobs.update(jdir.job.id, jstate)
-		slots.enqueue(toCalculate)
+		val jstate = new JobState(job, allSlots.size, toCalculate)
+		jobs.update(job.id, jstate)
+		enqueue(toCalculate)
+		!toCalculate.isEmpty
 	}
+
+	def enqueue(work: Seq[StiltSlot]): Unit = slots ++= work
 
 	def slotIsAvailable(slot: StiltSlot): Boolean = slotArchiver.load(slot).isDefined
 
-	def distributeWork(): Map[Worker, Seq[StiltSlot]] = for((wm, nCores) <- cores) yield {
-		//TODO Handle slots that became completed by a concurrent job here
-		wm -> slots.sendSlotsToWorker(wm, nCores)
+	def distributeWork(): Map[Worker, CalculateSlots] = workers
+		.map{
+			case (wm, wstate) =>
+				val work = grabWork(wstate.freeCores)
+				val requestId = wstate.requestWork(work)
+				wm -> CalculateSlots(requestId, work)
+		}.filter{
+			case (_, command) => !command.slots.isEmpty
+		}
+
+	private def grabWork(maxNumSlots: Int): Seq[StiltSlot] = {
+		val buff = Set.empty[StiltSlot]
+
+		while(!slots.isEmpty && buff.size < maxNumSlots){
+			val next = slots.dequeue()
+			if(!slotIsAvailable(next)) buff += next
+		}
+		buff.toSeq
 	}
 
-	def cancelJob(id: JobId): Option[JobDir] = jobs.remove(id).map{jstate =>
-		slots.cancelSlots(jstate.slots)
-		jstate.jdir
+	def cancelJob(id: JobId): Option[Job] = jobs.remove(id).map{jstate =>
+		val toRemove = Set(jstate.slots: _*)
+		//the following will remove only one occurrence of slot per queue
+		//this is desired because same slot may be repeated due to overlapping jobs
+		slots.dequeueAll(toRemove.remove)
+
+		jstate.job
 	}
 
-	def onSlotDone(slot: StiltSlot): Unit = jobs.values.foreach(_.onSlotCompletion(slot))
+	/**
+	 * returns jobs completed as a result of this slot completion
+	 */
+	def onSlotDone(w: Worker, slot: StiltSlot): Seq[Job] = {
+		workers.get(w).foreach(_.onSlotDone(slot))
+		jobs.values.collect{
+			case jstate if jstate.isFinishedBy(slot) => jstate.job
+		}.toSeq
+	}
 
 	def getDashboardInfo: DashboardInfo = {
-		val infra = cores.toSeq.map{case (worker, totalCores) =>
-			val usedCores = slots.usedCores(worker)
-			WorkerNodeInfo(worker.path.address, totalCores - usedCores, totalCores)
+		val infra = workers.toSeq.map{case (worker, wstate) =>
+			WorkerNodeInfo(worker.path.address, wstate.freeCores, wstate.totalCores)
 		}
 		val (done, notFinished) = jobs.values.toSeq.partition(_.isDone)
 		val (running, queue) = notFinished.partition(_.hasBeenRun)
-		DashboardInfo(running.map(_.toInfo), done.map(_.toInfo), queue.map(_.jdir.job), infra)
+		DashboardInfo(running.map(_.toInfo), done.map(_.toInfo), queue.map(_.job), infra)
 	}
 }

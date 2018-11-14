@@ -14,62 +14,77 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 
 	override def preStart() = {
 		log.info(s"Starting up, looking in ${jobsDir} for unfinished jobs")
-		findUnfinishedJobs.foreach(startJob)
+
+		Util.iterateChildren(jobsDir).filter(JobDir.isUnfinishedJobDir).foreach{
+			dir => startJob(JobDir(dir).job)
+		}
 	}
 
 	override def getStreamElement = state.getDashboardInfo
 
 	override def specificReceive: Receive = coreReceive.andThen{_ =>
-		for((w, slots) <- state.distributeWork() if !slots.isEmpty){
-			w ! CalculateSlots(slots)
-			log.debug(s"Sent ${slots.size} slots to ${w}")
+		for((w, command) <- state.distributeWork() if !command.slots.isEmpty){
+			w ! command
+			log.debug(s"Sent ${command.slots.size} slots to ${w}")
 		}
 	}
 
 	def coreReceive: Receive = {
 		case jobRequest: Job =>
-			val job = jobRequest.copySetStarted
-			log.info(s"Receiving new job, saving it to ${jobsDir}/${job.id}")
-			val jdir = JobDir.save(job, jobsDir.resolve(job.id))
-			startJob(jdir)
+			val jdir = JobDir.save(jobRequest.copySetStarted, jobsDir)
 
-		case CancelJob(id) => state.cancelJob(id).foreach{
-			jdir => jdir.delete()
+			log.info(s"Received $jobRequest, saved to ${jdir.dir}")
+
+			startJob(jdir.job)
+
+		case CancelJob(id) => state.cancelJob(id) match{
+			case Some(job) =>
+				log.info(s"Cancelling $job")
+				jobDir(job).delete()
+			case None =>
+				log.warning(s"Job with id '$id' not found, therefore cannot cancel it")
 		}
 
-		case wms @ WorkMasterStatus(_, totalCores) =>
+		case wms: WorkMasterStatus =>
 			val wm = sender()
 			if (! state.isKnownWorker(wm)) {
-				log.info(s"Seeing new computational node $wm with $totalCores CPUs")
+				log.info(s"Seeing new computational node with ${wms.nCpusTotal} CPUs at ${wm.path}")
 				context.watch(wm)
 			}
-			state.handleWorkerUpdate(wm, wms)
+			val lostWork = state.handleWorkerUpdate(wm, wms)
+			if(!lostWork.isEmpty){
+				log.warning(s"Work lost (and re-queued): " + lostWork.mkString(", "))
+			}
 
-		case Terminated(watched) => if(state.isKnownWorker(watched)){
+		case Terminated(watched) if(state.isKnownWorker(watched)) =>
+			log.info(s"Computational node terminated: ${watched.path}")
 			state.removeWorker(watched)
-		}
 
 		case PleaseSendDashboardInfo =>
 			sender() ! state.getDashboardInfo
 
 		case SlotCalculated(result) => {
-			log.debug("Got SlotCalculated, saving to the slot archive")
+			log.debug(s"Got ${result.slot} calculated, saving to the slot archive")
 			state.slotArchiver.save(result)
-			state.onSlotDone(result.slot)
+			finishSlot(result.slot)
 		}
 
 		case StiltFailure(slot) =>
-			state.onSlotDone(slot)
+			finishSlot(slot)
 	}
 
-	def startJob(jdir: JobDir): Unit = {
-		log.info(s"Starting job $jdir.job")
-		state.startJob(jdir)
+	def finishSlot(slot: StiltSlot): Unit = state.onSlotDone(sender(), slot).foreach(finishJob)
+
+	def finishJob(job: Job): Unit = {
+		log.info(s"Done: $job")
+		jobDir(job).markAsDone()
 	}
 
-	def findUnfinishedJobs: Iterator[JobDir] = {
-		val pathIter = Util.iterateChildren(jobsDir)
-		for(dir <- pathIter if JobDir.isUnfinishedJobDir(dir) ) yield JobDir(dir)
+	def jobDir(job: Job) = JobDir.existing(job, jobsDir)
+
+	def startJob(job: Job): Unit = {
+		log.info(s"Starting $job")
+		if(!state.startJob(job)) finishJob(job)
 	}
 }
 

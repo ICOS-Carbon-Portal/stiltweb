@@ -27,15 +27,7 @@ case class Job(
 		this.copy(timeStopped=Some(Instant.now()))
 }
 
-
-case class BeginJob(jdir: JobDir)
-
-case class RequestManySlots(slots: Seq[StiltSlot])
-case class CancelSlots(slots: Seq[StiltSlot])
-
-case object Subscribe
-
-case class JobFinished(jinfo: JobInfo)
+case class CancelJob(id: String)
 
 case class JobInfo(job: Job, nSlots: Int, nSlotsFinished: Int) {
 	def id = job.id
@@ -56,6 +48,4 @@ case class DashboardInfo(
 }
 
 case object PleaseSendDashboardInfo
-
-case class WorkMasterUpdate(address: Address, status: WorkMasterStatus)
-case class WorkMasterDown(address: Address)
+case object Subscribe

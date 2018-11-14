@@ -28,9 +28,9 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 		def findIt(): Unit = context.actorSelection(receptionistAddr).resolveOne().onComplete{
 			case Success(ref) =>
 				context.watch(ref)
-				log.info(s"Found a slot producer $ref")
+				log.info(s"Found a receptionist at ${ref.path}")
 				receptionist = ref
-				ref ! myStatus
+				ref ! myStatus()
 			case _ =>
 				context.system.scheduler.scheduleOnce(1.second)(findIt())
 		}
@@ -40,15 +40,23 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 	def receive: Receive = {
 		case Terminated(ref) => if(ref == receptionist){
 			receptionist = context.system.deadLetters
-			log.info(s"Receptionist $ref terminated")
+			log.info(s"Receptionist ${ref.path} terminated")
 			findReceptionist()
 		}
 
-		case CalculateSlots(slots: Seq[StiltSlot]) =>
-			val newWork = slots.take(nCores - work.size)
+		case CalculateSlots(id, slots: Seq[StiltSlot]) =>
+			val newSlots = slots.distinct.filterNot(work.contains)
+			log.debug("Received new slots: " + newSlots.mkString(", "))
+
+			val freeCores = nCores - work.size
+
+			if(newSlots.size > freeCores)
+				log.warning(s"Received ${newSlots.size} new distinct slots while have only $freeCores free CPU cores")
+
+			val newWork = newSlots.take(freeCores)
 			work ++= newWork
 			newWork foreach calculateSlot
-			sender() ! myStatus
+			sender() ! myStatus(Some(id))
 
 		case WorkMaster.Stop =>
 			log.info(s"WorkMaster terminated (was $self)")
@@ -58,10 +66,10 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 	private def finishSlot(slot: StiltSlot, msg: Any): Unit = {
 		receptionist ! msg
 		work -= slot
-		receptionist ! myStatus
+		receptionist ! myStatus()
 	}
 
-	private def myStatus = WorkMasterStatus(nCores, work.toSeq)
+	private def myStatus(asResponseTo: Option[Long] = None) = WorkMasterStatus(nCores, work.toSeq, asResponseTo)
 
 	private def calculateSlot(slot: StiltSlot): Unit = {
 
