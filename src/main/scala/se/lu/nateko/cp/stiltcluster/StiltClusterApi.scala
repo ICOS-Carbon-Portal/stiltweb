@@ -5,6 +5,7 @@ import java.nio.file.Paths
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
+import akka.actor.ActorSelection
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.ws.Message
 import akka.pattern.ask
@@ -30,7 +31,10 @@ class StiltClusterApi {
 	val mainDir = Paths.get(stiltConf.mainDirectory)
 	val slotStep = stiltConf.slotStepInMinutes
 
-	val receptionist = system.actorOf(WorkReceptionist.props(stateDir, slotStep), name = "receptionist")
+	val receptionist = ActorSelection(
+		system.actorOf(WorkReceptionist.props(stateDir, slotStep), name = "receptionist"),
+		Iterable.empty
+	)
 
 
 	import system.dispatcher

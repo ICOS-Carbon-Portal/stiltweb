@@ -107,6 +107,6 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 		}
 		val (done, notFinished) = jobs.values.toSeq.partition(_.isDone)
 		val (running, queue) = notFinished.partition(_.hasBeenRun)
-		DashboardInfo(running.map(_.toInfo), done.map(_.toInfo), queue.map(_.job), infra)
+		DashboardInfo(running.map(_.toInfo), done.map(_.toInfo), queue.map(_.toInfo), infra)
 	}
 }

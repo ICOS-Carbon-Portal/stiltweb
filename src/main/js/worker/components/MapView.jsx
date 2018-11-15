@@ -156,7 +156,7 @@ export default class MapView extends Component {
 						<button style={{display: 'block', clear: 'both', marginBottom: 20}} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
 						{ ds.queue && (ds.queue.length || ds.done.length || ds.running.length)
 							? <div>
-								<JobList title="Job queue" isQueue={true} user={props.currUser} jobs={ds.queue}/>
+								<JobList title="Job queue" user={props.currUser} jobs={ds.queue}/>
 								<JobList title="Running computations" user={props.currUser} jobs={ds.running} />
 								<JobList title="Finished computations" user={props.currUser} jobs={ds.done} />
 							</div>
@@ -176,11 +176,7 @@ const JobList = props => props.jobs.length
 			<h3 className="panel-title">{props.title}</h3>
 		</div>
 		<div className="panel-body">{
-			props.jobs.map(job => {
-				return props.isQueue
-					? <JobLabel user={props.user} job={job} key={job.id} />
-					: <JobLabel user={props.user} job={job.job} key={job.job.id} />;
-			})
+			props.jobs.map(job => <JobLabel user={props.user} job={job.job} key={job.job.id} />)
 		}
 		</div>
 	</div>
