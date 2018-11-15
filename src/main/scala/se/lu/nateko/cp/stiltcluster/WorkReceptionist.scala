@@ -69,7 +69,8 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 			finishSlot(result.slot)
 		}
 
-		case StiltFailure(slot) =>
+		case StiltFailure(slot, errMsg, logsZip) =>
+			//TODO Write the logs zip to the job folder, register failures in the state
 			finishSlot(slot)
 	}
 

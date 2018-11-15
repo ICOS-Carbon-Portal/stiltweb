@@ -1,10 +1,13 @@
 package se.lu.nateko.cp.stiltcluster
 
+import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Path, Paths }
 import java.nio.file.StandardCopyOption._
 import java.nio.file.StandardOpenOption._
 import java.util.Comparator
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 object Util {
 
@@ -28,5 +31,25 @@ object Util {
 
 	def deleteDirRecursively(dir: Path): Unit = Files.walk(dir)
 		.sorted(Comparator.reverseOrder[Path])
-		.forEach(_.toFile.delete())
+		.forEach(Files.delete)
+
+
+	def zipFolder(dir: Path, excludeFileNames: String*): Array[Byte] = {
+
+		val bos = new ByteArrayOutputStream
+		val zos = new ZipOutputStream(bos, StandardCharsets.UTF_8)
+		val blackList = excludeFileNames.toSet
+
+		Files.walk(dir)
+			.filter(path => !Files.isDirectory(path) && !blackList.contains(path.getFileName.toString))
+			.forEach{path =>
+				val relPath = dir.relativize(path).toString
+				zos.putNextEntry(new ZipEntry(relPath))
+				zos.write(Files.readAllBytes(path))
+				zos.closeEntry()
+			}
+		zos.close()
+		bos.close()
+		bos.toByteArray()
+	}
 }
