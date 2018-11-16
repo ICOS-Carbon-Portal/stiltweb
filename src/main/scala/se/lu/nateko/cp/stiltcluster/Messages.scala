@@ -29,7 +29,9 @@ case class Job(
 
 case class CancelJob(id: String)
 
-case class JobInfo(job: Job, nSlots: Int, nSlotsFinished: Int) {
+case class SlotFailure(slot: StiltSlot, errorMessage: String, logsFilename: String)
+
+case class JobInfo(job: Job, nSlots: Int, nSlotsFinished: Int, failures: Seq[SlotFailure] = Nil) {
 	def id = job.id
 }
 

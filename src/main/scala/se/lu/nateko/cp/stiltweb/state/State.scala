@@ -92,7 +92,7 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 	}
 
 	/**
-	 * returns jobs completed as a result of this slot completion
+	 * @return jobs completed as a result of this slot completion
 	 */
 	def onSlotDone(w: Worker, slot: StiltSlot): Seq[Job] = {
 		workers.get(w).foreach(_.onSlotDone(slot))
@@ -100,6 +100,13 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 			case jstate if jstate.isFinishedBy(slot) => jstate.job
 		}.toSeq
 	}
+
+	/**
+	 * Records the failure.
+	 * @return incomplete jobs that include this slot
+	 */
+	def onSlotFailure(slot: StiltSlot, errMsg: String, logsPathMaker: Job => String): Seq[Job] =
+		jobs.values.flatMap{_.rememberFailureIfRelevant(slot, errMsg, logsPathMaker)}.toSeq
 
 	def getDashboardInfo: DashboardInfo = {
 		val infra = workers.toSeq.map{case (worker, wstate) =>

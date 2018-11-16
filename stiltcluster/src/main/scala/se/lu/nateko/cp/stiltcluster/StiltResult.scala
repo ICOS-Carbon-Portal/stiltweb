@@ -35,6 +35,7 @@ Results/XXX/stiltresult2012x56.10Nx013.42Ex00150_1.csv
 package se.lu.nateko.cp.stiltcluster
 
 
+import java.io.FileNotFoundException
 import java.nio.file.{ Files, Path, Paths }
 
 
@@ -105,8 +106,14 @@ object StiltResult {
 	 */
 	def readOutputFiles(slot: StiltSlot, dir: Path, jobId: String = "XXX"): Seq[StiltResultFile] =
 		StiltResultFileType.values.toSeq.map { typ =>
+
 			val relPath = StiltResultFile.calcFileName(slot, typ, jobId)
 			val absPath = dir.resolve(relPath)
+
+			if(!Files.exists(absPath)) throw new FileNotFoundException(
+				s"File ${relPath.getFileName} was not found after calculation. The calculation must have failed."
+			)
+
 			val data = Files.readAllBytes(absPath)
 			new StiltResultFile(slot, typ, data)
 		}

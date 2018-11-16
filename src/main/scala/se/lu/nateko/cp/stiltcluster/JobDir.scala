@@ -13,6 +13,9 @@ class JobDir(val job: Job, val dir: Path) {
 		if(!Files.exists(doneFile)) Util.writeFileAtomically(doneFile, Array.empty[Byte])
 	}
 
+	def logsPath(slot: StiltSlot) = dir.resolve(s"logs_$slot.zip")
+	def saveLogs(slot: StiltSlot, logZip: Array[Byte]) = Util.writeFileAtomically(logsPath(slot), logZip)
+
 	def delete(): Unit =
 		try{
 			Util.deleteDirRecursively(dir)
@@ -46,4 +49,5 @@ object JobDir{
 	def existing(job: Job, jobsDir: Path) = new JobDir(job, resolvePath(jobsDir, job))
 
 	def resolvePath(jobsDir: Path, job: Job): Path = jobsDir.resolve(job.id)
+
 }

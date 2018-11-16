@@ -8,12 +8,13 @@ import java.nio.file.StandardOpenOption._
 import java.util.Comparator
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import scala.util.Random
 
 object Util {
 
 	def writeFileAtomically(f: Path, data: Array[Byte]): Unit = {
-		val tmp = Paths.get(f.toAbsolutePath.toString + ".tmp")
-		Files.write(tmp, data, TRUNCATE_EXISTING, CREATE, WRITE)
+		val tmp = Paths.get(f.toAbsolutePath.toString + ".tmp_" + Random.nextInt.toString)
+		Files.write(tmp, data, CREATE, WRITE)
 		Files.move(tmp, f, ATOMIC_MOVE, REPLACE_EXISTING)
 	}
 

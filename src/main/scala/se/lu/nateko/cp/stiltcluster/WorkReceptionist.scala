@@ -70,7 +70,9 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 		}
 
 		case StiltFailure(slot, errMsg, logsZip) =>
-			//TODO Write the logs zip to the job folder, register failures in the state
+			state.onSlotFailure(slot, errMsg, logPathMaker(slot)).foreach{job =>
+				logsZip.foreach(jobDir(job).saveLogs(slot, _))
+			}
 			finishSlot(slot)
 	}
 
@@ -81,12 +83,14 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 		jobDir(job).markAsDone()
 	}
 
-	def jobDir(job: Job) = JobDir.existing(job, jobsDir)
-
 	def startJob(job: Job): Unit = {
 		log.info(s"Starting $job")
 		if(!state.startJob(job)) finishJob(job)
 	}
+
+	def jobDir(job: Job) = JobDir.existing(job, jobsDir)
+
+	def logPathMaker(slot: StiltSlot)(job: Job) = stateDir.relativize(jobDir(job).logsPath(slot)).toString
 }
 
 object WorkReceptionist{
