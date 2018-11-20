@@ -38,11 +38,17 @@ object JobDir{
 		new JobDir(job, dir)
 	}
 
-	def save(job: Job, toJobsDir: Path): JobDir = {
+	def saveAsNew(job: Job, toJobsDir: Path): JobDir = {
 		val dir = resolvePath(toJobsDir, job)
 		Files.createDirectories(dir)
+
 		val f = dir.resolve(JobFile)
 		Util.writeFileAtomically(f, job.toJson.prettyPrint)
+
+		val previouslyDoneFile = dir.resolve(DoneFile)
+		//user may want to re-run same job again because of some failed slots
+		Files.deleteIfExists(previouslyDoneFile)
+
 		new JobDir(job, dir)
 	}
 

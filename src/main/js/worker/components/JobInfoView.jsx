@@ -29,6 +29,7 @@ export default class JobInfoView extends Component {
 			(props.currUser.email === job.userId || props.currUser.isAdmin);
 		const showLink = (jinfo.nSlotsFinished == jinfo.nSlots);
 		const hasFailures = !!jinfo.failures.length;
+		const failuresMustBeShown = hasFailures && this.state.showErrors;
 
 		return <div className={"panel panel-" + (hasFailures? "warning" : "default")}>
 			<div className="panel-heading" onClick={this.toggleShowErrors.bind(this)} style={hasFailures ? {cursor: 'pointer'} : {}}>
@@ -52,7 +53,7 @@ export default class JobInfoView extends Component {
 					<span> - submitted by {job.userId}</span>
 				</span>
 			</div>
-			{allowCancel || (hasFailures && this.state.showErrors)
+			{allowCancel || failuresMustBeShown
 				? <div className="panel-body">
 					<YesNoView
 						visible={this.state.showCancelJobDialog}
@@ -61,7 +62,7 @@ export default class JobInfoView extends Component {
 						actionYes={this.confirmJobCancel.bind(this)}
 						actionNo={this.toggleCancelJobDialog.bind(this)}
 					/>
-					<FailureList failures={jinfo.failures} />
+					<FailureList failures={jinfo.failures} visible={failuresMustBeShown}/>
 				</div>
 				: null
 			}
@@ -74,13 +75,13 @@ const GlyphSign = props => <span
 	style={{marginRight: 10, top: 3, fontSize:'130%'}}
 />;
 
-const FailureList = props => props.failures.length
+const FailureList = props => props.visible
 	? <div className="panel panel-danger">
-		<div className="panel-heading">Errors</div>
+		<div className="panel-heading">Slot calculation failures</div>
 		<div className="panel-body">
 			<table className="table">
 				<thead>
-					<tr><th>Slot</th><th>Error message</th><th>Logs</th></tr>
+					<tr><th>Slots</th><th>Error messages</th><th>Logs</th></tr>
 				</thead>
 				<tbody>{props.failures.map(({slot, errorMessage, logsFilename}) =>
 					<tr key={logsFilename}>

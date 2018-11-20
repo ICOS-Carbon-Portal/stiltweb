@@ -31,7 +31,7 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 
 	def coreReceive: Receive = {
 		case jobRequest: Job =>
-			val jdir = JobDir.save(jobRequest.copySetStarted, jobsDir)
+			val jdir = JobDir.saveAsNew(jobRequest.copySetStarted, jobsDir)
 
 			log.info(s"Received $jobRequest, saved to ${jdir.dir}")
 
