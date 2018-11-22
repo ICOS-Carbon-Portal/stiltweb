@@ -24,8 +24,8 @@ export default class FootprintsRegistry{
 
 		let idxMin = self.getRelevantFootprint(dateRange[0]);
 		let idxMax = self.getRelevantFootprint(dateRange[1]);
-		if(dates[idxMin] < dateRange[0]) idxMin++;
-		if(dates[idxMax] > dateRange[1]) idxMax--;
+		if(dates[idxMin] < dateRange[0] && idxMin < idxMax) idxMin++;
+		if(dates[idxMax] > dateRange[1] && idxMax > idxMin) idxMax--;
 		return [idxMin, idxMax];
 	}
 
