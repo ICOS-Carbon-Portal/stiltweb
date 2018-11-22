@@ -2,9 +2,11 @@ import { createStore, applyMiddleware } from 'redux'
 import thunkMiddleware from 'redux-thunk'
 import reducer from './reducer'
 import {fetchInitData} from './actions'
+import Axes from "./models/Axes";
 
 
 const initState = {
+	axes: new Axes(),
 	showSpinner: false,
 	wdcggFormat: null,
 	stations: [],

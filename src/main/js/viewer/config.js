@@ -67,10 +67,10 @@ const stiltResultColumns = [dateSeries, {
 
 const stiltResultColumnGrouping = {
 	'Biosperic CO2': ['co2.bio'],
-	'Photosyntetic uptake and respiration': ['co2.bio.gee', 'co2.bio.resp'],
+	'Biosperic CO2 split into Photosynthetic uptake and respiration': ['co2.bio.gee', 'co2.bio.resp'],
 	'Anthropogenic CO2': ['co2.fuel'],
-	'Fuel types': ['co2.fuel.coal', 'co2.fuel.oil', 'co2.fuel.gas', 'co2.fuel.bio'],
-	'Source categories': ['co2.energy', 'co2.transport', 'co2.industry', 'co2.others']
+	'Anthropogenic CO2 split into Fuel types': ['co2.fuel.coal', 'co2.fuel.oil', 'co2.fuel.gas', 'co2.fuel.bio'],
+	'Anthropogenic CO2 split into Source categories': ['co2.energy', 'co2.transport', 'co2.industry', 'co2.others']
 };
 
 const secondaryComponents = Object.keys(stiltResultColumnGrouping).reduce((acc, key) => {

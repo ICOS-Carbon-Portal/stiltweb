@@ -1,24 +1,38 @@
 import React, { Component } from 'react';
 import Dygraph from 'dygraphs';
+import './Dygraphs.css';
 import {deepMerge} from 'icos-cp-utils';
+import DygraphYAxes from '../models/DygraphYAxes';
 
 
 export default class Dygraphs extends Component {
 	constructor(props) {
 		super(props);
+
+		this.dataId = undefined;
+		this.graph = undefined;
+		this.axes = props.axes;
+		this.lastAxesTs = undefined;
+		this.dygraphYAxes = new DygraphYAxes();
 	}
 
 	componentDidMount(){
 		const props = this.props;
 
 		this.dataId = props.data.id;
+		const station = props.selectedStation;
+		const title = `${station.name} (${station.alt} m, lat: ${station.lat}, lng: ${station.lon})`;
 
 		this.graph = new Dygraph(
 			this.graphDiv,
 			props.data.getData(),
 			deepMerge({
-				title: `${props.selectedStation.name} (${props.selectedStation.alt} m)`,
-				drawCallback: this.rangeChangeHandler.bind(this),
+				title,
+				drawCallback: this.drawCallbackHandler.bind(this),
+				zoomCallback: this.dygraphYAxes.zoomCallback.bind(this.dygraphYAxes),
+				interactionModel: Object.assign({}, Dygraph.defaultInteractionModel, {
+					dblclick: this.dygraphYAxes.dblclick.bind(this.dygraphYAxes)
+				}),
 				dateWindow: props.dateRange,
 				strokeWidth: 1,
 				colorValue: 0.9,
@@ -28,28 +42,31 @@ export default class Dygraphs extends Component {
 				labelsSeparateLines: false,
 				connectSeparatedPoints: true,
 				labelsKMB: true,
+				labelsUTC: true,
 				digitsAfterDecimal: 4,
 				axes: {
 					x: {
 						drawGrid: false,
 						valueFormatter: this.formatDate.bind(this),
-						axisLabelWidth: 65
+						axisLabelWidth: 68
 					},
 					y: {
-						axisLabelWidth: 65
+						axisLabelWidth: 65,
+						ticker: this.dygraphYAxes.tickerY1.bind(this.dygraphYAxes)
 					},
 					y2: {
-						axisLabelWidth: 65
+						axisLabelWidth: 70,
+						ticker: this.dygraphYAxes.tickerY2.bind(this.dygraphYAxes)
 					}
 				},
 				series: makeSeriesOpt(props.data.series),
-				visibility: this.getVisibility(props)
+				visibility: this.getVisibility(props),
 			}, props.graphOptions)
 		);
 	}
 
-	componentWillUnmount(){
-		this.graph.destroy();
+	drawCallbackHandler(graph){
+		if (this.props.updateXRange) this.props.updateXRange(graph.xAxisRange());
 	}
 
 	formatDate(ms){
@@ -67,9 +84,22 @@ export default class Dygraphs extends Component {
 	}
 
 	componentWillReceiveProps(nextProps){
+		this.axes = nextProps.axes;
+		const nextVisibility = this.getVisibility(nextProps);
 		const update = {};
 
+		if (this.axes.ts !== this.lastAxesTs) {
+			this.lastAxesTs = this.axes.ts;
+
+			const data = nextProps.data.getData();
+			const labels = this.makeLabels(nextProps).slice(1);
+			const axelNumbers = labels.map(lbl => nextProps.axes.isLabelOnPrimary(lbl) ? 1 : 2);
+
+			this.dygraphYAxes.initFromExternal(this.graph, data, nextVisibility, axelNumbers);
+		}
+
 		const nextRange = nextProps.dateRange;
+
 		if(nextRange){
 			const currRange = this.graph.xAxisRange();
 
@@ -88,7 +118,6 @@ export default class Dygraphs extends Component {
 			});
 		}
 
-		const nextVisibility = this.getVisibility(nextProps);
 		if(!areEqualArrays(nextVisibility, this.getVisibility(this.props))){
 			Object.assign(update, {visibility: nextVisibility});
 		}
@@ -99,11 +128,7 @@ export default class Dygraphs extends Component {
 			this.graph.setAnnotations(nextProps.annotations, optionsWillUpdate); //avoiding double redrawing
 		}
 
-		if(optionsWillUpdate) this.graph.updateOptions(update);
-	}
-
-	rangeChangeHandler(graph){
-		if(this.props.updateXRange) this.props.updateXRange(graph.xAxisRange());
+		if (optionsWillUpdate) this.graph.updateOptions(update);
 	}
 
 	render(){
@@ -142,4 +167,3 @@ function annotationsHaveBeenUpdated(oldAnno, newAnno){
 
 	return !oldAnno.every((oa, i) => oa.series === newAnno[i].series && oa.x === newAnno[i].x);
 }
-

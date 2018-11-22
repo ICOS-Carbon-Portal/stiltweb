@@ -10,10 +10,10 @@ import StationsMap from '../../common/components/LMap.jsx';
 export default props => <div className="panel panel-default">
 	<div className="panel-body">
 		<div className="row">
-			<div className="col-md-3" style={{paddingRight:0}}>
+			<div className="col-md-5" style={{paddingRight:0}}>
 				<StationSelectingMap {...props} />
 			</div>
-			<div className="col-md-9">
+			<div className="col-md-7">
 				<ul className="list-group" style={{marginBottom:0}}>
 					<li className="list-group-item">{config.viewerScope
 						? <ViewerScopeDisplay {...config.viewerScope} />
@@ -66,7 +66,7 @@ const StationAndYearSelector = ({selectYear, selectStation, selectedScope, selec
 	const yearsDisabled = !yearInfos.length;
 
 	return <div className="row">
-		<div className="col-md-6">
+		<div className="col-md-7">
 			<Select
 				selectValue={selectStation}
 				infoTxt="Select station here or on the map"
@@ -76,7 +76,7 @@ const StationAndYearSelector = ({selectYear, selectStation, selectedScope, selec
 				sort={true}
 			/>
 		</div>
-		<div className="col-md-6">
+		<div className="col-md-5">
 			<Select
 				selectValue={selectYear}
 				infoTxt={yearsDisabled ? "Select station first" : "Select year"}

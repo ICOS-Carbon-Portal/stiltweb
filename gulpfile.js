@@ -11,6 +11,8 @@ var babelify = require('babelify');
 var babel = require('gulp-babel');
 var preprocessify = require('preprocessify');
 
+var SCALA_VERSION = 'scala-2.12';
+
 var projects = ['viewer', 'worker'];
 projects.forEach(function(project){
 
@@ -24,7 +26,7 @@ projects.forEach(function(project){
 		alljs: projSrc + '/**/*.js',
 		commonjs: 'src/main/js/common/**/*.js*',
 		commonjsx: 'src/main/js/common/**/*.jsx*',
-		target: 'src/main/resources/www/',
+		target: 'target/' + SCALA_VERSION + '/classes/www/',
 		bundleFile: project + '.js'
 	};
 

@@ -26,7 +26,7 @@ export default function(state, action){
 				}));
 				return Object.assign(s, {siteId: s.id});
 			});
-			const newState = updateWith(['wdcggFormat', 'countriesTopo']);
+			let newState = updateWith(['wdcggFormat', 'countriesTopo']);
 
 			return Object.assign(newState, {stations});
 
@@ -37,12 +37,14 @@ export default function(state, action){
 
 		case SET_SELECTED_STATION:
 			const station = action.selectedStation;
+			const selectedScope = config.viewerScope ? null : station.years.length === 1
+			? station.years[0]
+			: station.years.find(({year}) => state.selectedScope && state.selectedScope.year === year);
 
 			return keep(['wdcggFormat', 'stations', 'countriesTopo', 'options'], {
 				selectedStation: station,
-				selectedScope: config.viewerScope ? null : station.years.length === 1
-					? station.years[0]
-					: station.years.find(({year}) => state.selectedScope && state.selectedScope.year === year)
+				selectedScope,
+				axes: state.axes.withSelectedScope(selectedScope)
 			});
 
 		case SET_SELECTED_SCOPE:
@@ -66,7 +68,10 @@ export default function(state, action){
 			return update({desiredFootprint, dateRange, footprintsFetcher});
 
 		case SET_VISIBILITY:
-			return deepUpdate(state, ['options', 'modelComponentsVisibility'], action.update);
+			newState = deepUpdate(state, ['options', 'modelComponentsVisibility'], action.update);
+			return Object.assign(newState, {
+				axes: state.axes.updateVisibility(Object.keys(action.update)[0], Object.values(action.update)[0])
+			});
 
 		case INCREMENT_FOOTPRINT:
 			return state.footprint
