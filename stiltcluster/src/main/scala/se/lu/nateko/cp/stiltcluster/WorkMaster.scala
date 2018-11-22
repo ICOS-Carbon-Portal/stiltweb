@@ -10,27 +10,29 @@ import scala.util.Success
 import akka.actor.{ Actor, ActorRef, Props, Terminated }
 import akka.actor.ActorLogging
 import akka.util.Timeout
+import java.nio.file.Path
 
 
-class WorkMaster(nCores: Int, prodAddr: String) extends Actor with ActorLogging {
+class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with ActorLogging {
+	import WorkMaster._
 
-	var producer: ActorRef = context.system.deadLetters
+	var receptionist: ActorRef = context.system.deadLetters
 	val work = Set.empty[StiltSlot]
 
 	log.info("WorkMaster starting up")
 
-	override def preStart(): Unit = findSlotProducer()
+	override def preStart(): Unit = findReceptionist()
 
-	def findSlotProducer(): Unit = {
+	def findReceptionist(): Unit = {
 		implicit val timeout = Timeout(3.seconds)
 		import context.dispatcher
 
-		def findIt(): Unit = context.actorSelection(prodAddr).resolveOne().onComplete{
+		def findIt(): Unit = context.actorSelection(receptionistAddr).resolveOne().onComplete{
 			case Success(ref) =>
 				context.watch(ref)
-				log.info(s"Found a slot producer $ref")
-				producer = ref
-				ref ! myStatus
+				log.info(s"Found a receptionist at ${ref.path}")
+				receptionist = ref
+				ref ! myStatus()
 			case _ =>
 				context.system.scheduler.scheduleOnce(1.second)(findIt())
 		}
@@ -38,64 +40,103 @@ class WorkMaster(nCores: Int, prodAddr: String) extends Actor with ActorLogging 
 	}
 
 	def receive: Receive = {
-		case Terminated(ref) => if(ref == producer){
-			producer = context.system.deadLetters
-			log.info(s"Slot producer $ref terminated")
-			findSlotProducer()
+		case Terminated(ref) => if(ref == receptionist){
+			receptionist = context.system.deadLetters
+			log.info(s"Receptionist ${ref.path} terminated")
+			findReceptionist()
 		}
 
-		case CalculateSlots(slots: Seq[StiltSlot]) =>
-			val newWork = slots.take(nCores - work.size)
+		case CalculateSlots(id, slots: Seq[StiltSlot]) =>
+			val newSlots = slots.distinct.filterNot(work.contains)
+			log.debug("Received new slots: " + newSlots.mkString(", "))
+
+			val freeCores = nCores - work.size
+
+			if(newSlots.size > freeCores)
+				log.warning(s"Received ${newSlots.size} new distinct slots while have only $freeCores free CPU cores")
+
+			val newWork = newSlots.take(freeCores)
 			work ++= newWork
 			newWork foreach calculateSlot
-			sender() ! myStatus
+			sender() ! myStatus(Some(id))
 
-		case WorkMaster.Stop =>
+		case Stop =>
 			log.info(s"WorkMaster terminated (was $self)")
 			context stop self
 	}
 
-	private def finishSlot(slot: StiltSlot, msg: Any): Unit = {
-		producer ! msg
-		work -= slot
-		producer ! myStatus
-	}
-
-	private def myStatus = WorkMasterStatus(nCores, work.toSeq)
+	private def myStatus(asResponseTo: Option[Long] = None) = WorkMasterStatus(nCores, work.toSeq, asResponseTo)
 
 	private def calculateSlot(slot: StiltSlot): Unit = {
 
 		import scala.concurrent.ExecutionContext.Implicits.global
 
-		def calculateOnce(): Future[Unit] = Future{
-			log.debug(s"Starting stilt calculation of $slot")
+		def runStiltGetBaseFolder(prevAttempts: Int): Future[(Int, Path)] = {
+			val attempts = prevAttempts + 1
 
-			val stiltOutput = RunStilt.cmd_run(slot)
+			val res = Future{
+				log.debug(s"Attempt $attempts (of max $MaxNumOfAttempts) of stilt calculation of $slot")
 
-			log.debug(s"Stilt simulation finished $slot ($stiltOutput)")
+				val stiltOutput = RunStilt.cmd_run(slot)
 
-			val d = Paths.get(stiltOutput)
-			assert(Files.isDirectory(d))
+				log.debug(s"Stilt simulation finished $slot ($stiltOutput)")
 
-			finishSlot(slot, SlotCalculated(StiltResult(slot, d.resolve("output"))))
-
-			Util.deleteDirRecursively(d)
-			log.debug(s"Removed the ${d} directory")
-			log.debug(s"Slot calculation for $slot was a success")
+				val d = Paths.get(stiltOutput)
+				assert(Files.isDirectory(d))
+				attempts -> d
+			}
+			if(attempts >= MaxNumOfAttempts)
+				res
+			else
+				res.recoverWith{case _: Throwable => runStiltGetBaseFolder(attempts)}
 		}
 
-		calculateOnce().recoverWith{ case _: Throwable => calculateOnce()}
-			.failed
-			.foreach{err =>
-				log.info(s"Slot calculation for $slot was a failure: " + err.getMessage)
-				log.debug(err.getStackTrace().mkString("", "\n", "\n"))
-				finishSlot(slot, StiltFailure(slot))
+		def getResult(prevAttempts: Int): Future[StiltOutcome] = runStiltGetBaseFolder(prevAttempts)
+			.flatMap{case (attempts, d) =>
+
+				Future{
+					val res = SlotCalculated(StiltResult(slot, d.resolve("output")))
+					log.debug(s"Slot calculation for $slot was a success")
+					res
+				}.recoverWith{
+					case err: Throwable =>
+						logError(err)
+						if(attempts < MaxNumOfAttempts) getResult(attempts)
+						else Future.successful{
+							val logsZip = Util.zipFolder(d.resolve("logs"), "PARTICLE.DAT")
+							StiltFailure(slot, err.getMessage, Some(logsZip))
+						}
+				}.andThen{
+					case _ =>
+						Util.deleteDirRecursively(d)
+						log.debug(s"Removed the ${d} directory")
+				}
 			}
+			.recover{
+				case err: Throwable =>
+					logError(err)
+					StiltFailure(slot, err.getMessage, None)
+			}
+
+		def logError(err: Throwable): Unit = {
+			val errMsg = err.getMessage
+			log.info(s"Slot calculation for $slot was a failure: $errMsg")
+			log.debug(err.getStackTrace().mkString("", "\n", "\n"))
+		}
+
+		getResult(0).foreach{outcome =>
+			receptionist ! outcome
+			work -= slot
+			receptionist ! myStatus()
+		}
 	}
 }
 
 object WorkMaster{
-	def props(nCores: Int, producerAddress: String) = Props.create(classOf[WorkMaster], Int.box(nCores), producerAddress)
+
+	val MaxNumOfAttempts = 2
+
+	def props(nCores: Int, receptionistAddress: String) = Props.create(classOf[WorkMaster], Int.box(nCores), receptionistAddress)
 
 	case object Stop
 }

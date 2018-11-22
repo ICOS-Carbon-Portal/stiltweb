@@ -5,68 +5,7 @@ import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.Props
-
-class JobMonitor(jobDir: JobDir, slotStepInMinutes: Integer) extends Actor with ActorLogging {
-
-	val slotProducer = context.actorSelection("/user/slotproducer")
-	val dashboard = context.actorSelection("/user/dashboardmaker")
-
-	val allSlots = JobMonitor.calculateSlots(jobDir.job, slotStepInMinutes)
-
-	override def preStart(): Unit = {
-
-		log.info(s"Starting up job ${jobDir.job}, ${allSlots.size} slots in total, sending request.")
-
-		slotProducer ! RequestManySlots(allSlots)
-		workOnRemaining(allSlots)
-	}
-
-	private def deletionHandler(slots: Seq[StiltSlot]): Receive = {
-		case deletion @ CancelJob(id) =>
-			if(id == jobDir.job.id){
-				slotProducer ! CancelSlots(slots)
-				dashboard ! deletion
-				jobDir.delete()
-				context stop self
-			}
-	}
-
-	def receive = deletionHandler(allSlots)
-
-	def workOnRemaining(remaining: Seq[StiltSlot]): Unit = {
-
-		val totalSlotsNum = allSlots.size
-		dashboard ! JobInfo(jobDir.job, totalSlotsNum, totalSlotsNum - remaining.length)
-
-		if(remaining.isEmpty){
-			jobDir.markAsDone()
-			JobMonitor.ensureStationIdLinkExists(jobDir)
-			dashboard ! JobFinished(JobInfo(jobDir.job.copySetStopped, totalSlotsNum, totalSlotsNum))
-			log.info(s"Job ${jobDir.job} done, dashboard notified, terminating.")
-			context stop self
-		} else
-			context become workingOn(remaining)
-	}
-
-	def workingOn(outstanding: Seq[StiltSlot]): Receive = deletionHandler(outstanding).orElse{
-		case local: LocallyAvailableSlot =>
-			val (removed, remaining) = outstanding.partition(local.slot === _)
-
-			if (removed.isEmpty) log.warning(s"Received slot I'm not waiting for ${local}")
-			workOnRemaining(remaining)
-
-		case StiltFailure(slot) =>
-			workOnRemaining(outstanding.filter(_ != slot))
-	}
-
-}
-
 object JobMonitor{
-
-	def props(jdir: JobDir, slotStepInMinutes: Integer): Props = Props.create(classOf[JobMonitor], jdir, slotStepInMinutes)
 
 	def calculateSlots(job: Job, stepInMinutes: Int): Seq[StiltSlot] = {
 		val start = LocalDateTime.of(job.start, LocalTime.MIN)

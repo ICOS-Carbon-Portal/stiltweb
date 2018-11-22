@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import java.nio.file.Files
 import org.scalatest.Matchers._
 
-class ResultRawMakerTests extends FunSuite{
+class ResultRowMakerTests extends FunSuite{
 
 	def resourcePath(path: String) = Paths.get(getClass.getResource(path).toURI)
 

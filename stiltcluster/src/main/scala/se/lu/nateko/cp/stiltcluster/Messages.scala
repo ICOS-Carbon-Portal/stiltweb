@@ -1,9 +1,13 @@
 package se.lu.nateko.cp.stiltcluster
 
-case object Hi
-case class CancelJob(id: String)
-case class JobCanceled(id: String)
-case class CalculateSlots(slots: Seq[StiltSlot])
-case class SlotCalculated(result: StiltResult)
-case class WorkMasterStatus(nCpusTotal: Int, work: Seq[StiltSlot])
+case class CalculateSlots(requestId: Long, slots: Seq[StiltSlot])
+
+sealed trait StiltOutcome
+case class SlotCalculated(result: StiltResult) extends StiltOutcome
+
+case class StiltFailure(slot: StiltSlot, errorMsg: String, logsZip: Option[Array[Byte]]) extends StiltOutcome
+
+case class WorkMasterStatus(nCpusTotal: Int, work: Seq[StiltSlot], respondingToRequest: Option[Long] = None){
+	def freeCores = nCpusTotal - work.size
+}
 

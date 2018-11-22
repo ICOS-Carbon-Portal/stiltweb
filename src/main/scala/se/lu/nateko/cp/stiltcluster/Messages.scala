@@ -27,17 +27,11 @@ case class Job(
 		this.copy(timeStopped=Some(Instant.now()))
 }
 
+case class CancelJob(id: String)
 
-case class BeginJob(jdir: JobDir)
+case class SlotFailure(slot: StiltSlot, errorMessage: String, logsFilename: String)
 
-case class RequestManySlots(slots: Seq[StiltSlot])
-case class CancelSlots(slots: Seq[StiltSlot])
-
-case object Subscribe
-
-case class JobFinished(jinfo: JobInfo)
-
-case class JobInfo(job: Job, nSlots: Int, nSlotsFinished: Int) {
+case class JobInfo(job: Job, nSlots: Int, nSlotsFinished: Int, failures: Seq[SlotFailure] = Nil) {
 	def id = job.id
 }
 
@@ -46,16 +40,14 @@ case class WorkerNodeInfo(address: Address, nCpusFree: Int, nCpusTotal: Int)
 case class DashboardInfo(
 		running: Seq[JobInfo],
 		done: Seq[JobInfo],
-		queue: Seq[Job],
+		queue: Seq[JobInfo],
 		infra: Seq[WorkerNodeInfo]
 	){
 
 	def findCancellableJobById(jobId: String): Option[Job] = {
-		queue.find(_.id == jobId).orElse(running.find(_.id == jobId).map(_.job))
+		(running ++ queue).find(_.id == jobId).map(_.job)
 	}
 }
 
 case object PleaseSendDashboardInfo
-
-case class WorkMasterUpdate(address: Address, status: WorkMasterStatus)
-case class WorkMasterDown(address: Address)
+case object Subscribe

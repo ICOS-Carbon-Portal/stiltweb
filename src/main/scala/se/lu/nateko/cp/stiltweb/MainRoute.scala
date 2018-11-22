@@ -70,6 +70,9 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			} ~
 			path("wsdashboardinfo"){
 				handleWebSocketMessages(cluster.websocketsFlow)
+			} ~
+			pathPrefix("output"){
+				getFromBrowseableDirectory(config.stateDirectory)
 			}
 		} ~
 		post{
@@ -86,9 +89,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 					complete((StatusCodes.BadRequest, "Wrong request payload, expected a proper Job object"))
 				} ~
 				complete((StatusCodes.Forbidden, "Please log in with Carbon Portal"))
-			}
-		} ~
-		post {
+			} ~
 			path("deletejob" / Segment) { jobId =>
 				user{userId =>
 					if (config.admins.exists(_ == userId.email)) {

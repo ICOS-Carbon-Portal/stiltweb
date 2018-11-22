@@ -66,7 +66,7 @@ object LocallyAvailableSlot {
 }
 
 
-class SlotArchiver(stateDir: Path, slotStepInMinutes: Integer) {
+class SlotArchiver(stateDir: Path, slotStepInMinutes: Int) {
 
 	val slotsDir = Util.ensureDirectory(stateDir.resolve("slots"))
 

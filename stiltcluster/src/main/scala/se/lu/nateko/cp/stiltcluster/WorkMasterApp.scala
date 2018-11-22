@@ -27,7 +27,7 @@ object WorkMasterApp extends App {
 	}
 
 	val wm = system.actorOf(
-		WorkMaster.props(coresForStilt, conf.getString("stiltcluster.producerAddress")),
+		WorkMaster.props(coresForStilt, conf.getString("stiltcluster.receptionistAddress")),
 		name = "workmaster"
 	)
 

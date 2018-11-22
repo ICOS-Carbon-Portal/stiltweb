@@ -16,7 +16,7 @@ export default class DashboardView extends Component {
 
 			<JobInfoList
 				title="Job queue"
-				jobs={ds.queue.map(jobToJobInfo)}
+				jobs={ds.queue}
 				currUser={props.currUser}
 				cancelJob={props.cancelJob}
 			/>
@@ -37,10 +37,6 @@ export default class DashboardView extends Component {
 
 		</WideRow>;
 	}
-}
-
-function jobToJobInfo(job){
-	return {job, nSlots: undefined, nSlotsFinished: 0};
 }
 
 const JobInfoList = props => props.jobs.length

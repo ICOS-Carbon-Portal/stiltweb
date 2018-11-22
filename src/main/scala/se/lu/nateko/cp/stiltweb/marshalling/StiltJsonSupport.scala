@@ -4,7 +4,7 @@ import java.time.{ Instant, LocalDate }
 import akka.actor.Address
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
-import se.lu.nateko.cp.stiltcluster.{DashboardInfo, Job, JobInfo, StiltPosition, StiltSlot, StiltTime, WorkMasterStatus, WorkerNodeInfo}
+import se.lu.nateko.cp.stiltcluster._
 import spray.json._
 import se.lu.nateko.cp.stiltweb.StiltResultsRequest
 import se.lu.nateko.cp.stiltweb.StiltStationInfo
@@ -70,9 +70,10 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 	implicit val stiltTimeFormat = jsonFormat4(StiltTime.apply)
 	implicit val stiltPositionFormat = jsonFormat3(StiltPosition.apply)
 	implicit val stiltSlotFormat = jsonFormat2(StiltSlot.apply)
+	implicit val slotFailureFormat = jsonFormat3(SlotFailure)
 
-	implicit val jobInfoFormat = jsonFormat3(JobInfo)
-	implicit val workMasterStatusFormat = jsonFormat2(WorkMasterStatus)
+	implicit val jobInfoFormat = jsonFormat4(JobInfo)
+	implicit val workMasterStatusFormat = jsonFormat3(WorkMasterStatus)
 	implicit val workerNodeInfoFormat = jsonFormat3(WorkerNodeInfo)
 
 	implicit val dashboardInfoFormat = jsonFormat4(DashboardInfo)

@@ -35,6 +35,7 @@ Results/XXX/stiltresult2012x56.10Nx013.42Ex00150_1.csv
 package se.lu.nateko.cp.stiltcluster
 
 
+import java.io.FileNotFoundException
 import java.nio.file.{ Files, Path, Paths }
 
 
@@ -48,35 +49,33 @@ object StiltResultFileType extends Enumeration {
 
 
 
-/* A single stilt output file. We don't need to keep it's original filename
+/**
+ * A single stilt output file. We don't need to keep it's original filename
  * around since that can be generated from the slot and file type. The 'data'
  * member is the actual file data.
  */
-case class StiltResultFile (slot: StiltSlot,
-							typ: StiltResultFileType.Value,
-							data: Array[Byte])
+case class StiltResultFile (slot: StiltSlot, typ: StiltResultFileType.Value, data: Array[Byte])
 
 object StiltResultFile {
 
+	import StiltResultFileType._
 
-	def calcFileName(slot: StiltSlot,
-					 typ: StiltResultFileType.Value,
-					 jobId: String = "XXX"): Path = {
+	def calcFileName(slot: StiltSlot, typ: StiltResultFileType.Value, jobId: String): Path = {
 		typ match {
 
-			case StiltResultFileType.Foot =>
+			case Foot =>
 				// Footprints/XXX/foot2012x12x01x00x56.10Nx013.42Ex00150_aggreg.nc
 				Paths.get(f"Footprints/${jobId}/foot${slot}_aggreg.nc")
 
-			case StiltResultFileType.RDataFoot =>
+			case RDataFoot =>
 				// Footprints/XXX/.RDatafoot2012x12x01x00x56.10Nx013.42Ex00150
 				Paths.get(f"Footprints/${jobId}/.RDatafoot${slot}")
 
-			case StiltResultFileType.RData =>
+			case RData =>
 				// RData/XXX/.RData2012x12x01x00x56.10Nx013.42Ex00150
 				Paths.get(f"RData/${jobId}/.RData${slot}")
 
-			case StiltResultFileType.CSV =>
+			case CSV =>
 				// Results/XXX/stiltresult2012x56.10Nx013.42Ex00150_1.csv
 				Paths.get(f"Results/${jobId}/stiltresult${slot.year}x${slot.pos}_1.csv")
 
@@ -86,21 +85,18 @@ object StiltResultFile {
 
 
 
-/* The result of a stilt computation for a single slot. It's just a slot and the
+/**
+ *  The result of a stilt computation for a single slot. It's just a slot and the
  * four valuable output files.
  *
  * Instances of this are sent on the wire (as Akka messages) from the backend
  * (computation) nodes to the frontend (web).
  */
 case class StiltResult (slot: StiltSlot, files: Seq[StiltResultFile])
-case class StiltFailure(slot: StiltSlot)
 
 object StiltResult {
 
-	import StiltResultFileType._
-	val requiredFileTypes = Seq(Foot, RDataFoot, RData, CSV)
-
-	/* Read the (valuable) output files from a stilt simulation.
+	/** Read the (valuable) output files from a stilt simulation.
 
 	 A stilt simulation produces many output files, but we only need four
 	 specific files, one of each type. The stilt simulation software allows you
@@ -108,16 +104,20 @@ object StiltResult {
 	 since stilt used a single giant output directory. Since stiltweb uses
 	 generated output directories, we always set job id to "XXX".
 	 */
-	def readOutputFiles(slot: StiltSlot,
-						dir: Path,
-						jobId:String = "XXX"): Seq[StiltResultFile] = {
-		requiredFileTypes.map { typ =>
+	def readOutputFiles(slot: StiltSlot, dir: Path, jobId: String = "XXX"): Seq[StiltResultFile] =
+		StiltResultFileType.values.toSeq.map { typ =>
+
 			val relPath = StiltResultFile.calcFileName(slot, typ, jobId)
 			val absPath = dir.resolve(relPath)
+
+			if(!Files.exists(absPath)) throw new FileNotFoundException(
+				s"File ${relPath.getFileName} was not found after calculation. The calculation must have failed."
+			)
+
 			val data = Files.readAllBytes(absPath)
 			new StiltResultFile(slot, typ, data)
 		}
-	}
+
 
 	def apply(slot: StiltSlot, dir: Path): StiltResult = {
 		new StiltResult(slot, readOutputFiles(slot, dir))

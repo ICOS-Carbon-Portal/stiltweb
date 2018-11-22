@@ -5,7 +5,8 @@ import java.nio.file.Paths
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
-import akka.actor.{ ActorSystem, Props }
+import akka.actor.ActorSelection
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.ws.Message
 import akka.pattern.ask
 import akka.stream.OverflowStrategy
@@ -30,13 +31,10 @@ class StiltClusterApi {
 	val mainDir = Paths.get(stiltConf.mainDirectory)
 	val slotStep = stiltConf.slotStepInMinutes
 
-	val dashboard = system.actorOf(Props[DashboardMaker], name="dashboardmaker")
-
-	private val archiver =  new SlotArchiver(stateDir, slotStep)
-	system.actorOf(SlotProducer.props(archiver), name="slotproducer")
-
-	val receptionist = system.actorOf(WorkReceptionist.props(stateDir, slotStep), name = "receptionist")
-
+	val receptionist = ActorSelection(
+		system.actorOf(WorkReceptionist.props(stateDir, slotStep), name = "receptionist"),
+		Iterable.empty
+	)
 
 
 	import system.dispatcher
@@ -48,7 +46,7 @@ class StiltClusterApi {
 	def queryOwner(jobId: String): Future[Option[String]] = {
 		// The assumption is that this query will run on the same JVM as the responding actor.
 		implicit val timeout = Timeout(1 seconds)
-		ask(dashboard, PleaseSendDashboardInfo).mapTo[DashboardInfo].map{ dbi =>
+		ask(receptionist, PleaseSendDashboardInfo).mapTo[DashboardInfo].map{ dbi =>
 			dbi.findCancellableJobById(jobId).map(_.userId)
 		}
 	}
@@ -60,7 +58,7 @@ class StiltClusterApi {
 
 		val source: Source[Message, Any] = Source
 			.actorRef[DashboardInfo](1, OverflowStrategy.dropHead)
-			.mapMaterializedValue(publisher => dashboard.tell(Subscribe, publisher))
+			.mapMaterializedValue(publisher => receptionist.tell(Subscribe, publisher))
 			.map(di => Strict(di.toJson.compactPrint))
 
 		Flow.fromSinkAndSourceMat(Sink.ignore, source)(Keep.right)
