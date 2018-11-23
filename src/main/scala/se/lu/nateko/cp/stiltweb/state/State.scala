@@ -23,7 +23,7 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 	private val workers = Map.empty[Worker, WorkmasterState]
 	private val jobs = Map.empty[JobId, JobState]
 
-	val slotArchiver = new SlotArchiver(stateDir, slotStepInMinutes)
+	val archiver = new Archiver(stateDir, slotStepInMinutes)
 
 	def isKnownWorker(w: Worker): Boolean = workers.contains(w)
 
@@ -48,7 +48,7 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 	 * returns true if there is actual work to do, false otherwise
 	 */
 	def startJob(job: Job): Boolean = {
-		val allSlots = JobMonitor.calculateSlots(job, slotStepInMinutes)
+		val allSlots = archiver.calculateSlots(job)
 
 		val toCalculate: Seq[StiltSlot] = allSlots.filterNot(slotIsAvailable)
 
@@ -60,7 +60,7 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 
 	def enqueue(work: Seq[StiltSlot]): Unit = slots ++= work
 
-	def slotIsAvailable(slot: StiltSlot): Boolean = slotArchiver.load(slot).isDefined
+	def slotIsAvailable(slot: StiltSlot): Boolean = archiver.load(slot).isDefined
 
 	def distributeWork(): Map[Worker, CalculateSlots] = workers
 		.map{

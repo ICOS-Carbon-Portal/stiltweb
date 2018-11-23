@@ -6,17 +6,18 @@ import akka.actor.ActorLogging
 import akka.actor.Props
 import akka.actor.Terminated
 import se.lu.nateko.cp.stiltweb.state.State
+import se.lu.nateko.cp.stiltweb.JobDir
 
 class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends StreamPublisher[DashboardInfo] with ActorLogging {
 
-	val jobsDir = Util.ensureDirectory(stateDir.resolve("jobs"))
 	val state = new State(stateDir, slotStepInMinutes.intValue)
+	val jobsDir = state.archiver.jobsDir
 
 	override def preStart() = {
 		log.info(s"Starting up, looking in ${jobsDir} for unfinished jobs")
 
 		Util.iterateChildren(jobsDir).filter(JobDir.isUnfinishedJobDir).foreach{
-			dir => startJob(JobDir(dir).job)
+			dir => startJob(JobDir.load(dir).job)
 		}
 	}
 
@@ -31,7 +32,7 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 
 	def coreReceive: Receive = {
 		case jobRequest: Job =>
-			val jdir = JobDir.saveAsNew(jobRequest.copySetStarted, jobsDir)
+			val jdir = state.archiver.save(jobRequest.copySetStarted)
 
 			log.info(s"Received $jobRequest, saved to ${jdir.dir}")
 
@@ -65,7 +66,7 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 
 		case SlotCalculated(result) => {
 			log.debug(s"Got ${result.slot} calculated, saving to the slot archive")
-			state.slotArchiver.save(result)
+			state.archiver.save(result)
 			finishSlot(result.slot)
 		}
 
@@ -85,10 +86,11 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 
 	def startJob(job: Job): Unit = {
 		log.info(s"Starting $job")
-		if(!state.startJob(job)) finishJob(job)
+		val thereIsWorkToBeDone = state.startJob(job)
+		if(!thereIsWorkToBeDone) finishJob(job)
 	}
 
-	def jobDir(job: Job) = JobDir.existing(job, jobsDir)
+	def jobDir(job: Job) = new JobDir(job, state.archiver.getJobDir(job))
 
 	def logPathMaker(slot: StiltSlot)(job: Job) = stateDir.relativize(jobDir(job).logsPath(slot)).toString
 }

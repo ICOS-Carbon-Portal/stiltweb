@@ -1,9 +1,11 @@
-package se.lu.nateko.cp.stiltcluster
+package se.lu.nateko.cp.stiltweb
 
 import java.nio.file.{Files, Path}
-
-import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport._
+import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.JobFormat
 import spray.json._
+import se.lu.nateko.cp.stiltcluster.Job
+import se.lu.nateko.cp.stiltcluster.StiltSlot
+import se.lu.nateko.cp.stiltcluster.Util
 
 
 class JobDir(val job: Job, val dir: Path) {
@@ -32,14 +34,13 @@ object JobDir{
 	def isJobDir(f: Path) = Files.isDirectory(f) && Files.exists(f.resolve(JobFile))
 	def isUnfinishedJobDir(f: Path) = isJobDir(f) && ! Files.exists(f.resolve(DoneFile))
 
-	def apply(dir: Path) = {
+	def load(dir: Path): JobDir = {
 		val jobFile = dir.resolve(JobFile)
 		val job = scala.io.Source.fromFile(jobFile.toFile).mkString.parseJson.convertTo[Job]
 		new JobDir(job, dir)
 	}
 
-	def saveAsNew(job: Job, toJobsDir: Path): JobDir = {
-		val dir = resolvePath(toJobsDir, job)
+	def saveAsNew(job: Job, dir: Path): JobDir = {
 		Files.createDirectories(dir)
 
 		val f = dir.resolve(JobFile)
@@ -51,9 +52,5 @@ object JobDir{
 
 		new JobDir(job, dir)
 	}
-
-	def existing(job: Job, jobsDir: Path) = new JobDir(job, resolvePath(jobsDir, job))
-
-	def resolvePath(jobsDir: Path, job: Job): Path = jobsDir.resolve(job.id)
 
 }
