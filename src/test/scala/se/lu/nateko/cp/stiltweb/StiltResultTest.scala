@@ -5,24 +5,18 @@ import java.nio.file.{Files, Paths}
 import org.scalatest.FunSuite
 import se.lu.nateko.cp.stiltcluster.{StiltResult, StiltSlot, StiltResultFileType}
 
-
-object StiltResultTest {
-	val sampleFileName = "./Footprints/XXX/foot2012x12x08x18x46.55Nx007.98Ex00720_aggreg.nc"
-	val (_prefix, sampleSlot, _suffix) = StiltSlot.ofFilename(sampleFileName)
-
-	assert(_prefix == "./Footprints/XXX/foot")
-	assert(_suffix == "_aggreg.nc")
-
+object StiltResultTest{
+	val StiltSlot(sampleSlot) = "2012x12x08x18x46.55Nx007.98Ex00720"
 	val sampleSlotDir = Paths.get(getClass.getResource("/stilt-sample-run/output").getFile)
 	assert(Files.exists(sampleSlotDir))
 
 	val sampleResult = StiltResult(sampleSlot, sampleSlotDir)
 }
 
-
 class StiltResultTest extends FunSuite {
 
-	import StiltResultTest.{sampleSlotDir, sampleResult}
+	import StiltResultTest._
+
 
 	test("Read output directory") {
 

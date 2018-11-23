@@ -10,7 +10,7 @@ class RunStiltTest extends FunSuite {
 				  LocalDate.of(2012, 1, 1),
 				  LocalDate.of(2012, 1, 2),
 				  "user")
-	val slot = StiltSlot.ofString("2012x12x01x00x56.10Nx013.42Ex00150")
+	val StiltSlot(slot) = "2012x12x01x00x56.10Nx013.42Ex00150"
 
 	test("Run command") {
 		assert(RunStilt.run_cmd("echo foobar") == Seq("foobar"))

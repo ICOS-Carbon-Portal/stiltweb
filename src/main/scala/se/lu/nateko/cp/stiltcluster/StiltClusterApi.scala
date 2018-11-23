@@ -13,6 +13,7 @@ import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{ Flow, Keep, Sink, Source }
 import akka.util.Timeout
 import se.lu.nateko.cp.stiltweb.ConfigReader
+import se.lu.nateko.cp.stiltweb.state.Archiver
 
 
 class StiltClusterApi {
@@ -28,11 +29,10 @@ class StiltClusterApi {
 		Paths.get(dirPath.replaceFirst("^~", System.getProperty("user.home")))
 	}
 
-	val mainDir = Paths.get(stiltConf.mainDirectory)
-	val slotStep = stiltConf.slotStepInMinutes
+	val archiver = new Archiver(stateDir, stiltConf.slotStepInMinutes)
 
 	val receptionist = ActorSelection(
-		system.actorOf(WorkReceptionist.props(stateDir, slotStep), name = "receptionist"),
+		system.actorOf(WorkReceptionist.props(archiver), name = "receptionist"),
 		Iterable.empty
 	)
 

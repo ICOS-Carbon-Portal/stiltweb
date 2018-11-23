@@ -35,13 +35,14 @@ object StiltPosition {
 
 	val re = """(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+)""".r
 
-	def ofString(s: String): StiltPosition = {
-		val re(latS, latC, lonS, lonC, alt) = s
+	def unapply(s: String): Option[StiltPosition] = s match {
+		case re(latS, latC, lonS, lonC, alt) =>
 
-		val lat = latS.toDouble * (if (latC == "N") 1 else -1)
-		val lon = lonS.toDouble * (if (lonC == "E") 1 else -1)
+			val lat = latS.toDouble * (if (latC == "N") 1 else -1)
+			val lon = lonS.toDouble * (if (lonC == "E") 1 else -1)
 
-		new StiltPosition(lat, lon, alt.toInt)
+			Some(StiltPosition(lat, lon, alt.toInt))
+		case _ => None
 	}
 }
 
@@ -62,10 +63,11 @@ object StiltTime {
 	final val validHours = List("00", "03", "06", "09", "12", "15", "18", "21")
 	final val re = """(\d{4})x(\d{2})x(\d{2})x(\d{2})""".r // 2012x12x01x00
 
-	def ofString(slot: String): StiltTime = {
-		val re(year, month, day, hour) = slot
-		require(validHours contains hour)
-		new StiltTime(year.toInt, month.toInt, day.toInt, hour.toInt)
+	def unapply(slot: String): Option[StiltTime] = slot match {
+		case re(year, month, day, hour) if validHours contains hour =>
+			Some(StiltTime(year.toInt, month.toInt, day.toInt, hour.toInt))
+		case _ =>
+			None
 	}
 }
 
@@ -90,17 +92,10 @@ case class StiltSlot(time: StiltTime, pos: StiltPosition) {
 
 object StiltSlot {
 
-	def ofString(s: String): StiltSlot = {
-		// s looks like "2012x12x01x00x56.10Nx013.42Ex00150"
-		new StiltSlot(StiltTime.ofString(s.substring(0, 13)),
-					  StiltPosition.ofString(s.substring(14)))
-	}
+	// s looks like "2012x12x01x00x56.10Nx013.42Ex00150"
+	def unapply(s: String): Option[StiltSlot] = for(
+		time <- StiltTime.unapply(s.substring(0, 13));
+		pos <- StiltPosition.unapply(s.substring(14))
+	) yield StiltSlot(time, pos)
 
-	def ofFilename(s: String): (String, StiltSlot, String) = {
-		val mt = StiltTime.re.findFirstMatchIn(s).get
-		val mp = StiltPosition.re.findFirstMatchIn(s.substring(mt.end)).get
-		(s.substring(0, mt.start),
-		 StiltSlot.ofString(s.substring(mt.start, mt.end+mp.end)),
-		 s.substring(mt.end+mp.end))
-	}
 }

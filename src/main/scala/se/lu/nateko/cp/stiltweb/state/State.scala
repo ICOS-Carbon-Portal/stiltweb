@@ -1,7 +1,5 @@
 package se.lu.nateko.cp.stiltweb.state
 
-import java.nio.file.Path
-
 import scala.collection.mutable.Map
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Set
@@ -14,7 +12,7 @@ import se.lu.nateko.cp.stiltcluster._
  * By design, this class is not supposed to write to "outer world" or send any messages,
  * but can mutate itself and its members.
  */
-class State(stateDir: Path, slotStepInMinutes: Int) {
+class State(archiver: Archiver) {
 
 	type Worker = ActorRef
 	type JobId = String
@@ -22,8 +20,6 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 	private val slots = Queue.empty[StiltSlot]
 	private val workers = Map.empty[Worker, WorkmasterState]
 	private val jobs = Map.empty[JobId, JobState]
-
-	val archiver = new Archiver(stateDir, slotStepInMinutes)
 
 	def isKnownWorker(w: Worker): Boolean = workers.contains(w)
 

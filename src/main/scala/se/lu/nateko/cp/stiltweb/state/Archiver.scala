@@ -19,7 +19,7 @@ class LocallyAvailableSlot (val slot: StiltSlot, val slotDir: Path) {
 	override def toString() = s"LocallyAvailableslot(${slot}, ${slotDir})"
 }
 
-class Archiver(stateDir: Path, slotStepInMinutes: Int) {
+class Archiver(val stateDir: Path, slotStepInMinutes: Int) {
 
 	val slotsDir = Util.ensureDirectory(stateDir.resolve("slots"))
 	val jobsDir = Util.ensureDirectory(stateDir.resolve("jobs"))
