@@ -83,7 +83,7 @@ const FailureList = props => props.visible
 				<thead>
 					<tr><th>Slots</th><th>Error messages</th><th>Logs</th></tr>
 				</thead>
-				<tbody>{props.failures.map(({slot, errorMessage, logsFilename}) =>
+				<tbody>{props.failures.map(({slot, errorMessages, logsFilename}) =>
 					<tr key={logsFilename}>
 						<td>{timeStr(slot.time)}</td>
 						<td>{

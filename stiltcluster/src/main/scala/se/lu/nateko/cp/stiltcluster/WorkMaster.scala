@@ -134,7 +134,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 
 object WorkMaster{
 
-	val MaxNumOfAttempts = 1
+	val MaxNumOfAttempts = 2
 
 	def props(nCores: Int, receptionistAddress: String) = Props.create(classOf[WorkMaster], Int.box(nCores), receptionistAddress)
 
@@ -144,7 +144,7 @@ object WorkMaster{
 		val logsDir = stiltBaseDir.resolve("logs")
 		val logsZip = Util.zipFolder(logsDir, "PARTICLE.DAT")
 		val logErrMsgs = Util.iterateChildren(logsDir)
-			.filter(d => Files.isRegularFile(d) && d.endsWith(".log"))
+			.filter(d => Files.isRegularFile(d) && d.getFileName.toString.endsWith(".log"))
 			.flatMap(d => Source.fromFile(d.toFile).getLines)
 			.filter(_.contains("ERROR"))
 			.toIndexedSeq
