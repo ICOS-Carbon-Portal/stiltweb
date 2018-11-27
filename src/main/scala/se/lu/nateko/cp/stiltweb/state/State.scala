@@ -101,8 +101,8 @@ class State(archiver: Archiver) {
 	 * Records the failure.
 	 * @return incomplete jobs that include this slot
 	 */
-	def onSlotFailure(slot: StiltSlot, errMsg: String, logsPathMaker: Job => String): Seq[Job] =
-		jobs.values.flatMap{_.rememberFailureIfRelevant(slot, errMsg, logsPathMaker)}.toSeq
+	def onSlotFailure(slot: StiltSlot, errMsgs: Seq[String], logsPathMaker: Job => String): Seq[Job] =
+		jobs.values.flatMap{_.rememberFailuresIfRelevant(slot, errMsgs, logsPathMaker)}.toSeq
 
 	def getDashboardInfo: DashboardInfo = {
 		val infra = workers.toSeq.map{case (worker, wstate) =>

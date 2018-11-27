@@ -86,7 +86,9 @@ const FailureList = props => props.visible
 				<tbody>{props.failures.map(({slot, errorMessage, logsFilename}) =>
 					<tr key={logsFilename}>
 						<td>{timeStr(slot.time)}</td>
-						<td>{errorMessage}</td>
+						<td>{
+							errorMessages.map(msg => <div>{msg}</div>)
+						}</td>
 						<td><a href={config.workerOutputDir + logsFilename} target="_blanck">logs</a></td>
 					</tr>
 				)}</tbody>

@@ -68,8 +68,8 @@ class WorkReceptionist(archiver: Archiver) extends StreamPublisher[DashboardInfo
 			finishSlot(result.slot)
 		}
 
-		case StiltFailure(slot, errMsg, logsZip) =>
-			state.onSlotFailure(slot, errMsg, logPathMaker(slot)).foreach{job =>
+		case StiltFailure(slot, errMsgs, logsZip) =>
+			state.onSlotFailure(slot, errMsgs, logPathMaker(slot)).foreach{job =>
 				logsZip.foreach(jobDir(job).saveLogs(slot, _))
 			}
 			finishSlot(slot)

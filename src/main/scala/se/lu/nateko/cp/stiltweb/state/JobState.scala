@@ -24,9 +24,9 @@ class JobState(val job: Job, nSlotsTotal: Int, initWork: Seq[StiltSlot]){
 	}
 	def hasBeenRun = slotz.size < initRemainingSlots
 
-	def rememberFailureIfRelevant(slot: StiltSlot, errMsg: String, logsPathMaker: Job => String): Option[Job] =
+	def rememberFailuresIfRelevant(slot: StiltSlot, errMsgs: Seq[String], logsPathMaker: Job => String): Option[Job] =
 		if(slotz.contains(slot)){
-			failures += SlotFailure(slot, errMsg, logsPathMaker(job))
+			failures += SlotFailure(slot, errMsgs, logsPathMaker(job))
 			Some(job)
 		} else None
 }
