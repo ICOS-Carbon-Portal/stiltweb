@@ -17,11 +17,14 @@ import scala.util.Try
 
 import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
 import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
+import se.lu.nateko.cp.stiltcluster.StiltPosition
 import se.lu.nateko.cp.stiltcluster.StiltResultFileType
+import se.lu.nateko.cp.stiltcluster.StiltTime
 import se.lu.nateko.cp.stiltweb.csv.LocalDayTime
 import se.lu.nateko.cp.stiltweb.csv.RawRow
 import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
 import se.lu.nateko.cp.stiltweb.csv.RowCache
+import se.lu.nateko.cp.stiltweb.state.Archiver
 import spray.json.JsNull
 import spray.json.JsNumber
 import spray.json.JsValue
@@ -29,7 +32,7 @@ import spray.json.JsValue
 class StiltResultsPresenter(config: StiltWebConfig) {
 	import StiltResultsPresenter._
 
-	private val stationsDir = Paths.get(config.stateDirectory, stationsDirectory)
+	private val archiver = new Archiver(Paths.get(config.stateDirectory), config.slotStepInMinutes)
 
 	def getStationInfos: Seq[StiltStationInfo] = {
 		def opt(s: String): Option[String] = if(s.trim.isEmpty) None else Some(s.trim)
@@ -45,38 +48,26 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 			}
 			.toMap
 
-		subdirectories(stationsDir).map{directory =>
+		subdirectories(archiver.stationsDir).map{directory =>
 			val id = directory.getFileName.toString
 
 			val ids = idToIds.get(id).getOrElse(StiltStationIds(id))
 
-			val (lat, lon, alt) = latLonAlt(directory)
+			val pos = stiltPos(directory)
 
 			val years = subdirectories(directory).map(_.getFileName.toString).collect{
 				case yearDirPattern(dddd) => dddd.toInt
 			}
 
-			StiltStationInfo(ids, lat, lon, alt, years)
+			StiltStationInfo(ids, pos.lat, pos.lon, pos.alt, years)
 		}
 	}
 
-	private def latLonAlt(stationDir: Path): (Double, Double, Int) = {
+	private def stiltPos(stationDir: Path): StiltPosition = {
 		val id = stationDir.toRealPath().getFileName.toString
-		try{
-			id match{
-
-				case siteIdRegex(latStr, latSignStr, lonStr, lonSignStr, altStr) =>
-
-					val lat = latStr.toDouble * (if(latSignStr == "N") 1 else -1)
-					val lon = lonStr.toDouble * (if(lonSignStr == "E") 1 else -1)
-					val alt = altStr.toInt
-					(lat, lon, alt)
-			}
-		}catch{
-			case err: Throwable => throw new Exception(
-				s"Could not parse $id as stilt site id to extract lat/lon/alt",
-				err
-			)
+		id match{
+			case StiltPosition(sp) => sp
+			case _ => throw new Exception(s"Could not parse $id as stilt site id to extract lat/lon/alt")
 		}
 	}
 
@@ -97,7 +88,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 			case (fpDir, dt) if Files.exists(fpDir.resolve(StiltResultFileType.Foot.toString)) => dt
 		}
 
-	private def yearPath(stationId: String, year: Year) = stationsDir.resolve(stationId).resolve(year.toString)
+	private def yearPath(stationId: String, year: Year) = archiver.stationsDir.resolve(stationId).resolve(year.toString)
 
 	private def listSlotRows(stationId: String, year: Year, from: Option[MonthDay], to: Option[MonthDay]): Iterator[SlotCsvRow] = {
 		val rowFactory = () => listSlots(stationId, year, None, None).flatMap{ case (fpDir, dt) =>
@@ -130,8 +121,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		.flatMap(subdirectories)
 		.map(path => path -> path.getFileName.toString)
 		.collect{
-			case (path, footDtPattern(yyyy, mm, dd, hh)) =>
-				path -> LocalDateTime.of(yyyy.toInt, mm.toInt, dd.toInt, hh.toInt, 0)
+			case (path, StiltTime(stime)) => path -> stime.toJava
 		}
 		.filter{
 			val fromDt = from.map(toDate).map(d => LocalDateTime.of(d, LocalTime.MIN)).getOrElse(LocalDateTime.of(year, 1, 1, 0, 0))
@@ -158,7 +148,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		val dd = "%02d".format(dt.getDayOfMonth)
 		val hh = "%02d".format(dt.getHour)
 		val fpDir = Array(yyyy, "x", mm, "x", dd, "x", hh).mkString
-		val yyyyDir = stationsDir.resolve(stationId).resolve(yyyy)
+		val yyyyDir = archiver.stationsDir.resolve(stationId).resolve(yyyy)
 		val mmDir = yyyyDir.resolve(mm).resolve(fpDir)
 
 		if(Files.exists(mmDir)) mmDir else{
@@ -214,16 +204,10 @@ object StiltResultsPresenter{
 	type CsvRow = Map[String, Double]
 	type SlotCsvRow = (LocalDateTime, CsvRow)
 
-	val stationsDirectory = "stations"
-
 	// ex: 2007
 	val yearDirPattern = """^(\d{4})$""".r
 	// ex: 07, 5
 	val monthDirPattern = """^(\d\d?)$""".r
-	// ex: 2007x02x03x06
-	val footDtPattern = """^(\d{4})x(\d\d)x(\d\d)x(\d\d)$""".r
-	// ex: 46.55Nx007.98Ex00720
-	val siteIdRegex = """^(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+)$""".r
 
 	def subdirectories(dir: Path): IndexedSeq[Path] = {
 		if(!Files.exists(dir) || !Files.isDirectory(dir)) IndexedSeq.empty else {

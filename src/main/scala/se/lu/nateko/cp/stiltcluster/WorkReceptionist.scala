@@ -1,22 +1,21 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.nio.file.Path
-
 import akka.actor.ActorLogging
 import akka.actor.Props
 import akka.actor.Terminated
+import se.lu.nateko.cp.stiltweb.JobDir
+import se.lu.nateko.cp.stiltweb.state.Archiver
 import se.lu.nateko.cp.stiltweb.state.State
 
-class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends StreamPublisher[DashboardInfo] with ActorLogging {
+class WorkReceptionist(archiver: Archiver) extends StreamPublisher[DashboardInfo] with ActorLogging {
 
-	val jobsDir = Util.ensureDirectory(stateDir.resolve("jobs"))
-	val state = new State(stateDir, slotStepInMinutes.intValue)
+	val state = new State(archiver)
 
 	override def preStart() = {
-		log.info(s"Starting up, looking in ${jobsDir} for unfinished jobs")
+		log.info(s"Starting up, looking in ${archiver.jobsDir} for unfinished jobs")
 
-		Util.iterateChildren(jobsDir).filter(JobDir.isUnfinishedJobDir).foreach{
-			dir => startJob(JobDir(dir).job)
+		Util.iterateChildren(archiver.jobsDir).filter(JobDir.isUnfinishedJobDir).foreach{
+			dir => startJob(JobDir.load(dir).job)
 		}
 	}
 
@@ -31,7 +30,7 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 
 	def coreReceive: Receive = {
 		case jobRequest: Job =>
-			val jdir = JobDir.saveAsNew(jobRequest.copySetStarted, jobsDir)
+			val jdir = archiver.save(jobRequest.copySetStarted)
 
 			log.info(s"Received $jobRequest, saved to ${jdir.dir}")
 
@@ -65,12 +64,12 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 
 		case SlotCalculated(result) => {
 			log.debug(s"Got ${result.slot} calculated, saving to the slot archive")
-			state.slotArchiver.save(result)
+			archiver.save(result)
 			finishSlot(result.slot)
 		}
 
-		case StiltFailure(slot, errMsg, logsZip) =>
-			state.onSlotFailure(slot, errMsg, logPathMaker(slot)).foreach{job =>
+		case StiltFailure(slot, errMsgs, logsZip) =>
+			state.onSlotFailure(slot, errMsgs, logPathMaker(slot)).foreach{job =>
 				logsZip.foreach(jobDir(job).saveLogs(slot, _))
 			}
 			finishSlot(slot)
@@ -85,14 +84,15 @@ class WorkReceptionist(stateDir: Path, slotStepInMinutes: Integer) extends Strea
 
 	def startJob(job: Job): Unit = {
 		log.info(s"Starting $job")
-		if(!state.startJob(job)) finishJob(job)
+		val thereIsWorkToBeDone = state.startJob(job)
+		if(!thereIsWorkToBeDone) finishJob(job)
 	}
 
-	def jobDir(job: Job) = JobDir.existing(job, jobsDir)
+	def jobDir(job: Job) = new JobDir(job, archiver.getJobDir(job))
 
-	def logPathMaker(slot: StiltSlot)(job: Job) = stateDir.relativize(jobDir(job).logsPath(slot)).toString
+	def logPathMaker(slot: StiltSlot)(job: Job) = archiver.stateDir.relativize(jobDir(job).logsPath(slot)).toString
 }
 
 object WorkReceptionist{
-	def props(stateDir: Path, slotStepInMinutes: Integer) = Props.create(classOf[WorkReceptionist], stateDir: Path, slotStepInMinutes)
+	def props(archiver: Archiver) = Props.create(classOf[WorkReceptionist], archiver)
 }

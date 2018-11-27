@@ -1,7 +1,5 @@
 package se.lu.nateko.cp.stiltweb.state
 
-import java.nio.file.Path
-
 import scala.collection.mutable.Map
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Set
@@ -14,7 +12,7 @@ import se.lu.nateko.cp.stiltcluster._
  * By design, this class is not supposed to write to "outer world" or send any messages,
  * but can mutate itself and its members.
  */
-class State(stateDir: Path, slotStepInMinutes: Int) {
+class State(archiver: Archiver) {
 
 	type Worker = ActorRef
 	type JobId = String
@@ -22,8 +20,6 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 	private val slots = Queue.empty[StiltSlot]
 	private val workers = Map.empty[Worker, WorkmasterState]
 	private val jobs = Map.empty[JobId, JobState]
-
-	val slotArchiver = new SlotArchiver(stateDir, slotStepInMinutes)
 
 	def isKnownWorker(w: Worker): Boolean = workers.contains(w)
 
@@ -48,7 +44,7 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 	 * returns true if there is actual work to do, false otherwise
 	 */
 	def startJob(job: Job): Boolean = {
-		val allSlots = JobMonitor.calculateSlots(job, slotStepInMinutes)
+		val allSlots = archiver.calculateSlots(job)
 
 		val toCalculate: Seq[StiltSlot] = allSlots.filterNot(slotIsAvailable)
 
@@ -60,7 +56,7 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 
 	def enqueue(work: Seq[StiltSlot]): Unit = slots ++= work
 
-	def slotIsAvailable(slot: StiltSlot): Boolean = slotArchiver.load(slot).isDefined
+	def slotIsAvailable(slot: StiltSlot): Boolean = archiver.load(slot).isDefined
 
 	def distributeWork(): Map[Worker, CalculateSlots] = workers
 		.map{
@@ -105,8 +101,8 @@ class State(stateDir: Path, slotStepInMinutes: Int) {
 	 * Records the failure.
 	 * @return incomplete jobs that include this slot
 	 */
-	def onSlotFailure(slot: StiltSlot, errMsg: String, logsPathMaker: Job => String): Seq[Job] =
-		jobs.values.flatMap{_.rememberFailureIfRelevant(slot, errMsg, logsPathMaker)}.toSeq
+	def onSlotFailure(slot: StiltSlot, errMsgs: Seq[String], logsPathMaker: Job => String): Seq[Job] =
+		jobs.values.flatMap{_.rememberFailuresIfRelevant(slot, errMsgs, logsPathMaker)}.toSeq
 
 	def getDashboardInfo: DashboardInfo = {
 		val infra = workers.toSeq.map{case (worker, wstate) =>

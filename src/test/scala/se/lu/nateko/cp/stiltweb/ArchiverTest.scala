@@ -1,14 +1,17 @@
 package se.lu.nateko.cp.stiltweb
 
 import java.nio.file.Files
+import java.time.LocalDate
 
-import org.scalatest._
-import se.lu.nateko.cp.stiltcluster._
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
+import org.scalatest._
+
+import se.lu.nateko.cp.stiltcluster._
+import se.lu.nateko.cp.stiltweb.state.Archiver
 
 
-class SlotArchiverTest extends FunSuite with BeforeAndAfterAll{
+class ArchiverTest extends FunSuite with BeforeAndAfterAll{
 
 	val tmp = Files.createTempDirectory("slotarchiver")
 
@@ -18,7 +21,7 @@ class SlotArchiverTest extends FunSuite with BeforeAndAfterAll{
 
 	test("sending/receiving slots") {
 
-		val sla = new SlotArchiver(tmp, 180)
+		val sla = new Archiver(tmp, 180)
 		val slot = StiltResultTest.sampleSlot
 
 		def listDir = Files.walk(tmp).sorted().iterator.asScala
@@ -26,16 +29,17 @@ class SlotArchiverTest extends FunSuite with BeforeAndAfterAll{
 			.mkString("\n")
 			.trim
 
-		// The SlotArchiver have just started in an empty directory, it
+		// The Archiver initialized with an empty directory, it
 		// should therefore not know about any slots.
 		assert(sla.load(slot) === None)
 
 		// And it's slot directory should be empty.
-		assert(listDir === "slots")
+		assert(listDir === "jobs\nslots\nstations")
 
 		sla.save(StiltResultTest.sampleResult)
 		// the slot should have been stored on disk.
-		val exp2 = """slots
+		val exp2 = """jobs
+					|slots
 					|slots/46.55Nx007.98Ex00720
 					|slots/46.55Nx007.98Ex00720/2012
 					|slots/46.55Nx007.98Ex00720/2012/12
@@ -44,8 +48,22 @@ class SlotArchiverTest extends FunSuite with BeforeAndAfterAll{
 					|slots/46.55Nx007.98Ex00720/2012/12/2012x12x08x18/foot
 					|slots/46.55Nx007.98Ex00720/2012/12/2012x12x08x18/rdata
 					|slots/46.55Nx007.98Ex00720/2012/12/2012x12x08x18/rdatafoot
-					|slots/46.55Nx007.98Ex00720/2012/cache180_4096.txt""".stripMargin
+					|slots/46.55Nx007.98Ex00720/2012/cache180_4096.txt
+					|stations""".stripMargin
 		assert(listDir === exp2)
 
+	}
+
+	test("two days have 16 3-hour slots"){
+		val pos = StiltPosition(50.0, 10.0, 100)
+		val job = Job("station", pos.lat, pos.lon, pos.alt, LocalDate.of(2012, 12, 7), LocalDate.of(2012, 12, 8), "username")
+		val sla = new Archiver(tmp, 180)
+		val slots = sla.calculateSlots(job)
+
+		assert(slots.size === 16)
+		val s0 = slots.head
+		assert(s0.pos === pos)
+		assert(s0.time === StiltTime(2012, 12, 7, 0))
+		assert(slots.last.time === StiltTime(2012, 12, 8, 21))
 	}
 }

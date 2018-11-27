@@ -5,6 +5,7 @@ import java.nio.file.{ Files, Paths }
 import scala.collection.mutable.Set
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.io.Source
 import scala.util.Success
 
 import akka.actor.{ Actor, ActorRef, Props, Terminated }
@@ -102,10 +103,9 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 					case err: Throwable =>
 						logError(err)
 						if(attempts < MaxNumOfAttempts) getResult(attempts)
-						else Future.successful{
-							val logsZip = Util.zipFolder(d.resolve("logs"), "PARTICLE.DAT")
-							StiltFailure(slot, err.getMessage, Some(logsZip))
-						}
+						else Future.successful(
+							getFailureInfo(slot, d, err.getMessage)
+						)
 				}.andThen{
 					case _ =>
 						Util.deleteDirRecursively(d)
@@ -115,7 +115,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 			.recover{
 				case err: Throwable =>
 					logError(err)
-					StiltFailure(slot, err.getMessage, None)
+					StiltFailure(slot, Seq(err.getMessage), None)
 			}
 
 		def logError(err: Throwable): Unit = {
@@ -134,9 +134,24 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 
 object WorkMaster{
 
-	val MaxNumOfAttempts = 2
+	val MaxNumOfAttempts = 1
 
 	def props(nCores: Int, receptionistAddress: String) = Props.create(classOf[WorkMaster], Int.box(nCores), receptionistAddress)
 
 	case object Stop
+
+	def getFailureInfo(slot: StiltSlot, stiltBaseDir: Path, fallbackErrMsg: String): StiltFailure = {
+		val logsDir = stiltBaseDir.resolve("logs")
+		val logsZip = Util.zipFolder(logsDir, "PARTICLE.DAT")
+		val logErrMsgs = Util.iterateChildren(logsDir)
+			.filter(d => Files.isRegularFile(d) && d.endsWith(".log"))
+			.flatMap(d => Source.fromFile(d.toFile).getLines)
+			.filter(_.contains("ERROR"))
+			.toIndexedSeq
+			.sorted
+
+		val errMsgs = if(logErrMsgs.isEmpty) Seq(fallbackErrMsg) else logErrMsgs
+
+		StiltFailure(slot, errMsgs, Some(logsZip))
+	}
 }
