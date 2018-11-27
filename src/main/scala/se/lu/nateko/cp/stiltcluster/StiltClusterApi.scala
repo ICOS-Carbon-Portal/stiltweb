@@ -66,4 +66,6 @@ class StiltClusterApi {
 	}
 
 	def terminate() = system.terminate()
+
+	val ioDispatcher = system.dispatchers.lookup("akka.actor.default-blocking-io-dispatcher")
 }

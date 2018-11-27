@@ -84,10 +84,17 @@ class Archiver(val stateDir: Path, slotStepInMinutes: Int) {
 	def getYearDir(slot: StiltSlot): Path =
 		getPosDir(slot.pos).resolve(slot.year.toString)
 
+	// /some/where/stations/JFJ/2012/
+	def getYearDir(siteId: String, year: Int): Path = stationsDir.resolve(siteId).resolve(year.toString)
+
 	// /some/where/slots/20.01Sx150.01Wx01234/2012/03/2012x12x01x00
 	def getSlotDir(slot: StiltSlot): Path =
 		getYearDir(slot).resolve(f"${slot.month}%02d").resolve(slot.time.toString)
 
+	// /some/where/stations/JFJ/2012/03/2012x12x01x09
+	def getSlotDir(siteId: String, time: StiltTime): Path = stationsDir
+		.resolve(siteId).resolve(time.year.toString)
+		.resolve(f"${time.month}%02d").resolve(time.toString)
 
 	def calculateSlots(job: Job): Seq[StiltSlot] = {
 		val start = LocalDateTime.of(job.start, LocalTime.MIN)

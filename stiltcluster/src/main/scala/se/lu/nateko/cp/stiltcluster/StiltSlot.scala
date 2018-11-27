@@ -69,6 +69,8 @@ object StiltTime {
 		case _ =>
 			None
 	}
+
+	def fromJava(dt: LocalDateTime) = StiltTime(dt.getYear, dt.getMonthValue, dt.getDayOfMonth, dt.getHour)
 }
 
 

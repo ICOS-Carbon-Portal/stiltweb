@@ -29,7 +29,7 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 	.enablePlugins(IcosCpSbtDeployPlugin)
 	.settings(
 		name := "stiltcluster",
-		version := "0.2.0",
+		version := "0.3.0",
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka" %% "akka-remote"         % akkaVersion,
 			"com.typesafe.akka" %% "akka-slf4j"          % akkaVersion,
@@ -58,13 +58,16 @@ lazy val stiltweb = (project in file("."))
 	.settings(commonSettings: _*)
 	.settings(
 		name := "stiltweb",
-		version := "0.2.1",
+		version := "0.3.0",
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka"  %% "akka-http-spray-json"               % akkaHttpVersion,
 			"com.typesafe.akka"  %% "akka-stream"                        % akkaVersion,
 			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.6.0-SNAPSHOT",
 			"se.lu.nateko.cp"    %% "views-core"                         % "0.4.0-SNAPSHOT",
-			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.0-SNAPSHOT",
+			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.2-SNAPSHOT",
+			"edu.ucar"            % "netcdf4"                            % "4.6.11" excludeAll(
+				ExclusionRule(organization = "edu.ucat", name = "cdm")
+			),
 			"com.typesafe.akka"  %% "akka-testkit"                       % akkaVersion        % "test",
 			"org.scalatest"      %% "scalatest"                          % "3.0.1"            % "test"
 		),

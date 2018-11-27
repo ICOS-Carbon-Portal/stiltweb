@@ -24,6 +24,7 @@ import se.lu.nateko.cp.stiltweb.csv.LocalDayTime
 import se.lu.nateko.cp.stiltweb.csv.RawRow
 import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
 import se.lu.nateko.cp.stiltweb.csv.RowCache
+import se.lu.nateko.cp.stiltweb.netcdf.FootprintJoiner
 import se.lu.nateko.cp.stiltweb.state.Archiver
 import spray.json.JsNull
 import spray.json.JsNumber
@@ -84,11 +85,20 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 			}
 
 	def listFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[LocalDateTime] =
+		listSlotsWithFootprints(stationId, fromDate, toDate).map(_._2)
+
+	def mergeFootprintsToNetcdf(stationId: String, fromDate: LocalDate, toDate: LocalDate): Path = {
+		val footPaths = listSlotsWithFootprints(stationId, fromDate, toDate)
+			.map(_._1.resolve(StiltResultFileType.Foot.toString))
+		FootprintJoiner.joinToTempFile(footPaths)
+	}
+
+	private def listSlotsWithFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[Slot] =
 		reduceToSingleYearOp(listSlots(stationId, _, _, _))(fromDate, toDate).collect{
-			case (fpDir, dt) if Files.exists(fpDir.resolve(StiltResultFileType.Foot.toString)) => dt
+			case slot @ (fpDir, _) if Files.exists(fpDir.resolve(StiltResultFileType.Foot.toString)) => slot
 		}
 
-	private def yearPath(stationId: String, year: Year) = archiver.stationsDir.resolve(stationId).resolve(year.toString)
+	private def yearPath(stationId: String, year: Year) = archiver.getYearDir(stationId, year.getValue)
 
 	private def listSlotRows(stationId: String, year: Year, from: Option[MonthDay], to: Option[MonthDay]): Iterator[SlotCsvRow] = {
 		val rowFactory = () => listSlots(stationId, year, None, None).flatMap{ case (fpDir, dt) =>
@@ -142,26 +152,11 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		.flatMap(_.toEmit)
 	}
 
-	private def footPrintDir(stationId: String, dt: LocalDateTime): Path = {
-		val yyyy = dt.getYear.toString
-		val mm = "%02d".format(dt.getMonthValue)
-		val dd = "%02d".format(dt.getDayOfMonth)
-		val hh = "%02d".format(dt.getHour)
-		val fpDir = Array(yyyy, "x", mm, "x", dd, "x", hh).mkString
-		val yyyyDir = archiver.stationsDir.resolve(stationId).resolve(yyyy)
-		val mmDir = yyyyDir.resolve(mm).resolve(fpDir)
-
-		if(Files.exists(mmDir)) mmDir else{
-			val m = dt.getMonthValue.toString
-			yyyyDir.resolve(m).resolve(fpDir)
-		}
-	}
-
 	def getFootprintRaster(stationId: String, dt: LocalDateTime): Raster = {
 
 		val factory = {
 			import config.netcdf._
-			val footprintDir = footPrintDir(stationId, dt).toString + File.separator
+			val footprintDir = archiver.getSlotDir(stationId, StiltTime.fromJava(dt)).toString + File.separator
 			new ViewServiceFactoryImpl(footprintDir, dateVars.asJava, latitudeVars.asJava, longitudeVars.asJava, elevationVars.asJava)
 		}
 		val service = factory.getNetCdfViewService(StiltResultFileType.Foot.toString)

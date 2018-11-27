@@ -1,15 +1,26 @@
 package se.lu.nateko.cp.stiltweb
 
+import java.nio.file.Files
 import java.time.LocalDateTime
 import java.time.LocalDate
 
+import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.unmarshalling.Unmarshaller
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport
 import se.lu.nateko.cp.stiltweb.marshalling.StationInfoMarshalling
+
+import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+import scala.util.Try
+import akka.stream.scaladsl.Flow
+import akka.util.ByteString
+
 
 class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 
@@ -18,6 +29,10 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 	import authRouting.user
 
 	private val service = new StiltResultsPresenter(config)
+
+	implicit val localDateFSU = Unmarshaller.apply[String, LocalDate](_ => s =>
+		Future.fromTry(Try(LocalDate.parse(s)))
+	)
 
 	def route: Route = pathPrefix("viewer") {
 		get {
@@ -31,11 +46,23 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				getFromResource("www/viewer.js")
 			} ~
 			path("listfootprints") {
-				parameters(("stationId", "fromDate", "toDate")) { (stationId, fromDateStr, toDateStr) =>
-					val fromDate = LocalDate.parse(fromDateStr)
-					val toDate = LocalDate.parse(toDateStr)
+				parameters(("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate])) { (stationId, fromDate, toDate) =>
 					val footprintsList = service.listFootprints(stationId, fromDate, toDate)
 					complete(footprintsList.map(_.toString).toSeq)
+				}
+			} ~
+			path("joinfootprints") {
+				parameters(("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate])) { (stationId, fromDate, toDate) =>
+					val netcdfPathFut = Future(service.mergeFootprintsToNetcdf(stationId, fromDate, toDate))(cluster.ioDispatcher)
+					withRequestTimeout(60.seconds){
+						onSuccess(netcdfPathFut){netcdf =>
+							onResponseStreamed(() => Files.deleteIfExists(netcdf)){
+								respondWithAttachment(stationId + ".nc"){
+									getFromFile(netcdf.toFile)
+								}
+							}
+						}
+					}
 				}
 			} ~
 			path("stationinfo") {
@@ -133,4 +160,17 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			}
 		}
 	}
+
+	def onResponseStreamed(cb: () => Unit): Directive0 = mapResponseEntity(re => {
+		re.transformDataBytes(Flow.apply[ByteString].watchTermination(){
+			case (mat, fut) =>
+				fut.onComplete{case _ => cb()}(cluster.ioDispatcher)
+				mat
+		})
+	})
+
+	def respondWithAttachment(fileName: String): Directive0 = respondWithHeader(
+		`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> fileName))
+	)
+
 }
