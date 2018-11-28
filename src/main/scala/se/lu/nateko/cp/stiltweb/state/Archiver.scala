@@ -66,7 +66,7 @@ class Archiver(val stateDir: Path, slotStepInMinutes: Int) {
 
 		//ensuring that a station symlink exists
 		val stationIdLink = getStationDir(job)
-		if(!Files.exists(stationIdLink)) Files.createSymbolicLink(stationIdLink, getPosDir(job.pos))
+		if(!Files.exists(stationIdLink)) Files.createSymbolicLink(stationIdLink, stationsDir.relativize(getPosDir(job.pos)))
 
 		JobDir.saveAsNew(job, getJobDir(job))
 	}
