@@ -122,7 +122,7 @@ const AxisControlSecondary = props => {
 };
 
 
-const StiltComponentSelector = ({label, comment, updateVisibility, options}) => {
+const StiltComponentSelector = ({label, comment, disabled, updateVisibility, options}) => {
 	const visibilityChangeHandler = event => {
 		if(updateVisibility){
 			updateVisibility(label, event.target.checked);
@@ -131,11 +131,12 @@ const StiltComponentSelector = ({label, comment, updateVisibility, options}) => 
 
 	const visibility = options.modelComponentsVisibility || {};
 
-	return <span key={label} title={comment} style={{marginLeft: 7}}>
+	return <span key={label} title={disabled ? 'Not available' : comment} style={{marginLeft: 7}}>
 		<input type="checkbox"
-			checked={!!visibility[label]}
+			checked={disabled ? false : !!visibility[label]}
 			onChange={visibilityChangeHandler}
 			style={{marginRight: 3, position: 'relative', top: 2}}
+			disabled={disabled}
 		/>
 		{label}
 	</span>;
