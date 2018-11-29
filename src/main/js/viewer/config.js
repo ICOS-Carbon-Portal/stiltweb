@@ -96,7 +96,9 @@ export default {
 	stiltResultColumnGrouping,
 	wdcggColumns,
 	primaryComponents(selectedScope){
-		const obsColumns = !selectedScope || selectedScope.dataObject ? wdcggColumns.slice(1) : [];
+		const obsColumns = !selectedScope || selectedScope.dataObject
+			? wdcggColumns.slice(1)
+			: [Object.assign({}, wdcggColumns[1], {disabled: true})];
 		return obsColumns.concat(stiltResultColumns.slice(1,3));
 	},
 	secondaryComponents,

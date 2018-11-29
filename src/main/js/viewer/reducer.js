@@ -1,6 +1,8 @@
-import {FETCHED_INITDATA, FETCHED_STATIONDATA, FETCHED_RASTER, SET_SELECTED_STATION, SET_SELECTED_SCOPE,
+import {
+	FETCHED_INITDATA, FETCHED_STATIONDATA, FETCHED_RASTER, SET_SELECTED_STATION, SET_SELECTED_SCOPE,
 	SET_DATE_RANGE, SET_VISIBILITY, INCREMENT_FOOTPRINT, PUSH_PLAY, SET_DELAY, ERROR,
-	SHOW_SPINNER, HIDE_SPINNER} from './actions';
+	SHOW_SPINNER, HIDE_SPINNER, SET_FOOTPRINT
+} from './actions';
 import {makeTimeSeriesGraphData} from './models/timeSeriesHelpers';
 import FootprintsRegistry from './models/FootprintsRegistry';
 import FootprintsFetcher from './models/FootprintsFetcher';
@@ -72,6 +74,11 @@ export default function(state, action){
 			return Object.assign(newState, {
 				axes: state.axes.updateVisibility(Object.keys(action.update)[0], Object.values(action.update)[0])
 			});
+
+		case SET_FOOTPRINT:
+			return state.footprint
+				? update({desiredFootprint: state.footprints.getFootprint(action.index)})
+				: state;
 
 		case INCREMENT_FOOTPRINT:
 			return state.footprint

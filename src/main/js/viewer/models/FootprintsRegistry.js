@@ -17,6 +17,10 @@ export default class FootprintsRegistry{
 		this._step = steps[0];
 	}
 
+	get dates(){
+		return this._dates;
+	}
+
 	indexRange(dateRange){
 		const self = this;
 		const dates = this._dates;
