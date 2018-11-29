@@ -1,19 +1,58 @@
 import React, { Component } from 'react';
 import Dygraph from 'dygraphs';
 import './Dygraphs.css';
-import {deepMerge} from 'icos-cp-utils';
+import {deepMerge, debounce} from 'icos-cp-utils';
 import DygraphYAxes from '../models/DygraphYAxes';
+import Marker from '../models/Marker';
 
+
+const canvasMarker = {
+	leftPadding: 15,
+	lineWidth: 1,
+	markerOffset: 3
+};
 
 export default class Dygraphs extends Component {
 	constructor(props) {
 		super(props);
 
+		this.footprintDates = undefined;
+		this.footprint = {
+			index: undefined
+		};
+		this.xAxisRange = [];
 		this.dataId = undefined;
 		this.graph = undefined;
 		this.axes = props.axes;
 		this.lastAxesTs = undefined;
 		this.dygraphYAxes = new DygraphYAxes();
+		this.canvasOverlay = null;
+		this.marker = null;
+	}
+
+	addEvents(){
+		this.resize = debounce(this.resizeHandler.bind(this));
+		window.addEventListener("resize", this.resize);
+
+		this.mousemoveCOHandler = this.canvasOverlayMousemove.bind(this);
+		this.canvasOverlay.addEventListener("mousemove", this.mousemoveCOHandler);
+
+		this.graphOut = this.marker.dragEnd.bind(this.marker);
+		this.graphDiv.addEventListener("mouseleave", this.graphOut);
+		this.graphDiv.addEventListener("mouseup", this.graphOut);
+	}
+
+	componentWillUnmount(){
+		this.marker.release();
+		window.removeEventListener("resize", this.resize);
+		this.canvasOverlay.removeEventListener("mousemove", this.mousemoveCOHandler);
+		this.graphDiv.removeEventListener("mouseleave", this.graphOut);
+		this.graphDiv.removeEventListener("mouseup", this.graphOut);
+	}
+
+	resizeHandler(){
+		this.markFootprint();
+		this.marker.xRange = this.props.dateRange.map(x => this.graph.toDomXCoord(x));
 	}
 
 	componentDidMount(){
@@ -31,7 +70,7 @@ export default class Dygraphs extends Component {
 				drawCallback: this.drawCallbackHandler.bind(this),
 				zoomCallback: this.dygraphYAxes.zoomCallback.bind(this.dygraphYAxes),
 				interactionModel: Object.assign({}, Dygraph.defaultInteractionModel, {
-					dblclick: this.dygraphYAxes.dblclick.bind(this.dygraphYAxes)
+					dblclick: this.dblclickHandler.bind(this)
 				}),
 				dateWindow: props.dateRange,
 				strokeWidth: 1,
@@ -63,10 +102,32 @@ export default class Dygraphs extends Component {
 				visibility: this.getVisibility(props),
 			}, props.graphOptions)
 		);
+
+		const {canvasOverlay, marker} = createCanvasOverlay(
+			this.graphDiv,
+			this.graph,
+			this.markerEndCallback.bind(this)
+		);
+		this.canvasOverlay = canvasOverlay;
+		this.marker = marker;
+		this.graphDiv.firstChild.appendChild(this.canvasOverlay);
+
+		this.addEvents();
 	}
 
 	drawCallbackHandler(graph){
 		if (this.props.updateXRange) this.props.updateXRange(graph.xAxisRange());
+	}
+
+	dblclickHandler(){
+		this.dygraphYAxes.dblclick();
+		this.markFootprint();
+	}
+
+	markFootprint(){
+		const footprintDate = new Date(this.footprint.date);
+		const x = this.graph.toDomXCoord(footprintDate);
+		this.canvasOverlay.style.left = x - canvasMarker.markerOffset + 1 + 'px';
 	}
 
 	formatDate(ms){
@@ -84,21 +145,23 @@ export default class Dygraphs extends Component {
 	}
 
 	componentWillReceiveProps(nextProps){
+		const data = nextProps.data.getData();
+		this.footprintDates = nextProps.footprints.dates;
 		this.axes = nextProps.axes;
+		const nextRange = nextProps.dateRange;
+		this.marker.xRange = nextProps.dateRange.map(x => this.graph.toDomXCoord(x));
+
 		const nextVisibility = this.getVisibility(nextProps);
 		const update = {};
 
 		if (this.axes.ts !== this.lastAxesTs) {
 			this.lastAxesTs = this.axes.ts;
 
-			const data = nextProps.data.getData();
 			const labels = this.makeLabels(nextProps).slice(1);
 			const axelNumbers = labels.map(lbl => nextProps.axes.isLabelOnPrimary(lbl) ? 1 : 2);
 
 			this.dygraphYAxes.initFromExternal(this.graph, data, nextVisibility, axelNumbers);
 		}
-
-		const nextRange = nextProps.dateRange;
 
 		if(nextRange){
 			const currRange = this.graph.xAxisRange();
@@ -112,7 +175,7 @@ export default class Dygraphs extends Component {
 		if(nextData && nextData.id !== this.dataId){
 			this.dataId = nextData.id;
 			Object.assign(update, {
-				file: nextProps.data.getData(),
+				file: data,
 				labels: this.makeLabels(nextProps),
 				series: makeSeriesOpt(nextProps.data.series)
 			});
@@ -124,11 +187,45 @@ export default class Dygraphs extends Component {
 
 		const optionsWillUpdate = (Object.keys(update).length > 0);
 
-		if(annotationsHaveBeenUpdated(this.props.annotations, nextProps.annotations)){
-			this.graph.setAnnotations(nextProps.annotations, optionsWillUpdate); //avoiding double redrawing
+		if (nextProps.footprint && this.footprint.index !== nextProps.footprint.index) {
+			this.footprint = nextProps.footprint;
+			this.markFootprint();
+
+			this.graph.mouseMove_(400);
 		}
 
 		if (optionsWillUpdate) this.graph.updateOptions(update);
+	}
+
+	canvasOverlayMousemove(e){
+		const x = this.marker.mapPosition(e.clientX);
+		const closestIndex = this.getClosestDateIndex(x);
+		this.labelsDiv.firstChild.nodeValue = this.formatDate(this.footprintDates[closestIndex]);
+	}
+
+	getClosestDateIndex(x){
+		const markerDate = this.graph.toDataXCoord(x);
+		const dateIdx = this.footprintDates.findIndex(footprintDate => footprintDate > markerDate);
+
+		if (dateIdx === -1)
+			return this.footprintDates.length - 1;
+
+		const dateBeforeMarker = this.footprintDates[dateIdx - 1];
+		const dateAfterMarker = this.footprintDates[dateIdx];
+		return markerDate - dateBeforeMarker < dateAfterMarker - markerDate
+			? dateIdx - 1
+			: dateIdx;
+	}
+
+	markerEndCallback(clientX){
+		const x = this.marker.mapPosition(clientX);
+		const closestIndex = this.getClosestDateIndex(x);
+
+		if (closestIndex === this.footprint.index) {
+			this.markFootprint();
+		} else {
+			this.props.jumpToFootprint(closestIndex);
+		}
 	}
 
 	render(){
@@ -159,11 +256,31 @@ function makeSeriesOpt(dyDataSeries){
 	return opt;
 }
 
-function annotationsHaveBeenUpdated(oldAnno, newAnno){
-	if(!!oldAnno !== !!newAnno) return true;
-	if(!newAnno) return false;
-	if(oldAnno.length !== newAnno.length) return true;
-	if(newAnno.length === 0) return false;
+const createCanvasOverlay = (graphElement, graph, markerEndCallback) => {
+	const canvasOverlay = document.createElement("canvas");
+	canvasOverlay.id = "animationMarkerCanvas";
+	canvasOverlay.width = canvasMarker.markerOffset * 2 + canvasMarker.lineWidth;
+	const titleHeight = graph.getOption('titleHeight');
+	const xLabelHeight = graph.getOption('xLabelHeight');
+	const top = titleHeight + 5;
+	canvasOverlay.height = graph.canvas_.height - top - xLabelHeight - 20;
+	canvasOverlay.style = 'display:inline; position:absolute; z-index:99; cursor:ew-resize; top:' + top + 'px;';
 
-	return !oldAnno.every((oa, i) => oa.series === newAnno[i].series && oa.x === newAnno[i].x);
-}
+	const ctx = canvasOverlay.getContext('2d');
+	ctx.beginPath();
+	ctx.moveTo(canvasMarker.markerOffset, 0);
+	ctx.lineTo(canvasMarker.markerOffset, canvasOverlay.height);
+	ctx.lineWidth = canvasMarker.lineWidth;
+	ctx.strokeStyle = 'red';
+	ctx.stroke();
+
+	const marker = new Marker(
+		graphElement,
+		canvasOverlay,
+		canvasMarker.leftPadding,
+		canvasMarker.markerOffset,
+		markerEndCallback
+	);
+
+	return {canvasOverlay, marker};
+};

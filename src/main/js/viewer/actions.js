@@ -10,6 +10,7 @@ export const SET_SELECTED_SCOPE = 'SET_SELECTED_SCOPE';
 export const SET_DATE_RANGE = 'SET_DATE_RANGE';
 export const SET_VISIBILITY = 'SET_VISIBILITY';
 export const INCREMENT_FOOTPRINT = 'INCREMENT_FOOTPRINT';
+export const SET_FOOTPRINT = 'SET_FOOTPRINT';
 export const PUSH_PLAY = 'PUSH_PLAY';
 export const SET_DELAY = 'SET_DELAY';
 export const ERROR = 'ERROR';
@@ -131,6 +132,15 @@ const fetchFootprint = (dispatch, getState) => {
 };
 
 const fetchFootprintThrottled = throttle(dispatch => dispatch(fetchFootprint), 300);
+
+export const jumpToFootprint = index => dispatch => {
+	dispatch({
+		type: SET_FOOTPRINT,
+		index
+	});
+
+	dispatch(fetchFootprint);
+};
 
 export const incrementFootprint = increment => dispatch => {
 	dispatch({
