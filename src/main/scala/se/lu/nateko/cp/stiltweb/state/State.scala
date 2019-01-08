@@ -59,13 +59,11 @@ class State(archiver: Archiver) {
 	def slotIsAvailable(slot: StiltSlot): Boolean = archiver.load(slot).isDefined
 
 	def distributeWork(): Map[Worker, CalculateSlots] = workers
-		.map{
-			case (wm, wstate) =>
+		.collect{
+			case (wm, wstate) if wstate.freeCores > 0 && !slots.isEmpty =>
 				val work = grabWork(wstate.freeCores)
 				val requestId = wstate.requestWork(work)
 				wm -> CalculateSlots(requestId, work)
-		}.filter{
-			case (_, command) => !command.slots.isEmpty
 		}
 
 	private def grabWork(maxNumSlots: Int): Seq[StiltSlot] = {

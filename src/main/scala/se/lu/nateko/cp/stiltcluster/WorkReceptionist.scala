@@ -22,7 +22,7 @@ class WorkReceptionist(archiver: Archiver) extends StreamPublisher[DashboardInfo
 	override def getStreamElement = state.getDashboardInfo
 
 	override def specificReceive: Receive = coreReceive.andThen{_ =>
-		for((w, command) <- state.distributeWork() if !command.slots.isEmpty){
+		for((w, command) <- state.distributeWork()){
 			w ! command
 			log.debug(s"Sent ${command.slots.size} slots to ${w}")
 		}

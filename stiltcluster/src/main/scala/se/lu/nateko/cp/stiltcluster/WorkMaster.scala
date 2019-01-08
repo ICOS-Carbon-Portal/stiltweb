@@ -53,8 +53,13 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 
 			val freeCores = nCores - work.size
 
-			if(newSlots.size > freeCores)
+			if(newSlots.size > freeCores){
 				log.warning(s"Received ${newSlots.size} new distinct slots while have only $freeCores free CPU cores")
+				if(newSlots.size < 10) {
+					log.warning("New slots:")
+					newSlots.foreach(slot => log.warning(slot.toString))
+				}
+			}
 
 			val newWork = newSlots.take(freeCores)
 			work ++= newWork

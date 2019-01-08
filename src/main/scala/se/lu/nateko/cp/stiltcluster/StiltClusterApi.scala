@@ -14,6 +14,7 @@ import akka.stream.scaladsl.{ Flow, Keep, Sink, Source }
 import akka.util.Timeout
 import se.lu.nateko.cp.stiltweb.ConfigReader
 import se.lu.nateko.cp.stiltweb.state.Archiver
+import akka.stream.ThrottleMode
 
 
 class StiltClusterApi {
@@ -58,6 +59,7 @@ class StiltClusterApi {
 
 		val source: Source[Message, Any] = Source
 			.actorRef[DashboardInfo](1, OverflowStrategy.dropHead)
+			.throttle(2, 1.second, 1, ThrottleMode.Shaping)
 			.mapMaterializedValue(publisher => receptionist.tell(Subscribe, publisher))
 			.map(di => Strict(di.toJson.compactPrint))
 
