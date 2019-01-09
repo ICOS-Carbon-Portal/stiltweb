@@ -7,20 +7,27 @@ import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.JobInfo
 import se.lu.nateko.cp.stiltcluster.SlotFailure
 import se.lu.nateko.cp.stiltcluster.StiltSlot
+import java.time.Instant
 
 class JobState(val job: Job, nSlotsTotal: Int, initWork: Seq[StiltSlot]){
 
 	val initRemainingSlots = initWork.size
 	private[this] val slotz = Set(initWork: _*)
 	private[this] val failures = Buffer.empty[SlotFailure]
+	private[this] var doneTime: Option[Instant] = None
 
 	def slots = slotz.toSeq
-	def isDone = slotz.isEmpty
+	def isDone() = {
+		val done = slotz.isEmpty
+		if(done) doneTime = Some(Instant.now)
+		done
+	}
 
-	def isFinishedBy(slot: StiltSlot): Boolean = slotz.remove(slot) && isDone
+	def isFinishedBy(slot: StiltSlot): Boolean = slotz.remove(slot) && isDone()
 
 	def toInfo = {
-		JobInfo(job, nSlotsTotal, nSlotsTotal - slotz.size, failures)
+		val jobWithStop = if(doneTime.isDefined) job.copy(timeStopped = doneTime) else job
+		JobInfo(jobWithStop, nSlotsTotal, nSlotsTotal - slotz.size, failures)
 	}
 	def hasBeenRun = slotz.size < initRemainingSlots
 

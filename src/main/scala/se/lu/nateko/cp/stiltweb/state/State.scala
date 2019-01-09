@@ -6,6 +6,7 @@ import scala.collection.mutable.Set
 
 import akka.actor.ActorRef
 import se.lu.nateko.cp.stiltcluster._
+import java.time.Instant
 
 /**
  * Mutable state to be used from an actor (so, needs not be thread-safe).
@@ -48,7 +49,7 @@ class State(archiver: Archiver) {
 
 		val toCalculate: Seq[StiltSlot] = allSlots.filterNot(slotIsAvailable)
 
-		val jstate = new JobState(job, allSlots.size, toCalculate)
+		val jstate = new JobState(job.copy(timeStarted = Some(Instant.now)), allSlots.size, toCalculate)
 		jobs.update(job.id, jstate)
 		enqueue(toCalculate)
 		!toCalculate.isEmpty
@@ -106,8 +107,14 @@ class State(archiver: Archiver) {
 		val infra = workers.toSeq.map{case (worker, wstate) =>
 			WorkerNodeInfo(worker.path.address, wstate.freeCores, wstate.totalCores)
 		}
-		val (done, notFinished) = jobs.values.toSeq.partition(_.isDone)
+		val (done, notFinished) = jobs.values.toSeq.partition(_.isDone())
 		val (running, queue) = notFinished.partition(_.hasBeenRun)
-		DashboardInfo(running.map(_.toInfo), done.map(_.toInfo), queue.map(_.toInfo), infra)
+		val optInstOrd = Ordering[Option[Instant]]
+		DashboardInfo(
+			running.map(_.toInfo).sortBy(_.job.timeStarted)(optInstOrd),
+			done.map(_.toInfo).sortBy(_.job.timeStopped)(optInstOrd.reverse),
+			queue.map(_.toInfo).sortBy(_.job.timeStarted)(optInstOrd),
+			infra
+		)
 	}
 }

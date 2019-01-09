@@ -1,4 +1,4 @@
-scalaVersion in ThisBuild := "2.12.7"
+scalaVersion in ThisBuild := "2.12.8"
 
 cancelable in Global := true
 
@@ -21,8 +21,8 @@ lazy val commonSettings = Seq(
 	)
 )
 
-val akkaVersion = "2.5.17"
-val akkaHttpVersion = "10.1.5"
+val akkaVersion = "2.5.19"
+val akkaHttpVersion = "10.1.7"
 
 lazy val stiltcluster = (project in file("stiltcluster"))
 	.settings(commonSettings: _*)
