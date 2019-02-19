@@ -13,13 +13,11 @@ sealed trait CategoryVariable extends Variable{
 }
 
 case class PlainVariable(name: String) extends Variable
-case class PlainCategoryVariable(tracer: Gas, category: Category, specifier: String) extends CategoryVariable{
-	def name = s"$tracer.$category.$specifier"
+case class PlainCategoryVariable(name: String, tracer: Gas, category: Category, specifier: String) extends CategoryVariable{
 	def isCement: Boolean = specifier == Variable.cementName
 }
-case class FuelInfoVariable(tracer: Gas, category: Category, fuel: Fuel, fuelSubtype: String) extends CategoryVariable{
-	def name = s"$tracer.$category.${fuel}_$fuelSubtype"
-}
+case class FuelInfoVariable(name: String, tracer: Gas, category: Category, fuel: Fuel, fuelSubtype: String) extends CategoryVariable
+
 
 object Variable{
 
@@ -32,11 +30,11 @@ object Variable{
 			if(fuel == Fuel.OtherFuel){
 				//need to use the full specifier instead of subFuel here to avoid duplicates
 				val categoryVarPattern(_, _, specifier) = name
-				FuelInfoVariable(gas, Category(cat), fuel, specifier)
+				FuelInfoVariable(name, gas, Category(cat), fuel, specifier)
 			}
-			else FuelInfoVariable(gas, Category(cat), fuel, subFuel)
+			else FuelInfoVariable(name, gas, Category(cat), fuel, subFuel)
 		case categoryVarPattern(Gas(gas), cat, specifier) =>
-			PlainCategoryVariable(gas, Category(cat), specifier)
+			PlainCategoryVariable(name, gas, Category(cat), specifier)
 		case _ =>
 			PlainVariable(name)
 	}
