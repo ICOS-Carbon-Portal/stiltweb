@@ -54,7 +54,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			path("joinfootprints") {
 				parameters(("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate])) { (stationId, fromDate, toDate) =>
 					val netcdfPathFut = Future(service.mergeFootprintsToNetcdf(stationId, fromDate, toDate))(cluster.ioDispatcher)
-					withRequestTimeout(60.seconds){
+					withRequestTimeout(5.minutes){
 						onSuccess(netcdfPathFut){netcdf =>
 							onResponseStreamed(() => Files.deleteIfExists(netcdf)){
 								respondWithAttachment(stationId + ".nc"){
@@ -79,11 +79,18 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			}
 		} ~
 		post {
-			path("stiltresult") {
-				entity(as[StiltResultsRequest]) { req =>
-					complete(service.getStiltResults(req).toSeq)
+			entity(as[StiltResultsRequest]) { req =>
+				withRequestTimeout(5.minutes){
+					path("stiltresult") {
+						complete(service.getStiltResults(req).toSeq)
+					} ~
+					path("stiltrawresult") {
+						complete(service.getStiltRawResults(req).toSeq)
+					} ~
+					complete(StatusCodes.NotFound)
 				}
-			}
+			} ~
+			complete(StatusCodes.BadRequest -> "Expected a correct stilt result request JSON payload")
 		}
 	} ~
 	pathPrefix("worker"){

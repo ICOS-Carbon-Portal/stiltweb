@@ -3,7 +3,7 @@ package se.lu.nateko.cp.stiltweb.csv
 import Fuel.Fuel
 import Gas.Gas
 
-class RawRow private(vals: Map[Variable, Double]) {
+class RawRow private(val vals: Map[Variable, Double]) {
 	import RawRow._
 
 	def copy(toVar: String, fromVar: String): Assignment = toVar -> vals(PlainVariable(fromVar))

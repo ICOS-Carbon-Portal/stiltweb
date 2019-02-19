@@ -72,8 +72,11 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	def getStiltResults(req: StiltResultsRequest): Iterator[Seq[JsValue]] =
-		reduceToSingleYearOp(listSlotRows(req.stationId, _, _, _))(req.fromDate, req.toDate)
+	def getStiltResults(req: StiltResultsRequest): Iterator[Seq[JsValue]] = fetchStiltResults(listSlotRows, req)
+	def getStiltRawResults(req: StiltResultsRequest): Iterator[Seq[JsValue]] = fetchStiltResults(listRawSlotRows, req)
+
+	private def fetchStiltResults(fetcher: SlotCsvRowFetcher, req: StiltResultsRequest): Iterator[Seq[JsValue]] =
+		reduceToSingleYearOp(fetcher(req.stationId, _, _, _))(req.fromDate, req.toDate)
 			.map{ case (dt, row) =>
 				req.columns
 					.map{
@@ -101,16 +104,27 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	private def yearPath(stationId: String, year: Year) = archiver.getYearDir(stationId, year.getValue)
 
 	private def listSlotRows(stationId: String, year: Year, from: Option[MonthDay], to: Option[MonthDay]): Iterator[SlotCsvRow] = {
-		val rowFactory = () => listSlots(stationId, year, None, None).flatMap{ case (fpDir, dt) =>
-			Try{
-				val fpPath = fpDir.resolve(StiltResultFileType.CSV.toString)
-				val lines = Files.readAllLines(fpPath)
-				val rawRow = RawRow.parse(lines.get(0), lines.get(1))
+		val rowFactory = () => listSlots(stationId, year, None, None).flatMap{ case slot @ (_, dt) =>
+			readRawRow(slot).map{rawRow =>
 				LocalDayTime(dt) -> ResultRowMaker.makeRow(rawRow)
 			}.toOption.iterator
 		}
 		val cache = new RowCache(rowFactory, yearPath(stationId, year), year.getValue, config.slotStepInMinutes)
 		cache.getRows(from.map(new LocalDayTime(_, LocalTime.MIN)), to.map(new LocalDayTime(_, LocalTime.MAX)))
+	}
+
+	private def listRawSlotRows(stationId: String, year: Year, from: Option[MonthDay], to: Option[MonthDay]): Iterator[SlotCsvRow] =
+		listSlots(stationId, year, from, to).flatMap{ case slot @ (_, dt) =>
+			readRawRow(slot).map{rawRow =>
+				dt -> rawRow.vals.map{case (v, n) => v.name -> n}
+			}.toOption.iterator
+		}
+
+	private def readRawRow(slot: Slot): Try[RawRow] = Try{
+		val (fpDir, _) = slot
+		val fpPath = fpDir.resolve(StiltResultFileType.CSV.toString)
+		val lines = Files.readAllLines(fpPath)
+		RawRow.parse(lines.get(0), lines.get(1))
 	}
 
 	private def listSlots(stationId: String, yearY: Year, from: Option[MonthDay], to: Option[MonthDay]): Iterator[Slot] = {
@@ -198,6 +212,7 @@ object StiltResultsPresenter{
 	type Slot = (Path, LocalDateTime)
 	type CsvRow = Map[String, Double]
 	type SlotCsvRow = (LocalDateTime, CsvRow)
+	type SlotCsvRowFetcher = (String, Year, Option[MonthDay], Option[MonthDay]) => Iterator[SlotCsvRow]
 
 	// ex: 2007
 	val yearDirPattern = """^(\d{4})$""".r
