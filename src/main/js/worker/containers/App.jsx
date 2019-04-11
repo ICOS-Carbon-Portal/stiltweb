@@ -50,7 +50,14 @@ class App extends Component {
 			/>
 
 			<div className="page-header">
-					<h1>STILT calculation service <small>{subtitle}</small></h1>
+					<h1>
+						STILT calculation service <small>{subtitle}</small>
+						<span style={{float:'right'}}>
+							<a className="btn btn-info" href="https://www.icos-cp.eu/about-stilt-calculator" target="_blank">
+								<span className="glyphicon glyphicon-question-sign" /> Help
+							</a>
+						</span>
+					</h1>
 			</div>
 
 			{

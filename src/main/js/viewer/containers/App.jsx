@@ -25,7 +25,14 @@ class App extends Component {
 				<AnimatedToasters toasterData={this.props.toasterData} autoCloseDelay={5000} />
 
 				<div className="page-header">
-					<h1>{title}</h1>
+					<h1>
+						{title}
+						<span style={{float:'right'}}>
+							<a className="btn btn-info" href="https://www.icos-cp.eu/about-stilt-viewer" target="_blank">
+								<span className="glyphicon glyphicon-question-sign" /> Help
+							</a>
+						</span>
+					</h1>
 				</div>
 				<div className="row" style={{marginTop}}>
 
