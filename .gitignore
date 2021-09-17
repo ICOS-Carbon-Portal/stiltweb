@@ -33,6 +33,10 @@ nohup.out
 \#*\#
 
 .idea
+.bloop
+.metals
+.vscode
+/project
 /.cache-tests
 /bin/
 /stiltcluster/bin/

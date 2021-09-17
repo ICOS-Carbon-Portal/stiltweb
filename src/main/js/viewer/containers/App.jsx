@@ -6,6 +6,7 @@ import ControlPanelContainer from './ControlPanelContainer.jsx';
 import GraphsContainer from './GraphsContainer.jsx';
 import Spinner from '../components/Spinner.jsx';
 import config from '../config';
+import { Copyright } from 'icos-cp-copyright';
 
 const marginTop = 10;
 
@@ -50,6 +51,12 @@ class App extends Component {
 				<div className="row" style={{marginTop}}>
 					<div className="col-md-12">
 						<GraphsContainer />
+					</div>
+				</div>
+
+				<div className="row">
+					<div className="col-md-12">
+						<Copyright rootStyleOverride={{position:'absolute', bottom:2, right:15}} />
 					</div>
 				</div>
 
