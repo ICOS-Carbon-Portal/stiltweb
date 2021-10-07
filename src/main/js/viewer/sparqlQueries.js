@@ -4,7 +4,7 @@ export function wdcggTimeSeriesQuery(wdcggStationNames){
 	//TODO Remove the extra trailing space at the end of wdcggName when it is removed from the metadata
 	const wdcggIdValues = wdcggStationNames.map(wdcggName => `"${wdcggName} "`).join(' ');
 
-	return `prefix cpmeta: <http://meta.icos-cp.eu/ontologies/cpmeta/>
+	return {"text": `prefix cpmeta: <http://meta.icos-cp.eu/ontologies/cpmeta/>
 prefix prov: <http://www.w3.org/ns/prov#>
 select distinct ?wdcggId ?dobj ?nRows ?ackStartTime ?ackEndTime
 FROM <http://meta.icos-cp.eu/resources/wdcgg/>
@@ -17,7 +17,7 @@ where {
 		cpmeta:hasNumberOfRows ?nRows .
 	?acquisition prov:endedAtTime ?ackEndTime ;
 		prov:startedAtTime ?ackStartTime .
-}`;
+}`};
 
 }
 
