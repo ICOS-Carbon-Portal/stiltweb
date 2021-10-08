@@ -46,7 +46,7 @@
   "dependencies": {
     "babel-polyfill": "^6.5.0",
     "dygraphs": "^2.1.0",
-    "icos-cp-backend": "^0.4.3",
+    "icos-cp-backend": "^0.4.4",
     "icos-cp-leaflet-common": "^0.2.3",
     "icos-cp-legend": "^0.3.0",
     "icos-cp-netcdfmap": "^0.2.1",
