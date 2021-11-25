@@ -1,11 +1,11 @@
 package se.lu.nateko.cp.stiltweb.csv
 
-import org.scalatest.FunSuite
 import java.nio.file.Paths
 import java.nio.file.Files
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
+import org.scalatest.funsuite.AnyFunSuite
 
-class ResultRowMakerTests extends FunSuite{
+class ResultRowMakerTests extends AnyFunSuite{
 
 	def resourcePath(path: String) = Paths.get(getClass.getResource(path).toURI)
 

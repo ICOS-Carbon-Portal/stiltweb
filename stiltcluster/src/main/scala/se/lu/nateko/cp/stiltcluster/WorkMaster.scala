@@ -150,7 +150,7 @@ object WorkMaster{
 		val logsZip = Util.zipFolder(logsDir, "PARTICLE.DAT")
 		val logErrMsgs = Util.iterateChildren(logsDir)
 			.filter(d => Files.isRegularFile(d) && d.getFileName.toString.endsWith(".log"))
-			.flatMap(d => Source.fromFile(d.toFile).getLines)
+			.flatMap(d => Source.fromFile(d.toFile).getLines())
 			.filter(_.contains("ERROR"))
 			.toIndexedSeq
 			.sorted

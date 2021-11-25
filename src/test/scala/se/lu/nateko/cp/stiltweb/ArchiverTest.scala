@@ -3,19 +3,19 @@ package se.lu.nateko.cp.stiltweb
 import java.nio.file.Files
 import java.time.LocalDate
 
-import scala.collection.JavaConverters.asScalaIteratorConverter
-
-import org.scalatest._
+import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 import se.lu.nateko.cp.stiltcluster._
 import se.lu.nateko.cp.stiltweb.state.Archiver
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.BeforeAndAfterAll
 
 
-class ArchiverTest extends FunSuite with BeforeAndAfterAll{
+class ArchiverTest extends AnyFunSuite with BeforeAndAfterAll{
 
 	val tmp = Files.createTempDirectory("slotarchiver")
 
-	override def afterAll(){
+	override def afterAll(): Unit = {
 		Util.deleteDirRecursively(tmp)
 	}
 
@@ -24,7 +24,7 @@ class ArchiverTest extends FunSuite with BeforeAndAfterAll{
 		val sla = new Archiver(tmp, 180)
 		val slot = StiltResultTest.sampleSlot
 
-		def listDir = Files.walk(tmp).sorted().iterator.asScala
+		def listDir = Files.walk(tmp).sorted().iterator().asScala
 			.map(d => tmp.relativize(d).toString)
 			.mkString("\n")
 			.trim

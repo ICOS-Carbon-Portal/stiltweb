@@ -2,10 +2,10 @@ package se.lu.nateko.cp.stiltcluster
 
 import java.time.LocalDate
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 
-class RunStiltTest extends FunSuite {
+class RunStiltTest extends AnyFunSuite {
 	val job = Job("HTM", 56.10, 13.42, 150,
 				  LocalDate.of(2012, 1, 1),
 				  LocalDate.of(2012, 1, 2),

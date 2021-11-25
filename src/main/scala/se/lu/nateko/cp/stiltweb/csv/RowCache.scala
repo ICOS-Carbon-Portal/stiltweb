@@ -75,7 +75,7 @@ class RowCache(rowFactory: () => Iterator[CachedRow], parentFolder: Path, year: 
 				.iterator
 				.map{minute =>
 					buff.rewind()
-					fc.read(buff, (minute / slotStepInMinutes) * BytesPerRow)
+					fc.read(buff, (minute / slotStepInMinutes) * BytesPerRow.toLong)
 					yearStart.plusMinutes(minute.toLong) -> {
 						try{
 							new String(buff.array()).parseJson.convertTo[CsvRow]

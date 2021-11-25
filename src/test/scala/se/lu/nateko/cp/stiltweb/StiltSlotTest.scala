@@ -1,10 +1,10 @@
 package se.lu.nateko.cp.stiltweb
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import se.lu.nateko.cp.stiltcluster.{StiltPosition, StiltTime, StiltSlot}
 
 
-class StiltTimeTest extends FunSuite {
+class StiltTimeTest extends AnyFunSuite {
 
 	test("from/to string") {
 		val s = "2012x01x01x03"
@@ -19,7 +19,7 @@ class StiltTimeTest extends FunSuite {
 }
 
 
-class StiltPositionTest extends FunSuite {
+class StiltPositionTest extends AnyFunSuite {
 
 	test("from/to string, negative") {
 		val StiltPosition(p) = "20.01Sx150.01Wx01234"
@@ -37,7 +37,7 @@ class StiltPositionTest extends FunSuite {
 }
 
 
-class StiltSlotTest extends FunSuite {
+class StiltSlotTest extends AnyFunSuite {
 
 	val tim = StiltTime(2012, 12, 1, 0)
 	val pos = StiltPosition(56.10, -13.42, 150)

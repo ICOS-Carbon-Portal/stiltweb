@@ -16,13 +16,12 @@ src/main/resources/bundle.js
 /project/project/
 
 # Scala-IDE specific
-.scala_dependencies
-.cache-main
-.worksheet
-.project
-.settings/
-.classpath
-.cache
+.idea
+.bloop
+.metals
+.vscode
+.bsp
+metals.sbt
 
 #Front end specific
 src/main/resources/www/
@@ -32,14 +31,6 @@ nohup.out
 *.*~
 \#*\#
 
-.idea
-.bloop
-.metals
-.vscode
-/project
-/.cache-tests
-/bin/
-/stiltcluster/bin/
 /debug_script.sh
 /fake_log_output.sh
 /fakejob.txt

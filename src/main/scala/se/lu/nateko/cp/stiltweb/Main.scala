@@ -19,7 +19,6 @@ object Main extends App {
 
 	implicit val system = ActorSystem("stiltweb")
 	system.log
-	implicit val materializer = ActorMaterializer(namePrefix = Some("stiltweb_mat"))
 	implicit val dispatcher = system.dispatcher
 
 	val config = ConfigReader.default
@@ -37,8 +36,8 @@ object Main extends App {
 		handleExceptions(exceptionHandler){inner}
 	}
 
-	Http()
-		.bindAndHandle(route, "127.0.0.1", 9010)
+	Http().newServerAt("127.0.0.1", 9010)
+		.bindFlow(route)
 		.onComplete{
 			case Failure(error)   => error.printStackTrace()
 			case Success(binding) =>

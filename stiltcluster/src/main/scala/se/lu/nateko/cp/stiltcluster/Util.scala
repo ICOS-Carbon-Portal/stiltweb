@@ -13,7 +13,7 @@ import scala.util.Random
 object Util {
 
 	def writeFileAtomically(f: Path, data: Array[Byte]): Unit = {
-		val tmp = Paths.get(f.toAbsolutePath.toString + ".tmp_" + Random.nextInt.toString)
+		val tmp = Paths.get(f.toAbsolutePath.toString + ".tmp_" + Random.nextInt().toString)
 		Files.write(tmp, data, CREATE, WRITE)
 		Files.move(tmp, f, ATOMIC_MOVE, REPLACE_EXISTING)
 	}
@@ -26,7 +26,7 @@ object Util {
 	}
 
 	def iterateChildren(dir: Path): Iterator[Path] = {
-		import scala.collection.JavaConverters.asScalaIteratorConverter
+		import scala.jdk.CollectionConverters.IteratorHasAsScala
 		Files.list(dir).iterator.asScala
 	}
 

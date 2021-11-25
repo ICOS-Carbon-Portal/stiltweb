@@ -37,7 +37,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 	def route: Route = pathPrefix("viewer") {
 		get {
 			path("footprint") {
-				parameters(("stationId", "footprint")) { (stationId, localDtStr) =>
+				parameters("stationId", "footprint") { (stationId, localDtStr) =>
 					val localDt = LocalDateTime.parse(localDtStr)
 					complete(service.getFootprintRaster(stationId, localDt))
 				}
@@ -46,13 +46,13 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				getFromResource("www/viewer.js")
 			} ~
 			path("listfootprints") {
-				parameters(("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate])) { (stationId, fromDate, toDate) =>
+				parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]) { (stationId, fromDate, toDate) =>
 					val footprintsList = service.listFootprints(stationId, fromDate, toDate)
 					complete(footprintsList.map(_.toString).toSeq)
 				}
 			} ~
 			path("joinfootprints") {
-				parameters(("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate])) { (stationId, fromDate, toDate) =>
+				parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]) { (stationId, fromDate, toDate) =>
 					val netcdfPathFut = Future(service.mergeFootprintsToNetcdf(stationId, fromDate, toDate))(cluster.ioDispatcher)
 					withRequestTimeout(5.minutes){
 						onSuccess(netcdfPathFut){netcdf =>
@@ -70,7 +70,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				complete(service.getStationInfos)
 			} ~
 			path("availablemonths") {
-				complete(service.availableInputMonths)
+				complete(service.availableInputMonths())
 			} ~
 			redirectToTrailingSlashIfMissing(StatusCodes.Found){
 				pathSingleSlash {

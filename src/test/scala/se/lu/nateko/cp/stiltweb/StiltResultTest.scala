@@ -2,7 +2,7 @@ package se.lu.nateko.cp.stiltweb
 
 import java.nio.file.{Files, Paths}
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import se.lu.nateko.cp.stiltcluster.{StiltResult, StiltSlot, StiltResultFileType}
 
 object StiltResultTest{
@@ -13,7 +13,7 @@ object StiltResultTest{
 	val sampleResult = StiltResult(sampleSlot, sampleSlotDir)
 }
 
-class StiltResultTest extends FunSuite {
+class StiltResultTest extends AnyFunSuite {
 
 	import StiltResultTest._
 

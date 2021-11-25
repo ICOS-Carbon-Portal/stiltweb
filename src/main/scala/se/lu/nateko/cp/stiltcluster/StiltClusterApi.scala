@@ -46,7 +46,7 @@ class StiltClusterApi {
 
 	def queryOwner(jobId: String): Future[Option[String]] = {
 		// The assumption is that this query will run on the same JVM as the responding actor.
-		implicit val timeout = Timeout(1 seconds)
+		implicit val timeout = Timeout(1.second)
 		ask(receptionist, PleaseSendDashboardInfo).mapTo[DashboardInfo].map{ dbi =>
 			dbi.findCancellableJobById(jobId).map(_.userId)
 		}
@@ -58,13 +58,13 @@ class StiltClusterApi {
 		import akka.http.scaladsl.model.ws.TextMessage.Strict
 
 		val source: Source[Message, Any] = Source
-			.actorRef[DashboardInfo](1, OverflowStrategy.dropHead)
+			.actorRef[DashboardInfo](PartialFunction.empty, PartialFunction.empty, 1, OverflowStrategy.dropHead)
 			.throttle(2, 1.second, 1, ThrottleMode.Shaping)
 			.mapMaterializedValue(publisher => receptionist.tell(Subscribe, publisher))
 			.map(di => Strict(di.toJson.compactPrint))
 
 		Flow.fromSinkAndSourceMat(Sink.ignore, source)(Keep.right)
-			.keepAlive(30 seconds, () => Strict(""))
+			.keepAlive(30.seconds, () => Strict(""))
 	}
 
 	def terminate() = system.terminate()

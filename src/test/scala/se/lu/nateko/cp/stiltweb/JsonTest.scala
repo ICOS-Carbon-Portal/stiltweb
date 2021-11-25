@@ -2,13 +2,13 @@ package se.lu.nateko.cp.stiltweb
 
 import java.time.LocalDate
 
-import org.scalatest.FunSuite
 import se.lu.nateko.cp.stiltcluster.Job
 
 import spray.json._
 import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport._
+import org.scalatest.funsuite.AnyFunSuite
 
-class JsonTest extends FunSuite {
+class JsonTest extends AnyFunSuite {
 
 	// spray-json is way up in the cloud, this test brings it down to the ground
 	// so that one can get a feel for what's happening.
@@ -31,7 +31,7 @@ class JsonTest extends FunSuite {
 		// This particular test checks that the timeStarted and timeStopped
 		// fields are not being serialized.
 		assert(t == """"alt":150
-					   |"id":"job_1438388676"
+					   |"id":"job_940257578"
 					   |"lat":56.1
 					   |"lon":13.42
 					   |"siteId":"HTM"

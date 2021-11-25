@@ -27,7 +27,7 @@ class JobState(val job: Job, nSlotsTotal: Int, initWork: Seq[StiltSlot]){
 
 	def toInfo = {
 		val jobWithStop = if(doneTime.isDefined) job.copy(timeStopped = doneTime) else job
-		JobInfo(jobWithStop, nSlotsTotal, nSlotsTotal - slotz.size, failures)
+		JobInfo(jobWithStop, nSlotsTotal, nSlotsTotal - slotz.size, failures.toSeq)
 	}
 	def hasBeenRun = slotz.size < initRemainingSlots
 

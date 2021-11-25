@@ -9,7 +9,7 @@ import java.nio.file.StandardCopyOption._
 object FootprintJoiner {
 
 	def joinToTempFile(footprints: Iterator[Path]): Path = {
-		val fs = footprints.toStream
+		val fs = footprints.to(LazyList)
 		val first = fs.headOption.getOrElse(throw new Exception("No footprints available"))
 
 		val target = Files.createTempFile("footPrintsJoin_", ".nc")

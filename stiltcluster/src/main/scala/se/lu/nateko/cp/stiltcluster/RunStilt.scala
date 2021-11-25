@@ -17,7 +17,7 @@ object RunStilt {
 	def run_cmd(cmd: String): Seq[String] = {
 		// Run the command and return a sequence
 		// of the nonempty lines of stdout.
-		cmd.!!.split("\n").map(_.trim).filter(! _.isEmpty)
+		cmd.!!.split("\n").map(_.trim).filter(! _.isEmpty).toIndexedSeq
 	}
 
 	def cmd_run(slot: StiltSlot): String = {

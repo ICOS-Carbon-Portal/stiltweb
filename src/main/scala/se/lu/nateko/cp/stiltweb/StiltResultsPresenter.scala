@@ -11,7 +11,7 @@ import java.time.MonthDay
 import java.time.Year
 import java.time.ZoneOffset
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.io.{ Source => IoSource }
 import scala.util.Try
 
@@ -40,7 +40,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 
 		val idToIds: Map[String, StiltStationIds] = IoSource
 			.fromInputStream(getClass.getResourceAsStream("/stations.csv"), "UTF-8")
-			.getLines
+			.getLines()
 			.drop(1) // header
 			.map(_.split(",", -1).toSeq)
 			.map{
@@ -157,7 +157,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 		.scanLeft(new Throttler(LocalDateTime.MIN, None)){(throttler, next) =>
 			val nextDt = next._2
-			val maxPrevDt = nextDt.minusMinutes(config.slotStepInMinutes)
+			val maxPrevDt = nextDt.minusMinutes(config.slotStepInMinutes.toLong)
 			if(throttler.lastEmitted.compareTo(maxPrevDt) <= 0)
 				new Throttler(nextDt, Some(next))
 			else

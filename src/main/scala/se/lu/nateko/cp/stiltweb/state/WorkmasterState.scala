@@ -39,7 +39,7 @@ class WorkmasterState(wms: WorkMasterStatus) {
 
 		val purgedWork: Seq[StiltSlot] = purgedRequests.map(requests.get).flatten.flatMap(_.work)
 
-		requests.retain{
+		requests.filterInPlace{
 			case (id, _) => ! purgedRequests.contains(id)
 		}
 

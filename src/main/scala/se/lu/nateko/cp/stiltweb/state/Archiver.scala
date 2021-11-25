@@ -42,7 +42,7 @@ class Archiver(val stateDir: Path, slotStepInMinutes: Int) {
 			val yearDir = getYearDir(result.slot)
 			val year = result.slot.time.year
 			val cache = new RowCache(() => Iterator.empty, yearDir, year, slotStepInMinutes)
-			val lines = Source.fromBytes(csvf.data, "UTF-8").getLines.toIndexedSeq
+			val lines = Source.fromBytes(csvf.data, "UTF-8").getLines().toIndexedSeq
 			val rawRow = RawRow.parse(lines(0), lines(1))
 			val csvRow = ResultRowMaker.makeRow(rawRow)
 			cache.writeRow(LocalDayTime(result.slot.time.toJava), csvRow)

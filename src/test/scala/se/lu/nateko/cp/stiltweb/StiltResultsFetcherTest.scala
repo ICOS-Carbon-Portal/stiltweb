@@ -1,9 +1,9 @@
 package se.lu.nateko.cp.stiltweb
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 
-class StiltResultsFetcherTest extends FunSuite {
+class StiltResultsFetcherTest extends AnyFunSuite {
 
 	/* The following test won't work unless some specific file are created or
 	   a mocked filesystem is set up.
