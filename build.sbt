@@ -27,7 +27,6 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka" %% "akka-remote"         % akkaVersion,
 			"com.typesafe.akka" %% "akka-slf4j"          % akkaVersion,
-			"io.netty"           % "netty"               % "3.10.6.Final",
 			"ch.qos.logback"     % "logback-classic"     % "1.1.3",
 			"org.scalatest"     %% "scalatest"           % "3.1.0" % "test"
 		),
