@@ -34,8 +34,7 @@ class RowCache(rowFactory: () => Iterator[CachedRow], parentFolder: Path, year: 
 
 	val maxNRows = {
 		val stop = LocalDateTime.of(year + 1, 1, 1, 0, 0)
-		//+ 1 just in case of an extra last slot present, which used to be the case for some time
-		(Duration.between(yearStart, stop).toMinutes / slotStepInMinutes).toInt + 1
+		(Duration.between(yearStart, stop).toMinutes / slotStepInMinutes).toInt
 	}
 
 	def getRows(from: Option[LocalDayTime], to: Option[LocalDayTime]): Iterator[SlotCsvRow] = {
@@ -80,7 +79,7 @@ class RowCache(rowFactory: () => Iterator[CachedRow], parentFolder: Path, year: 
 						try{
 							new String(buff.array()).parseJson.convertTo[CsvRow]
 						}catch{
-							case _: Throwable => Map.empty
+							case err: Throwable => Map("errorReadingSlotCache" -> Double.NaN, err.getMessage -> Double.NaN)
 						}
 					}
 				}
@@ -103,7 +102,8 @@ class RowCache(rowFactory: () => Iterator[CachedRow], parentFolder: Path, year: 
 			val buff = ByteBuffer.wrap(rowArr)
 
 			try{
-				for(_ <- 1 to maxNRows) {
+				//+ 1 just in case of an extra last slot present, which used to be the case for some time
+				for(_ <- 1 to (maxNRows + 1)) {
 					fc.write(buff)
 					buff.rewind()
 				}
