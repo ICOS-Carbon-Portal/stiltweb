@@ -1,17 +1,15 @@
-ThisBuild / scalaVersion := "2.13.7"
+ThisBuild / scalaVersion := "3.1.0"
 
 Global / cancelable := true
 
 lazy val commonSettings = Seq(
 	organization := "se.lu.nateko.cp",
 	scalacOptions ++= Seq(
-		"-target:jvm-1.11",
+		"-Xtarget:11",
 		"-encoding", "UTF-8",
 		"-unchecked",
 		"-feature",
 		"-deprecation",
-		"-Wdead-code",
-		"-Wnumeric-widen"
 	)
 )
 
@@ -23,12 +21,12 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 	.enablePlugins(IcosCpSbtDeployPlugin)
 	.settings(
 		name := "stiltcluster",
-		version := "0.3.0",
+		version := "0.4.0",
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka" %% "akka-remote"         % akkaVersion,
 			"com.typesafe.akka" %% "akka-slf4j"          % akkaVersion,
 			"ch.qos.logback"     % "logback-classic"     % "1.1.3",
-			"org.scalatest"     %% "scalatest"           % "3.1.0" % "test"
+			"org.scalatest"     %% "scalatest"           % "3.2.10" % "test"
 		),
 
 		cpDeployTarget := "stiltcluster",
@@ -52,18 +50,30 @@ lazy val stiltweb = (project in file("."))
 	.settings(commonSettings: _*)
 	.settings(
 		name := "stiltweb",
-		version := "0.3.0",
+		version := "0.4.0",
+
+		libraryDependencies := {
+			libraryDependencies.value.map{
+				case m if m.name.startsWith("twirl-api") => 
+					m.cross(CrossVersion.for3Use2_13).excludeAll(ExclusionRule.everything)
+				case m => m
+			}
+		},
+
 		libraryDependencies ++= Seq(
-			"com.typesafe.akka"  %% "akka-http-spray-json"               % akkaHttpVersion,
+			"com.typesafe.akka"  %% "akka-http-spray-json"               % akkaHttpVersion cross CrossVersion.for3Use2_13,
 			"com.typesafe.akka"  %% "akka-stream"                        % akkaVersion,
-			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.6.5",
-			"se.lu.nateko.cp"    %% "views-core"                         % "0.4.8",
-			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.4",
+		//	"org.scala-lang.modules" %% "scala-xml" % "1.2.0" cross CrossVersion.for3Use2_13,
+			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.6.5" cross CrossVersion.for3Use2_13,
+			"se.lu.nateko.cp"    %% "views-core"                         % "0.4.8" cross CrossVersion.for3Use2_13  excludeAll(
+				ExclusionRule.everything
+			),
+			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.4" cross CrossVersion.for3Use2_13,
 			"edu.ucar"            % "netcdf4"                            % "4.6.11" excludeAll(
 				ExclusionRule(organization = "edu.ucar", name = "cdm")
 			),
 			"com.typesafe.akka"  %% "akka-testkit"                       % akkaVersion        % "test",
-			"org.scalatest"      %% "scalatest"                          % "3.1.0"            % "test"
+			"org.scalatest"      %% "scalatest"                          % "3.2.10"           % "test"
 		),
 
 		cpDeployTarget := "stiltweb",
