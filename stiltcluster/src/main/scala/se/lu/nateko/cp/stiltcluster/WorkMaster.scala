@@ -25,7 +25,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 	override def preStart(): Unit = findReceptionist()
 
 	def findReceptionist(): Unit = {
-		implicit val timeout = Timeout(3.seconds)
+		implicit val timeout: Timeout = Timeout(3.seconds)
 		import context.dispatcher
 
 		def findIt(): Unit = context.actorSelection(receptionistAddr).resolveOne().onComplete{

@@ -24,9 +24,9 @@ case class StiltWebConfig(
 
 object ConfigReader extends DefaultJsonProtocol{
 
-	implicit val pubAuthConfigFormat = jsonFormat4(PublicAuthConfig)
-	implicit val netcdfConfigFormat = jsonFormat4(NetCdfConfig)
-	implicit val cpdataConfigFormat = jsonFormat6(StiltWebConfig)
+	implicit val pubAuthConfigFormat: JsonFormat[PublicAuthConfig] = jsonFormat4(PublicAuthConfig.apply)
+	implicit val netcdfConfigFormat: JsonFormat[NetCdfConfig] = jsonFormat4(NetCdfConfig.apply)
+	implicit val cpdataConfigFormat: JsonFormat[StiltWebConfig] = jsonFormat6(StiltWebConfig.apply)
 
 	lazy val default: StiltWebConfig = fromAppConfig(ConfigLoader.localWithDefault())
 
