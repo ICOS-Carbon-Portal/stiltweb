@@ -25,6 +25,7 @@ import scala.util.Try
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
 import spray.json._
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 
@@ -40,16 +41,12 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		Future.fromTry(Try(LocalDate.parse(s)))
 	)
 
-	given [T: ToEntityMarshaller]: Conversion[T, TRM] =
-		t => TRM(t)(Marshaller.liftMarshaller(summon[ToEntityMarshaller[T]]))
+	given JsonWriter[String] = JsString(_)
+	given [T](using jw: JsonWriter[T]): RootJsonWriter[Seq[T]] =
+		DefaultJsonProtocol.immSeqFormat(DefaultJsonProtocol.lift(jw))
 
-	given Conversion[String, JsValue] = JsString(_)
-	given [T](using jf: JsonFormat[T]): RootJsonFormat[Seq[T]] = immSeqFormat(jf)
-	// given [T : RootJsonFormat]: Conversion[T, TRM] = {
-	// 	summon[Conversion[T, TRM]]
-	// }
-
-	//given Conversion[Seq[String], TRM] = ???
+	given [T: RootJsonWriter]: ToEntityMarshaller[T] = SprayJsonSupport.sprayJsonMarshaller
+	given [T: ToEntityMarshaller]: Conversion[T, TRM] = t => TRM(t)
 
 	def route: Route = pathPrefix("viewer").apply{
 		get.apply{

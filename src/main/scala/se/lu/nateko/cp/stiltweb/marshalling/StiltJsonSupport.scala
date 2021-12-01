@@ -14,7 +14,9 @@ import se.lu.nateko.cp.stiltweb.WhoamiResult
 import se.lu.nateko.cp.stiltweb.StiltStationIds
 import play.twirl.api.Html
 
-object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+object StiltJsonSupport {
+	import SprayJsonSupport._
+	import DefaultJsonProtocol._
 
 	implicit val rasterMarshalling: ToResponseMarshaller[Raster] = RasterMarshalling.marshaller
 	implicit val templateMarshaller: ToResponseMarshaller[Html] = TemplatePageMarshalling.marshaller

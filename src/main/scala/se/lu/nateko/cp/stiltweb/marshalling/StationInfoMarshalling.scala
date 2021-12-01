@@ -10,13 +10,17 @@ import se.lu.nateko.cp.stiltweb.StiltStationInfo
 import scala.concurrent.Future
 import akka.http.scaladsl.model.ContentType.WithCharset
 import spray.json._
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 object StationInfoMarshalling{
 	type Stations = Seq[StiltStationInfo]
-	import StiltJsonSupport._
 
-	val jsonMarshaller: ToResponseMarshaller[Stations] =
-		Marshaller.liftMarshaller(summon[RootJsonWriter[Stations]])
+	val jsonMarshaller: ToResponseMarshaller[Stations] = {
+		import StiltJsonSupport.stiltStationInfoWriter
+		import DefaultJsonProtocol.immSeqFormat
+		import SprayJsonSupport.sprayJsonMarshaller
+		summon[ToResponseMarshaller[Stations]]
+	}
 
 	val csvMarshaller: ToResponseMarshaller[Stations] = Marshaller(
 		_ => stations => Future.successful(
