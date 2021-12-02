@@ -5,7 +5,7 @@ import java.time.LocalDate
 import se.lu.nateko.cp.stiltcluster.Job
 
 import spray.json._
-import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport._
+import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.{given RootJsonFormat[Job]}
 import org.scalatest.funsuite.AnyFunSuite
 
 class JsonTest extends AnyFunSuite {

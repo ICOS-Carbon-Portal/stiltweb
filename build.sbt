@@ -16,6 +16,8 @@ lazy val commonSettings = Seq(
 val akkaVersion = "2.6.17"
 val akkaHttpVersion = "10.2.7"
 
+val scalaTest = "org.scalatest" %% "scalatest" % "3.2.10" % "test" exclude("org.scala-lang.modules", "scala-xml_3")
+
 lazy val stiltcluster = (project in file("stiltcluster"))
 	.settings(commonSettings: _*)
 	.enablePlugins(IcosCpSbtDeployPlugin)
@@ -26,7 +28,7 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 			"com.typesafe.akka" %% "akka-remote"         % akkaVersion cross CrossVersion.for3Use2_13,
 			"com.typesafe.akka" %% "akka-slf4j"          % akkaVersion cross CrossVersion.for3Use2_13,
 			"ch.qos.logback"     % "logback-classic"     % "1.1.3",
-			"org.scalatest"     %% "scalatest"           % "3.2.10" % "test" cross CrossVersion.for3Use2_13
+			scalaTest
 		),
 
 		cpDeployTarget := "stiltcluster",
@@ -69,8 +71,8 @@ lazy val stiltweb = (project in file("."))
 			"edu.ucar"            % "netcdf4"                            % "4.6.11" excludeAll(
 				ExclusionRule(organization = "edu.ucar", name = "cdm")
 			),
-			"com.typesafe.akka"  %% "akka-testkit"                       % akkaVersion        % "test" cross CrossVersion.for3Use2_13,
-			"org.scalatest"      %% "scalatest"                          % "3.2.10"           % "test" cross CrossVersion.for3Use2_13
+			"com.typesafe.akka"  %% "akka-testkit"                       % akkaVersion % "test" cross CrossVersion.for3Use2_13,
+			scalaTest
 		),
 
 		cpDeployTarget := "stiltweb",
