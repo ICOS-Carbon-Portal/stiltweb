@@ -16,7 +16,7 @@ object StationInfoMarshalling{
 	type Stations = Seq[StiltStationInfo]
 
 	val jsonMarshaller: ToResponseMarshaller[Stations] = {
-		import StiltJsonSupport.stiltStationInfoWriter
+		import StiltJsonSupport.{given JsonFormat[StiltStationInfo]}
 		import DefaultJsonProtocol.immSeqFormat
 		import SprayJsonSupport.sprayJsonMarshaller
 		summon[ToResponseMarshaller[Stations]]

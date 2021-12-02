@@ -5,18 +5,20 @@ import java.time.LocalDateTime
 import java.time.LocalDate
 
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{StatusCodes, StatusCode}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.Unmarshaller
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshalling.{ToResponseMarshallable => TRM}
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.marshalling.Marshaller
+import akka.http.scaladsl.marshalling.Marshaller.fromStatusCodeAndValue
+import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
-import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport
+import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.given
 import se.lu.nateko.cp.stiltweb.marshalling.StationInfoMarshalling
 
 import scala.concurrent.Future
@@ -24,13 +26,11 @@ import scala.concurrent.duration.DurationInt
 import scala.util.Try
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
-import spray.json._
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import spray.json.{DefaultJsonProtocol, RootJsonWriter}
+import SprayJsonSupport.sprayJsonUnmarshaller
+import DefaultJsonProtocol.{StringJsonFormat, JsValueFormat, immSeqFormat}
 
 class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
-
-	import StiltJsonSupport._
-	import scala.language.implicitConversions
 
 	val authRouting = new AuthRouting(config.auth)
 	import authRouting.user
@@ -41,12 +41,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		Future.fromTry(Try(LocalDate.parse(s)))
 	)
 
-	given JsonWriter[String] = JsString(_)
-	given [T](using jw: JsonWriter[T]): RootJsonWriter[Seq[T]] =
-		DefaultJsonProtocol.immSeqFormat(DefaultJsonProtocol.lift(jw))
-
 	given [T: RootJsonWriter]: ToEntityMarshaller[T] = SprayJsonSupport.sprayJsonMarshaller
-	given [T: ToEntityMarshaller]: Conversion[T, TRM] = t => TRM(t)
 
 	def route: Route = pathPrefix("viewer").apply{
 		get.apply{
@@ -169,10 +164,9 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			complete(BuildInfo.toString)
 		} ~
 		path("whoami").apply{
-			user{userId =>
-				complete((StatusCodes.OK,
-						  WhoamiResult(userId.email, config.admins.exists(_ == userId.email))))
-			} ~
+			user{userId => complete(
+				StatusCodes.OK -> WhoamiResult(userId.email, config.admins.exists(_ == userId.email))
+			)} ~
 			complete((StatusCodes.OK, WhoamiResult("")))
 		} ~
 		path("logout") {

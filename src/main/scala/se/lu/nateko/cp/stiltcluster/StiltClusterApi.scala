@@ -53,8 +53,8 @@ class StiltClusterApi {
 	}
 
 	val websocketsFlow: Flow[Message, Message, Any] = {
-		import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport._
-		import spray.json._
+		import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.given
+		import spray.json.enrichAny
 		import akka.http.scaladsl.model.ws.TextMessage.Strict
 
 		val source: Source[Message, Any] = Source
