@@ -43,10 +43,10 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 
 	given [T: RootJsonWriter]: ToEntityMarshaller[T] = SprayJsonSupport.sprayJsonMarshaller
 
-	def route: Route = pathPrefix("viewer").apply{
-		get.apply{
-			path("footprint").apply{
-				parameters("stationId", "footprint").apply{ (stationId, localDtStr) =>
+	def route: Route = pathPrefix("viewer"){
+		get{
+			path("footprint"){
+				parameters("stationId", "footprint"){ (stationId, localDtStr) =>
 					val localDt = LocalDateTime.parse(localDtStr)
 					complete(service.getFootprintRaster(stationId, localDt))
 				}
@@ -54,7 +54,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			path("viewer.js") {
 				getFromResource("www/viewer.js")
 			} ~
-			path("listfootprints").apply{
+			path("listfootprints"){
 				parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]) { (stationId, fromDate, toDate) =>
 					val footprintsList = service.listFootprints(stationId, fromDate, toDate)
 					complete(footprintsList.map(_.toString).toSeq)
@@ -78,7 +78,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				import StationInfoMarshalling.stationInfoMarshaller
 				complete(service.getStationInfos)
 			} ~
-			path("availablemonths").apply{
+			path("availablemonths"){
 				complete(service.availableInputMonths())
 			} ~
 			redirectToTrailingSlashIfMissing(StatusCodes.Found){
@@ -87,10 +87,10 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				}
 			}
 		} ~
-		post.apply {
+		post {
 			entity(as[StiltResultsRequest]) { req =>
-				withRequestTimeout(5.minutes).apply{
-					path("stiltresult").apply{
+				withRequestTimeout(5.minutes){
+					path("stiltresult"){
 						complete(service.getStiltResults(req).toSeq)
 					} ~
 					path("stiltrawresult") {
@@ -156,14 +156,14 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		}
 
 	} ~
-	get.apply{
+	get{
 		pathEndOrSingleSlash{
 			redirect("/viewer/", StatusCodes.Found)
 		} ~
 		path("buildInfo"){
 			complete(BuildInfo.toString)
 		} ~
-		path("whoami").apply{
+		path("whoami"){
 			user{userId => complete(
 				StatusCodes.OK -> WhoamiResult(userId.email, config.admins.exists(_ == userId.email))
 			)} ~
