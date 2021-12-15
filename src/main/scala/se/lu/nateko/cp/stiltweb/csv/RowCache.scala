@@ -11,7 +11,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.MonthDay
 
-import RowCache._
 import se.lu.nateko.cp.stiltweb.StiltResultsPresenter._
 import spray.json._
 import spray.json.DefaultJsonProtocol._
@@ -27,7 +26,8 @@ object LocalDayTime{
 	def apply(dt: LocalDateTime) = new LocalDayTime(MonthDay.from(dt), dt.toLocalTime)
 }
 
-class RowCache(rowFactory: () => Iterator[CachedRow], parentFolder: Path, year: Int, slotStepInMinutes: Int) {
+class RowCache(rowFactory: () => Iterator[RowCache.CachedRow], parentFolder: Path, year: Int, slotStepInMinutes: Int) {
+	import RowCache.BytesPerRow
 
 	private val cachePath = parentFolder.resolve(s"cache${slotStepInMinutes}_${BytesPerRow}.txt")
 	private val yearStart = LocalDateTime.of(year, 1, 1, 0, 0)

@@ -1,11 +1,11 @@
 package se.lu.nateko.cp.stiltweb
 
 import java.nio.file.{Files, Path}
-import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.JobFormat
 import spray.json._
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.StiltSlot
 import se.lu.nateko.cp.stiltcluster.Util
+import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.{given JsonFormat[Job]}
 
 
 class JobDir(val job: Job, val dir: Path) {

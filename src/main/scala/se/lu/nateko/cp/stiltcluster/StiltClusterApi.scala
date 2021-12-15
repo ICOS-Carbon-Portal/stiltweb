@@ -46,15 +46,15 @@ class StiltClusterApi {
 
 	def queryOwner(jobId: String): Future[Option[String]] = {
 		// The assumption is that this query will run on the same JVM as the responding actor.
-		implicit val timeout = Timeout(1.second)
+		implicit val timeout: Timeout = Timeout(1.second)
 		ask(receptionist, PleaseSendDashboardInfo).mapTo[DashboardInfo].map{ dbi =>
 			dbi.findCancellableJobById(jobId).map(_.userId)
 		}
 	}
 
 	val websocketsFlow: Flow[Message, Message, Any] = {
-		import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport._
-		import spray.json._
+		import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.given
+		import spray.json.enrichAny
 		import akka.http.scaladsl.model.ws.TextMessage.Strict
 
 		val source: Source[Message, Any] = Source

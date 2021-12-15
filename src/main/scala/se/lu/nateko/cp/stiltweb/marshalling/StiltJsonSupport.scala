@@ -3,24 +3,29 @@ package se.lu.nateko.cp.stiltweb.marshalling
 import java.time.{ Instant, LocalDate }
 import akka.actor.Address
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
+import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
 import se.lu.nateko.cp.stiltcluster._
 import spray.json._
 import se.lu.nateko.cp.stiltweb.StiltResultsRequest
 import se.lu.nateko.cp.stiltweb.StiltStationInfo
 import se.lu.nateko.cp.stiltweb.WhoamiResult
 import se.lu.nateko.cp.stiltweb.StiltStationIds
+import play.twirl.api.Html
 
-object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+object StiltJsonSupport {
+	import SprayJsonSupport._
+	import DefaultJsonProtocol._
 
-	implicit val rasterMarshalling = RasterMarshalling.marshaller
-	implicit val templateMarshaller = TemplatePageMarshalling.marshaller
+	given ToResponseMarshaller[Raster] = RasterMarshalling.marshaller
+	given ToResponseMarshaller[Html] = TemplatePageMarshalling.marshaller
 
-	implicit val stiltResultsWhoamiFormat = jsonFormat2(WhoamiResult)
+	given RootJsonFormat[WhoamiResult] = jsonFormat2(WhoamiResult.apply)
 
-	implicit object stiltStationInfoWriter extends RootJsonFormat[StiltStationInfo] {
-		private implicit val idsformat = jsonFormat5(StiltStationIds.apply)
-		private val simple = jsonFormat5(StiltStationInfo)
+	given RootJsonFormat[StiltStationInfo] with {
+		private given JsonFormat[StiltStationIds] = jsonFormat5(StiltStationIds.apply)
+		private val simple: JsonFormat[StiltStationInfo] = jsonFormat5(StiltStationInfo.apply)
 
 		def write(si: StiltStationInfo): JsValue = {
 			val self = si.toJson(simple).asJsObject
@@ -31,23 +36,23 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 		def read(json: JsValue): StiltStationInfo = ???
 	}
 
-	implicit object LocalDateFormat extends JsonFormat[LocalDate]{
+	given JsonFormat[LocalDate] with{
 		def write(d: LocalDate) = JsString(d.toString)
 		def read(value: JsValue) = value match {
 			case JsString(d) => LocalDate.parse(d)
 			case _ => throw new DeserializationException("Expected a date string in format YYYY-MM-DD")
 		}
 	}
-	implicit val stiltResultsRequestFormat = jsonFormat4(StiltResultsRequest)
+	given RootJsonFormat[StiltResultsRequest] = jsonFormat4(StiltResultsRequest.apply)
 
-	implicit object ActorAddressFormat extends JsonFormat[Address]{
+	given JsonFormat[Address] with {
 		def write(a: Address) = JsString(a.toString)
 		def read(value: JsValue) = throw new DeserializationException(
 			"JSON-parsing of akka.actor.Address instances is not implemented and should not be needed"
 		)
 	}
 
-	implicit object InstantFormat extends JsonFormat[Instant]{
+	given JsonFormat[Instant] with {
 		def write(i: Instant) = JsString(i.toString)
 		// We never want to read the time{Started,Stopped} from JSON
 		def read(value: JsValue) = throw new DeserializationException(
@@ -55,9 +60,9 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 		)
 	}
 
-	private val jobDefaultFormat = jsonFormat9(Job)
+	private val jobDefaultFormat: JsonFormat[Job] = jsonFormat9(Job.apply)
 
-	implicit object JobFormat extends RootJsonFormat[Job]{
+	given RootJsonFormat[Job] with {
 		def write(job: Job) = {
 			val basic = jobDefaultFormat.write(job).asJsObject
 			JsObject(basic.fields.filterNot{
@@ -67,16 +72,16 @@ object StiltJsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 		def read(value: JsValue) = jobDefaultFormat.read(value)
 	}
 
-	implicit val stiltTimeFormat = jsonFormat4(StiltTime.apply)
-	implicit val stiltPositionFormat = jsonFormat3(StiltPosition.apply)
-	implicit val stiltSlotFormat = jsonFormat2(StiltSlot.apply)
-	implicit val slotFailureFormat = jsonFormat3(SlotFailure)
+	given JsonFormat[StiltTime] = jsonFormat4(StiltTime.apply)
+	given JsonFormat[StiltPosition] = jsonFormat3(StiltPosition.apply)
+	given JsonFormat[StiltSlot] = jsonFormat2(StiltSlot.apply)
+	given JsonFormat[SlotFailure] = jsonFormat3(SlotFailure.apply)
 
-	implicit val jobInfoFormat = jsonFormat4(JobInfo)
-	implicit val workMasterStatusFormat = jsonFormat3(WorkMasterStatus)
-	implicit val workerNodeInfoFormat = jsonFormat3(WorkerNodeInfo)
+	given JsonFormat[JobInfo] = jsonFormat4(JobInfo.apply)
+	given JsonFormat[WorkMasterStatus] = jsonFormat3(WorkMasterStatus.apply)
+	given JsonFormat[WorkerNodeInfo] = jsonFormat3(WorkerNodeInfo.apply)
 
-	implicit val dashboardInfoFormat = jsonFormat4(DashboardInfo)
+	given JsonFormat[DashboardInfo] = jsonFormat4(DashboardInfo.apply)
 
 
 }
