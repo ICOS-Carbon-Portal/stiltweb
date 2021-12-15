@@ -75,7 +75,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				}
 			} ~
 			path("stationinfo") {
-				import StationInfoMarshalling.stationInfoMarshaller
+				import StationInfoMarshalling.given
 				complete(service.getStationInfos)
 			} ~
 			path("availablemonths"){

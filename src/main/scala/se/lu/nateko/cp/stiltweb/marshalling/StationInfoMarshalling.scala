@@ -3,6 +3,7 @@ package se.lu.nateko.cp.stiltweb.marshalling
 import akka.http.scaladsl.marshalling.Marshaller
 import akka.http.scaladsl.marshalling.Marshalling.WithOpenCharset
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
+import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
@@ -18,8 +19,8 @@ object StationInfoMarshalling{
 	val jsonMarshaller: ToResponseMarshaller[Stations] = {
 		import StiltJsonSupport.{given JsonFormat[StiltStationInfo]}
 		import DefaultJsonProtocol.immSeqFormat
-		import SprayJsonSupport.sprayJsonMarshaller
-		summon[ToResponseMarshaller[Stations]]
+		given [T: RootJsonWriter]: ToEntityMarshaller[T] = SprayJsonSupport.sprayJsonMarshaller
+		summon[ToEntityMarshaller[Stations]]
 	}
 
 	val csvMarshaller: ToResponseMarshaller[Stations] = Marshaller(
@@ -30,7 +31,7 @@ object StationInfoMarshalling{
 		)
 	)
 
-	implicit val stationInfoMarshaller: ToResponseMarshaller[Stations] = Marshaller.oneOf(csvMarshaller, jsonMarshaller)
+	given ToResponseMarshaller[Stations] = Marshaller.oneOf(csvMarshaller, jsonMarshaller)
 
 	private def getText(stations: Stations, contentType: WithCharset): HttpResponse = {
 		val lines: Seq[String] = "STILT id,STILT name,ICOS id,WDCGG,GLOBALVIEW" +: stations.map{station =>
