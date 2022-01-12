@@ -22,7 +22,8 @@ CES060,Cabauw 60m,CES,Cabauw 60m,CES
 CES120,Cabauw 120m,CES,Cabauw 120m,CES
 CES200,Cabauw 200m,CES,Cabauw 200m,CES
 CCO,Cap Corse,,,
-CMN,Monte Cimone,CMN,,CMN
+CMN780,Monte Cimone,CMN,,CMN
+CMN_test,,,,
 CRP,Cansore Point,,,CRP
 DEC,Delta Ebre,,,DEC
 EGH,Egham,,,
