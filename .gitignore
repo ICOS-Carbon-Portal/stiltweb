@@ -4,7 +4,6 @@
 
 # Node.js specific
 node_modules/
-/package-lock.json
 src/main/resources/bundle.js
 
 # sbt specific

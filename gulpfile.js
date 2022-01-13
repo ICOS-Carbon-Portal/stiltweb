@@ -1,23 +1,25 @@
 'use strict';
 
 var gulp = require('gulp');
-var gp_uglify = require('gulp-uglify');
+var uglify = require('gulp-uglify');
 var browserify = require('browserify');
 var bcss = require('browserify-css');
 var buffer = require('vinyl-buffer');
 var del = require('del');
 var source = require('vinyl-source-stream');
 var babelify = require('babelify');
-var babel = require('gulp-babel');
-var preprocessify = require('preprocessify');
 
-var SCALA_VERSION = 'scala-2.12';
+var SCALA_VERSION = 'scala-3.1.0';
+var PROD = 'production'
 
-var projects = ['viewer', 'worker'];
-projects.forEach(function(project){
+function applyProd() {
+	process.env.NODE_ENV = PROD;
+	return Promise.resolve();
+};
+
+function tasks(project){
 
 	var projSrc = 'src/main/js/' + project;
-	var jstarget = 'target/es5js/' + project;
 
 	var paths = {
 		main: projSrc + '/main.jsx',
@@ -30,61 +32,41 @@ projects.forEach(function(project){
 		bundleFile: project + '.js'
 	};
 
-	gulp.task('clean' + project, function() {
+	function clean() {
 		return del([paths.target + paths.bundleFile]);
-	});
-
-	gulp.task('apply-prod-environment', function() {
-		process.env.NODE_ENV = 'production';
-	});
+	};
 
 	function compileJs() {
-		var browser = browserify({
-			entries: [paths.main],
-			debug: false
-		})
+		var browser = browserify({entries: [paths.main], debug: false})
 			.transform(bcss, {global: true})
-			.transform(preprocessify({NODE_ENV: process.env.NODE_ENV}))
-			.transform(babelify, {presets: ["es2015", "react"]})
+			.transform(babelify, {presets: ["env", "react"]})
 			.bundle()
+			.pipe(source(paths.bundleFile))
 			.on('error', function(err){
 				console.log(err);
 				this.emit('end');
 			});
 
-		if (process.env.NODE_ENV === 'production'){
-			return browser
-				.pipe(source(paths.bundleFile))
-				.pipe(buffer())
-				.pipe(gp_uglify())
-				.pipe(gulp.dest(paths.target));
-		} else {
-			return browser
-				.pipe(source(paths.bundleFile))
-				.pipe(gulp.dest(paths.target));
-		}
+		var minified = process.env.NODE_ENV === PROD
+			? browser.pipe(buffer()).pipe(uglify())
+			: browser;
+
+		return minified.pipe(gulp.dest(paths.target));
 	}
 
-	gulp.task('js' + project, ['clean' + project], compileJs);
+	return {
+		build: gulp.series(clean, compileJs),
+		publish: gulp.series(applyProd, clean, compileJs)
+	}
+}
 
-	gulp.task('clean_es5' + project, function() {
-		return del([jstarget]);
-	});
+var viewer = tasks('viewer');
+var worker = tasks('worker');
+var publishViewer = viewer.publish;
+var publishWorker = worker.publish;
+var publish = gulp.parallel(publishViewer, publishWorker);
 
-	gulp.task('transpile' + project, ['clean_es5' + project], function(){
-		return gulp.src(paths.alljs)
-			.pipe(babel({presets: ['es2015']}))
-			.pipe(gulp.dest(jstarget));
-	});
-
-	gulp.task(project, ['js' + project], function(){
-		var sources = [paths.commonjs, paths.commonjsx, paths.js, paths.jsx];
-		return gulp.watch(sources, ['js' + project]);
-	});
-
-	gulp.task('publish' + project, ['apply-prod-environment', 'clean' + project], compileJs);
-});
-
-
-gulp.task('publish', projects.map(function(e) { return "publish" + e; }));
-gulp.task('default', ['publish']);
+exports.buildViewer = viewer.build;
+exports.buildWorker = worker.build;
+exports.publish = publish;
+exports.default = publish;

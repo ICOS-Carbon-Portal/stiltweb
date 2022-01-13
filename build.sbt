@@ -43,8 +43,11 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 		}
 	)
 
-val npmPublish = taskKey[Unit]("runs 'npm publish'")
-npmPublish := scala.sys.process.Process(Seq("bash", "-c", "npm install && npm run publish")).!
+val npmPublish = taskKey[Int]("runs 'npm run publish'")
+npmPublish := {
+	import scala.sys.process.Process
+	(Process("npm ci") #&& Process("npm run publish")).!
+}
 
 lazy val stiltweb = (project in file("."))
 	.dependsOn(stiltcluster)
@@ -52,7 +55,7 @@ lazy val stiltweb = (project in file("."))
 	.settings(commonSettings: _*)
 	.settings(
 		name := "stiltweb",
-		version := "0.4.0",
+		version := "0.4.1",
 
 		libraryDependencies := {
 			libraryDependencies.value.map{
@@ -94,7 +97,7 @@ lazy val stiltweb = (project in file("."))
 		assembly := (Def.taskDyn{
 			val original = assembly.taskValue
 			// Referencing the task's 'value' field will trigger the npm command
-			npmPublish.value
+			if(npmPublish.value != 0) throw new IllegalStateException("Front end build error")
 			// Then just return the original "assembly command"
 			Def.task(original.value)
 		}).value
