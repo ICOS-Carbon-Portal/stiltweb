@@ -67,7 +67,7 @@ export const fetchStationData = (dispatch, getState) => {
 
 	dispatch({type: SHOW_SPINNER});
 
-	getStationData(stationId, scope, state.wdcggFormat).then(
+	getStationData(stationId, scope, state.icosFormat).then(
 		stationData => {
 			dispatch(gotStationData(stationData, stationId, scope.fromDate, scope.toDate));
 			dispatch({type: HIDE_SPINNER});

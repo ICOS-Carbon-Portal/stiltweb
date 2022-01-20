@@ -28,7 +28,7 @@ export default function(state, action){
 				}));
 				return Object.assign(s, {siteId: s.id});
 			});
-			let newState = updateWith(['wdcggFormat', 'countriesTopo']);
+			let newState = updateWith(['icosFormat', 'countriesTopo']);
 
 			return Object.assign(newState, {stations});
 
@@ -43,7 +43,7 @@ export default function(state, action){
 			? station.years[0]
 			: station.years.find(({year}) => state.selectedScope && state.selectedScope.year === year);
 
-			return keep(['wdcggFormat', 'stations', 'countriesTopo', 'options'], {
+			return keep(['icosFormat', 'stations', 'countriesTopo', 'options'], {
 				selectedStation: station,
 				selectedScope,
 				axes: state.axes.withSelectedScope(selectedScope)

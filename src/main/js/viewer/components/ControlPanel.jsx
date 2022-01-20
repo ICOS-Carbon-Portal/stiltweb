@@ -58,7 +58,7 @@ const ViewerScopeDisplay = props => <div className="row">
 
 function yearInfoToLabel(info){
 	if(!info) return info;
-	return info.year + (info.dataObject ? ' (+WDCGG)' : '');
+	return info.year + (info.dataObject ? ` (+ICOS ${info.dataObject.samplingHeight} m)` : '');
 }
 
 const StationAndYearSelector = ({selectYear, selectStation, selectedScope, selectedStation, stations}) => {

@@ -8,7 +8,7 @@ import Axes from "./models/Axes";
 const initState = {
 	axes: new Axes(),
 	showSpinner: false,
-	wdcggFormat: null,
+	icosFormat: null,
 	stations: [],
 	selectedStation: null,
 	selectedYear: null,

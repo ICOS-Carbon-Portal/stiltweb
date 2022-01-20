@@ -1,12 +1,12 @@
 import config from '../config';
-import DygraphData, {wdcggBinTableToDygraphData} from './DygraphData';
+import DygraphData, {icosBinTableToDygraphData} from './DygraphData';
 
 export function makeTimeSeriesGraphData(obsBinTable, rawArray, id){
 
 	const modelComponents = makeModelComponentsData(rawArray);
 	if(!obsBinTable) return modelComponents.withId(id);
 
-	const obsDyData = wdcggBinTableToDygraphData(obsBinTable, config.wdcggColumns);
+	const obsDyData = icosBinTableToDygraphData(obsBinTable, config.icosColumns);
 
 	return DygraphData.merge(obsDyData, modelComponents).withId(id);
 }

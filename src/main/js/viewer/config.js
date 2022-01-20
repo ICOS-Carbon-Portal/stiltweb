@@ -78,9 +78,9 @@ const secondaryComponents = Object.keys(stiltResultColumnGrouping).reduce((acc, 
 	return acc;
 }, {});
 
-const wdcggColumns = [dateSeries, {
+const icosColumns = [dateSeries, {
 	label: 'co2.observed',
-	comment: 'observed atmospheric CO2 mole fraction available at WDCGG',
+	comment: 'observed atmospheric CO2 mole fraction available from ICOS',
 	options: {axis: 'y1', color: 'rgb(0, 0, 0)', strokeWidth: 2}
 }];
 
@@ -90,15 +90,14 @@ export default {
 	sparqlEndpoint: 'https://meta.icos-cp.eu/sparql',
 	cpmetaOntoUri: 'http://meta.icos-cp.eu/ontologies/cpmeta/',
 	cpmetaResUri: 'http://meta.icos-cp.eu/resources/cpmeta/',
-	wdcggBaseUri: 'http://meta.icos-cp.eu/resources/wdcgg/',
-	wdcggSpec: 'http://meta.icos-cp.eu/resources/cpmeta/wdcggDataObject',
+	icosCo2Spec: 'http://meta.icos-cp.eu/resources/cpmeta/atcCo2L2DataObject',
 	stiltResultColumns,
 	stiltResultColumnGrouping,
-	wdcggColumns,
+	icosColumns,
 	primaryComponents(selectedScope){
 		const obsColumns = !selectedScope || selectedScope.dataObject
-			? wdcggColumns.slice(1)
-			: [Object.assign({}, wdcggColumns[1], {disabled: true})];
+			? icosColumns.slice(1)
+			: [Object.assign({}, icosColumns[1], {disabled: true})];
 		return obsColumns.concat(stiltResultColumns.slice(1,3));
 	},
 	secondaryComponents,

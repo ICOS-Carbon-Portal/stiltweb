@@ -1,5 +1,5 @@
 
-export function wdcggBinTableToDygraphData(binTable, series){
+export function icosBinTableToDygraphData(binTable, series){
 	function rowGetter(i){
 		let row = binTable.row(i);
 		row[0] = new Date(row[0]);

@@ -1,16 +1,16 @@
 import 'whatwg-fetch';
 import {checkStatus, sparql, getJson, getBinaryTable, getBinRaster, tableFormatForSpecies} from 'icos-cp-backend';
-import {wdcggTimeSeriesQuery} from './sparqlQueries';
+import {icosAtmoReleaseQuery} from './sparqlQueries';
 import {copyprops} from 'icos-cp-utils';
 import {feature} from 'topojson';
 import config from './config';
 
 export function getInitialData(){
 	return Promise.all([
-		tableFormatForSpecies(config.wdcggSpec, config),
+		tableFormatForSpecies(config.icosCo2Spec, config),
 		getStationInfo(),
 		getCountriesGeoJson()
-	]).then(([wdcggFormat, stations, countriesTopo]) => {return {wdcggFormat, stations, countriesTopo};});
+	]).then(([icosFormat, stations, countriesTopo]) => {return {icosFormat, stations, countriesTopo};});
 }
 
 function getCountriesGeoJson(){
@@ -19,44 +19,48 @@ function getCountriesGeoJson(){
 }
 
 function getStationInfo(){
-	return getJson('stationinfo').then(stInfos => {
 
-		const wdcggNames = stInfos.map(stInfo => stInfo.wdcggId).filter(i => i);
+	return Promise.all([
+		getJson('stationinfo'),
+		sparql(icosAtmoReleaseQuery(config.icosCo2Spec), config.sparqlEndpoint)
+	])
+	.then(([stInfos, sparqlResult]) => {
 
-		const query = wdcggTimeSeriesQuery(wdcggNames);
+		const tsLookup = sparqlResult.results.bindings.reduce((acc, binding) => {
+			const stationId = binding.stationId.value.trim();
+			const dobjInfo = {
+				start: new Date(binding.ackStartTime.value),
+				stop: new Date(binding.ackEndTime.value),
+				nRows: parseInt(binding.nRows.value),
+				samplingHeight: parseFloat(binding.samplingHeight.value),
+				id: binding.dobj.value
+			};
+			if(!acc.hasOwnValue(stationId)) acc[stationId] = [];
+			acc[stationId].push(dobjInfo);
+			return acc;
+		}, {});
 
-		return sparql(query, config.sparqlEndpoint).then(sparqlResult => {
+		function dobjByStation(stInfo, year){
+			const cands = tsLookup[stInfo.icosId];
+			if(!cands) return undefined;
+			function altDiff(dInfo){
+				return Math.abs(dInfo.samplingHeight - stInfo.alt);
+			}
+			const available = dobjInfo
+				.filter(dobj => dobj.start.getUTCFullYear() <= year && dobj.stop.getUTCFullYear() >= year)
+				.sort((do1, do2) => altDiff(do1) - altDiff(do2)); //by proximity of sampling height and stilt altitude
+			return available[0];
+		}
 
-			const dobjInfo = sparqlResult.results.bindings.map(binding => {
-				const year = binding.ackStartTime && binding.ackEndTime
-					? new Date(new Date(binding.ackStartTime.value).valueOf() / 2 + new Date(binding.ackEndTime.value).valueOf() / 2).getUTCFullYear()
-					: undefined;
-				return {
-					wdcggId: binding.wdcggId.value.trim(),
-					year,
-					nRows: parseInt(binding.nRows.value),
-					dobj: binding.dobj.value
-				};
-			});
+		return stInfos.map(stInfo => {
+			const name = stInfo.name || stInfo.icosId || stInfo.id;
+			const years = stInfo.years.map(year =>
+				({year, dataObject: dobjByStation(stInfo, year)})
+			);
 
-			return stInfos.map(stInfo => {
-				const name = stInfo.name || stInfo.wdcggId || stInfo.id;
-				const years = stInfo.years.map(year => {
-					return {year, dataObject: dobjByYear(dobjInfo, stInfo.wdcggId, year)};
-				});
-
-				return Object.assign(copyprops(stInfo, ['id', 'lat', 'lon', 'alt']), {name, years})
-			});
+			return Object.assign(copyprops(stInfo, ['id', 'lat', 'lon', 'alt']), {name, years})
 		});
 	});
-}
-
-function dobjByYear(dobjInfo, wdcggId, year){
-	const available = dobjInfo
-		.filter(dobj => dobj.year === year && dobj.wdcggId === wdcggId)
-		.map(({dobj, nRows}) => {return {id: dobj, nRows};})
-		.sort((do1, do2) => do2.nRows - do1.nRows); //by number of points, descending
-	return available[0];
 }
 
 export function getRaster(stationId, filename){
@@ -64,11 +68,11 @@ export function getRaster(stationId, filename){
 	return getBinRaster(id, 'footprint', ['stationId', stationId], ['footprint', filename]);
 }
 
-export function getStationData(stationId, scope, wdcggFormat){
-	//stationId: String, scope: {fromDate: LocalDate(ISO), toDate: LocalDate(ISO), dataObjectInfo: {id: String, nRows: Int}}, wdcggFormat: TableFormat
+export function getStationData(stationId, scope, icosFormat){
+	//stationId: String, scope: {fromDate: LocalDate(ISO), toDate: LocalDate(ISO), dataObjectInfo: {id: String, nRows: Int}}, icosFormat: TableFormat
 	const {fromDate, toDate, dataObject} = scope;
 	const footprintsListPromise = getFootprintsList(stationId, fromDate, toDate);
-	const observationsPromise = getWdcggBinaryTable(dataObject, wdcggFormat);
+	const observationsPromise = getIcosBinaryTable(dataObject, icosFormat);
 	const modelResultsPromise = getStiltResults({
 		stationId,
 		fromDate,
@@ -80,11 +84,11 @@ export function getStationData(stationId, scope, wdcggFormat){
 		.then(([obsBinTable, modelResults, footprints]) => {return {obsBinTable, modelResults, footprints};});
 }
 
-function getWdcggBinaryTable(dataObjectInfo, wdcggFormat){
+function getIcosBinaryTable(dataObjectInfo, icosFormat){
 	if(!dataObjectInfo) return Promise.resolve(null);
 
-	const axisIndices = ['TIMESTAMP', 'PARAMETER'].map(idx => wdcggFormat.getColumnIndex(idx));
-	const tblRequest = wdcggFormat.getRequest(dataObjectInfo.id, dataObjectInfo.nRows, axisIndices);
+	const axisIndices = ['TIMESTAMP', 'PARAMETER'].map(idx => icosFormat.getColumnIndex(idx));
+	const tblRequest = icosFormat.getRequest(dataObjectInfo.id, dataObjectInfo.nRows, axisIndices);
 
 	return getBinaryTable(tblRequest);
 }
