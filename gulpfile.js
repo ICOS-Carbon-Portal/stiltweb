@@ -1,6 +1,5 @@
 'use strict';
 
-var gulp = require('gulp');
 var uglify = require('gulp-uglify');
 var browserify = require('browserify');
 var bcss = require('browserify-css');
@@ -8,6 +7,7 @@ var buffer = require('vinyl-buffer');
 var del = require('del');
 var source = require('vinyl-source-stream');
 var babelify = require('babelify');
+const { watch, dest, series, parallel } = require('gulp');
 
 var SCALA_VERSION = 'scala-3.1.0';
 var PROD = 'production'
@@ -51,12 +51,18 @@ function tasks(project){
 			? browser.pipe(buffer()).pipe(uglify())
 			: browser;
 
-		return minified.pipe(gulp.dest(paths.target));
+		return minified.pipe(dest(paths.target));
 	}
 
 	return {
-		build: gulp.series(clean, compileJs),
-		publish: gulp.series(applyProd, clean, compileJs)
+		build: function(){
+			watch(
+				[paths.js, paths.js, paths.commonjs, paths.commonjsx],
+				{ignoreInitial: false},
+				series(clean, compileJs)
+			)
+		},
+		publish: series(applyProd, clean, compileJs)
 	}
 }
 
@@ -64,9 +70,8 @@ var viewer = tasks('viewer');
 var worker = tasks('worker');
 var publishViewer = viewer.publish;
 var publishWorker = worker.publish;
-var publish = gulp.parallel(publishViewer, publishWorker);
+var publish = parallel(publishViewer, publishWorker);
 
 exports.buildViewer = viewer.build;
 exports.buildWorker = worker.build;
 exports.publish = publish;
-exports.default = publish;

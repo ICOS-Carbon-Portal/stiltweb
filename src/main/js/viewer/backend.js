@@ -29,13 +29,13 @@ function getStationInfo(){
 		const tsLookup = sparqlResult.results.bindings.reduce((acc, binding) => {
 			const stationId = binding.stationId.value.trim();
 			const dobjInfo = {
-				start: new Date(binding.ackStartTime.value),
-				stop: new Date(binding.ackEndTime.value),
+				start: new Date(binding.acqStartTime.value),
+				stop: new Date(binding.acqEndTime.value),
 				nRows: parseInt(binding.nRows.value),
 				samplingHeight: parseFloat(binding.samplingHeight.value),
 				id: binding.dobj.value
 			};
-			if(!acc.hasOwnValue(stationId)) acc[stationId] = [];
+			if(!acc.hasOwnProperty(stationId)) acc[stationId] = [];
 			acc[stationId].push(dobjInfo);
 			return acc;
 		}, {});
@@ -46,7 +46,7 @@ function getStationInfo(){
 			function altDiff(dInfo){
 				return Math.abs(dInfo.samplingHeight - stInfo.alt);
 			}
-			const available = dobjInfo
+			const available = cands
 				.filter(dobj => dobj.start.getUTCFullYear() <= year && dobj.stop.getUTCFullYear() >= year)
 				.sort((do1, do2) => altDiff(do1) - altDiff(do2)); //by proximity of sampling height and stilt altitude
 			return available[0];
@@ -87,7 +87,7 @@ export function getStationData(stationId, scope, icosFormat){
 function getIcosBinaryTable(dataObjectInfo, icosFormat){
 	if(!dataObjectInfo) return Promise.resolve(null);
 
-	const axisIndices = ['TIMESTAMP', 'PARAMETER'].map(idx => icosFormat.getColumnIndex(idx));
+	const axisIndices = ['TIMESTAMP', config.observationVarName].map(idx => icosFormat.getColumnIndex(idx));
 	const tblRequest = icosFormat.getRequest(dataObjectInfo.id, dataObjectInfo.nRows, axisIndices);
 
 	return getBinaryTable(tblRequest);

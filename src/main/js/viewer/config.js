@@ -91,6 +91,7 @@ export default {
 	cpmetaOntoUri: 'http://meta.icos-cp.eu/ontologies/cpmeta/',
 	cpmetaResUri: 'http://meta.icos-cp.eu/resources/cpmeta/',
 	icosCo2Spec: 'http://meta.icos-cp.eu/resources/cpmeta/atcCo2L2DataObject',
+	observationVarName: 'co2',
 	stiltResultColumns,
 	stiltResultColumnGrouping,
 	icosColumns,

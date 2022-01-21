@@ -1,9 +1,11 @@
 
 export function icosBinTableToDygraphData(binTable, series){
 	function rowGetter(i){
-		let row = binTable.row(i);
-		row[0] = new Date(row[0]);
-		return row;
+		const brow = binTable.row(i);
+		return [
+			new Date(brow[0]),
+			brow[1]
+		];
 	}
 	return new DygraphData(rowGetter, binTable.length, series);
 }

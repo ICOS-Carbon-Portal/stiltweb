@@ -8,7 +8,7 @@
     "publish": "gulp publish",
     "viewer": "gulp buildViewer",
     "worker": "gulp buildWorker",
-    "gulp": "gulp"
+    "gulptasks": "gulp --tasks"
   },
   "repository": {
     "type": "git",
