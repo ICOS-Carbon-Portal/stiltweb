@@ -69,10 +69,12 @@ export function getRaster(stationId, filename){
 }
 
 export function getStationData(stationId, scope, icosFormat){
-	//stationId: String, scope: {fromDate: LocalDate(ISO), toDate: LocalDate(ISO), dataObjectInfo: {id: String, nRows: Int}}, icosFormat: TableFormat
-	const {fromDate, toDate, dataObject} = scope;
+	//stationId: String
+	//scope: {fromDate: LocalDate(ISO), toDate: LocalDate(ISO), dataObject: {id: String, nRows: Int, start: Data(UTC), stop: Date(UTC)}}
+	//icosFormat: TableFormat
+	const {fromDate, toDate} = scope;
 	const footprintsListPromise = getFootprintsList(stationId, fromDate, toDate);
-	const observationsPromise = getIcosBinaryTable(dataObject, icosFormat);
+	const observationsPromise = getIcosBinaryTable(scope, icosFormat);
 	const modelResultsPromise = getStiltResults({
 		stationId,
 		fromDate,
@@ -84,12 +86,28 @@ export function getStationData(stationId, scope, icosFormat){
 		.then(([obsBinTable, modelResults, footprints]) => {return {obsBinTable, modelResults, footprints};});
 }
 
-function getIcosBinaryTable(dataObjectInfo, icosFormat){
-	if(!dataObjectInfo) return Promise.resolve(null);
+function getIcosBinaryTable(scope, icosFormat){
+	const {fromDate, toDate, dataObject} = scope;
+	if(!dataObject) return Promise.resolve(null);
+	const {nRows} = dataObject;
 
 	const axisIndices = ['TIMESTAMP', config.observationVarName].map(idx => icosFormat.getColumnIndex(idx));
-	const tblRequest = icosFormat.getRequest(dataObjectInfo.id, dataObjectInfo.nRows, axisIndices);
+	const tblRequest = icosFormat.getRequest(dataObject.id, nRows, axisIndices);
 
+	const [scopeFrom, scopeTo, dobjFrom, dobjTo] = [fromDate, toDate, dataObject.start, dataObject.stop].map(date => date.valueOf());
+
+	if(scopeFrom >= dobjTo || scopeTo <= dobjFrom) return Promise.resolve(null);
+
+	if(scopeFrom <= dobjFrom && scopeTo >= dobjTo) return getBinaryTable(tblRequest);
+
+	const dobjDur = dobjTo - dobjFrom;
+	const offset = scopeFrom <= dobjFrom
+		? 0
+		: Math.floor(nRows * ((scopeFrom - dobjFrom) / dobjDur));
+	const endPos = scopeTo >= dobjTo
+		? nRows
+		: Math.ceil(nRows * ((scopeTo - dobjFrom) / dobjDur));
+	tblRequest.slice = {offset, length: endPos - offset};
 	return getBinaryTable(tblRequest);
 }
 
