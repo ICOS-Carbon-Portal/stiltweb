@@ -94,7 +94,10 @@ function getIcosBinaryTable(scope, icosFormat){
 	const axisIndices = ['TIMESTAMP', config.observationVarName].map(idx => icosFormat.getColumnIndex(idx));
 	const tblRequest = icosFormat.getRequest(dataObject.id, nRows, axisIndices);
 
-	const [scopeFrom, scopeTo, dobjFrom, dobjTo] = [fromDate, toDate, dataObject.start, dataObject.stop].map(date => date.valueOf());
+	const scopeFrom = new Date(fromDate + 'T00:00:00.000Z').valueOf();
+	const scopeTo = new Date(toDate + 'T23:59:59.999Z').valueOf();
+	const dobjFrom = dataObject.start.valueOf();
+	const dobjTo = dataObject.stop.valueOf();
 
 	if(scopeFrom >= dobjTo || scopeTo <= dobjFrom) return Promise.resolve(null);
 
