@@ -36,18 +36,24 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	private val archiver = new Archiver(Paths.get(config.stateDirectory), config.slotStepInMinutes)
 
 	def getStationInfos: Seq[StiltStationInfo] = {
-		def opt(s: String): Option[String] = if(s.trim.isEmpty) None else Some(s.trim)
 
-		val idToIds: Map[String, StiltStationIds] = IoSource
-			.fromInputStream(getClass.getResourceAsStream("/stations.csv"), "UTF-8")
-			.getLines()
-			.drop(1) // header
-			.map(_.split(",", -1).toSeq)
-			.map{
-				case Seq(id, name, icosId, wdcggId, globalviewId) =>
-					id -> StiltStationIds(id, opt(name), opt(icosId), opt(wdcggId), opt(globalviewId))
+		val idToIds: Map[String, StiltStationIds] = {
+			val lines = IoSource
+				.fromInputStream(getClass.getResourceAsStream("/stations.csv"), "UTF-8")
+				.getLines()
+
+			val headerIdxs: Map[String, Int] = lines.next().split(",", -1).map(_.trim).zipWithIndex.toMap
+
+			lines.map{line =>
+				val cells = line.split(",", -1).map(_.trim)
+				def cell(colName: String) = cells(headerIdxs(colName))
+				val id = cell("STILT id")
+				val Array(name, icosId, wdcggId, globalviewId) = Array("STILT name", "ICOS id", "WDCGG", "GLOBALVIEW")
+					.map(cell).map{s => if(s.isEmpty) None else Some(s)}
+				id -> StiltStationIds(id, name, icosId, wdcggId, globalviewId)
 			}
 			.toMap
+		}
 
 		subdirectories(archiver.stationsDir).map{directory =>
 			val id = directory.getFileName.toString

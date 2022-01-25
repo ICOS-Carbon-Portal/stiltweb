@@ -9,6 +9,8 @@ import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import se.lu.nateko.cp.stiltweb.StiltStationInfo
 import scala.concurrent.Future
+import scala.io.{ Source => IoSource }
+import scala.util.Using
 import akka.http.scaladsl.model.ContentType.WithCharset
 import spray.json._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -34,12 +36,11 @@ object StationInfoMarshalling{
 	given ToResponseMarshaller[Stations] = Marshaller.oneOf(csvMarshaller, jsonMarshaller)
 
 	private def getText(stations: Stations, contentType: WithCharset): HttpResponse = {
-		val lines: Seq[String] = "STILT id,STILT name,ICOS id,WDCGG,GLOBALVIEW" +: stations.map{station =>
-			import station.id._
-			val cells = id +: Seq(name, icosId, wdcggId, globalviewId).map(_.getOrElse(""))
-			cells.mkString(",")
+
+		val csvStr = Using(IoSource.fromInputStream(getClass.getResourceAsStream("/stations.csv"), "UTF-8")){
+			src => src.getLines().mkString("\n")
 		}
-		val bytes = ByteString(lines.mkString("\n"), contentType.charset.value)
-		HttpResponse(entity = HttpEntity(contentType, Source.single(bytes)))
+
+		HttpResponse(entity = HttpEntity(contentType, csvStr.get))
 	}
 }
