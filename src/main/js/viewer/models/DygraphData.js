@@ -1,13 +1,30 @@
 
-export function icosBinTableToDygraphData(binTable, series){
+export function icosBinTableToDygraphData(binTable, fromDate, toDate, series){
+
+	const scopeFrom = new Date(fromDate + 'T00:00:00.000Z').valueOf();
+	const scopeTo = new Date(toDate + 'T23:59:59.999Z').valueOf();
+
+	function binSearch(time){
+		function inner(imin, imax){
+			if(imax <= imin) return imax;
+			const next = Math.round((imin + imax) / 2 + (Math.random() - 0.5)/ 10);
+			const nextTs = binTable.row(next)[0];
+			if(nextTs >= time) return binSearch(imin, nextTs);
+			else return binSearch(nextTs, imax);
+		}
+		return inner(0, binTable.length - 1);
+	}
+
+	const offset = binSearch(scopeFrom);
 	function rowGetter(i){
-		const brow = binTable.row(i);
+		const brow = binTable.row(i + offset);
 		return [
 			new Date(brow[0]),
 			brow[1]
 		];
 	}
-	return new DygraphData(rowGetter, binTable.length, series);
+	const dataSize = binSearch(scopeTo) - offset;
+	return new DygraphData(rowGetter, dataSize, series);
 }
 
 const NAN = {};//local tailor-made not-a-number

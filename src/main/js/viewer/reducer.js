@@ -58,7 +58,7 @@ export default function(state, action){
 				const footprints = new FootprintsRegistry(action.footprints);
 				const footprintsFetcher = new FootprintsFetcher(footprints, action.stationId);
 				const seriesId = action.stationId + '_' + action.fromDate + '_' + action.toDate;
-				const timeSeriesData = makeTimeSeriesGraphData(action.obsBinTable, action.modelResults, seriesId);
+				const timeSeriesData = makeTimeSeriesGraphData(action, seriesId);
 
 				return update({timeSeriesData, footprints, footprintsFetcher});
 			} else return state;

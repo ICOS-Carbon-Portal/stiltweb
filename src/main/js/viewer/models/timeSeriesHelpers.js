@@ -1,12 +1,14 @@
 import config from '../config';
 import DygraphData, {icosBinTableToDygraphData} from './DygraphData';
 
-export function makeTimeSeriesGraphData(obsBinTable, rawArray, id){
+export function makeTimeSeriesGraphData(stationDataAction, id){
 
-	const modelComponents = makeModelComponentsData(rawArray);
+	const {obsBinTable, modelResults, fromDate, toDate} = stationDataAction;
+
+	const modelComponents = makeModelComponentsData(modelResults);
 	if(!obsBinTable) return modelComponents.withId(id);
 
-	const obsDyData = icosBinTableToDygraphData(obsBinTable, config.icosColumns);
+	const obsDyData = icosBinTableToDygraphData(obsBinTable, fromDate, toDate, config.icosColumns);
 
 	return DygraphData.merge(obsDyData, modelComponents).withId(id);
 }
