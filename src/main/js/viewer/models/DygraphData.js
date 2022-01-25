@@ -6,11 +6,12 @@ export function icosBinTableToDygraphData(binTable, fromDate, toDate, series){
 
 	function binSearch(time){
 		function inner(imin, imax){
-			if(imax <= imin) return imax;
-			const next = Math.round((imin + imax) / 2 + (Math.random() - 0.5)/ 10);
+			if(imax <= imin + 1) return imin;
+			const next = Math.floor((imin + imax) / 2);
 			const nextTs = binTable.row(next)[0];
-			if(nextTs >= time) return binSearch(imin, nextTs);
-			else return binSearch(nextTs, imax);
+			if(nextTs == time) return next;
+			else if(nextTs > time) return inner(imin, next);
+			else return inner(next, imax);
 		}
 		return inner(0, binTable.length - 1);
 	}
