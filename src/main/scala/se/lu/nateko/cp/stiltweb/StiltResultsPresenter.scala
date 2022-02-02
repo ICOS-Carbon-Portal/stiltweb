@@ -36,6 +36,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	private val archiver = new Archiver(Paths.get(config.stateDirectory), config.slotStepInMinutes)
 
 	def getStationInfos: Seq[StiltStationInfo] = {
+		import StiltStationIds.{STILT_id, STILT_name, ICOS_id, ICOS_height}
 
 		val idToIds: Map[String, StiltStationIds] = {
 			val lines = IoSource
@@ -47,10 +48,10 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 			lines.map{line =>
 				val cells = line.split(",", -1).map(_.trim)
 				def cell(colName: String) = cells(headerIdxs(colName))
-				val id = cell("STILT id")
-				val Array(name, icosId, wdcggId, globalviewId) = Array("STILT name", "ICOS id", "WDCGG", "GLOBALVIEW")
+				val id = cell(STILT_id)
+				val Array(name, icosId, icosHeight) = Array(STILT_name, ICOS_id, ICOS_height)
 					.map(cell).map{s => if(s.isEmpty) None else Some(s)}
-				id -> StiltStationIds(id, name, icosId, wdcggId, globalviewId)
+				id -> StiltStationIds(id, name, icosId, icosHeight.flatMap(_.toFloatOption))
 			}
 			.toMap
 		}

@@ -1,131 +1,204 @@
-STILT id,STILT name,ICOS id,WDCGG,GLOBALVIEW
-AMS,Amsterdam,,,
-AMS_DW,Amsterdam downwind,,,
-ARR,Andoya,,,
-BAL,Baltic Sea,,Baltic Sea,BAL
-BER,Berlin,,,
-BER_DW,Berlin downwind,,,
-BG1,,,,
-BG2,,,,
-BG4,,,,
-BGU,Begur,,Begur,
-BIK005,Bialystok 5m,,,BIK
-BIK030,Bialystok 30m,,,
-BIK090,Bialystok 90m,,,
-BIK180,Bialystok 180m,,,
-BIK300,Bialystok 300m,,,
-BIR,Birkenes,BIR,,BIR
-BIS,Biscarrosse,,,
-BSC,Black Sea Coast,,,BSC
-CES020,Cabauw 20m,CES,Cabauw 20m,CES
-CES060,Cabauw 60m,CES,Cabauw 60m,CES
-CES120,Cabauw 120m,CES,Cabauw 120m,CES
-CES200,Cabauw 200m,CES,Cabauw 200m,CES
-CCO,Cap Corse,,,
-CMN780,Monte Cimone,CMN,,CMN
-CMN_test,,,,
-CRP,Cansore Point,,,CRP
-DEC,Delta Ebre,,,DEC
-EGH,Egham,,,
-F3P,North Sea Platform,,,
-FIK,Finokalia,,Finokalia,
-FRE,Freinsheim,,,
-GAT100,Gartow 100m,GAT,,
-GAT030,Gartow 30m,GAT,,
-GAT060,Gartow 60m,GAT,,
-GAT132,Gartow 132m,GAT,,
-GAT344,Gartow 344m,GAT,,
-GIF,Gif-sur-Yvette,,,
-GOE,Goes,,,
-GOL,,,,
-HAM,Hamburg,,,
-HAM_DW,Hamburg downwind,,,
-HAM_UW,Hamburg upwind,,,
-HEI,Heidelberg,,,HEI
-HEL,Helgoland,HEL,,
-HEN,Hengelo,,,
-HFD,Heathfield,,,
-HOV,Hovsore,,,
-HPB010,Hohenpeissenberg 10m,HPB,Hohenpeissenberg,HPB
-HPB093,Hohenpeissenberg 93m,HPB,Hohenpeissenberg,HPB
-HPB131,Hohenpeissenberg 131m,HPB,Hohenpeissenberg,HPB
-HTM150,Hyltemossa 150m,HTM,,HTM
-HUN096,Hegyhatsal 96m,,Hegyhatsal,HUN
-IPR015,Ispra,IPR,,
-IPR100,Ispra 100m,IPR,,
-IZN,Iznajar,,,
-JEM,Jemiolow,,,
-JENA,Jena,,,
-JFJ,Jungfraujoch,JFJ,Jungfraujoch,
-JUE,Forschungszentrum Jülich,JUE,,
-KAS,Kasprowy Wierch,,,
-KIT030,KIT Karlsruhe 30m,KIT,,
-KIT050,KIT Karlsruhe 50m,KIT,,
-KIT100,KIT Karlsruhe 100m,KIT,,
-KIT200,KIT Karlsruhe 200m,KIT,,
-KRE100,Kresin 100m,KRE,,
-KRE250,Kresin 250m,KRE,,
-KRE125,Kresin 125m,KRE,,
-LIN099,Lindenberg 99m,LIN,,LIN
-LMP,Lampedusa,LMP,Lampedusa,LMP
-LMU,La Muela,,,LMU
-LPO,Ile Grande,,,
-LUT,Lutjewad 60m,LUT,,LUT
-MAH,Malin Head,,,
-MHD,Mace Head,,Mace Head,MHD
-MIL,Milano,,,
-MUN,Munich,,,
-MUN_DW,Munich downwind,,,
-NOR100,Norunda,NOR,,NOR
-OES,Östergarnsholm,,,
-OHP,Observatoire HauteProvence,,,
-OPE050,OPE 50m,OPE,,OPE
-OPE120,OPE 120m,OPE,,OPE
-OST,Østerild,,,
-OTTA,,,,
-OXK023,Ochsenkopf 23m,OXK,,OXK
-OXK090,Ochsenkopf 90m,OXK,,
-OXK163,Ochsenkopf 163m,OXK,Ochsenkopf,
-PAL,Pallas-Sammaltunturi,PAL,Pallas-Sammaltunturi,PAL
-PAR,Paris,,,
-PAR_DW,Paris downwind,,,
-PDM,Pic du Midi,,Pic du Midi,
-PEE,Peel,,,
-POTT,,,,
-PRA,Prague,,,
-PRA_DW,Prague downwind,,,
-PRW,Pila Rusinowo,,,
-PRS,Plateau Rosa,PRS,Plateau Rosa,PRS
-PUI,Puijo,PUI,,PUI
-PUY,Puy de Dome,PUY,Puy de Dome,PUY
-RGL,Ridge Hill,,,RGL
-RIS,Risø,,,
-RTR,Roc Tredudon,,,
-ROM1,,,,
-ROT,,,,
-RUH,,,,
-SAC100,Saclay 100m,,,
-SSL,Schauinsland,,Schauinsland,SSL
-SKK,Selkirk,,,
-SMR127,SMEAR/Hyytiälä 127m,SMR,,SMR
-SMR125,SMEAR/Hyytiälä 125m,SMR,,SMR
-STH,Stockholm,,,
-STH_DW,Stockholm downwind,,,
-STK200,Steinkimmen 200m,STK,,
-SVB150,Svartberget 150m,SVB,,
-TAC191,Tacolneston Tall Tower,,Tacolneston Tall Tower,TAC
-TEST,,,,
-TOH147,Torfhaus 147m,,,
-TRN005,Trainou 5m,TRN,,TRN
-TRN050,Trainou 50m,TRN,,TRN
-TRN100,Trainou 100m,TRN,,
-TRN180,Trainou 180m,TRN,,
-TSE,Turm Schleptruper,,,
-TTA222,Angus 222m,,,TTA
-TTA050,Angus 50m,,,TTA
-UTO,Utö,UTO,,
-VIE,,,,
-VOI,Voeikovo,,,
-WES,Westerland,,Westerland,
-WAO,Weybourne,WAO,,WAO
-ZRK,,,,
+STILT id,STILT name,ICOS id,ICOS height
+322,,,
+777,,,
+AMS,Amsterdam,,
+AMS_DW,Amsterdam downwind,,
+ARR,Andoya,,
+BAL,Baltic Sea,,
+BAN112.00,,,
+BAN953.00,,,
+BER,Berlin,,
+BER_DW,Berlin downwind,,
+BER_UW,Berlin upwind,,
+BGU,Begur,,
+BIK180,Bialystok 180m,,
+BIK300,Bialystok 300m,,
+BIR,Birkenes 40m,,
+BIR075,Birkenes 75m,BIR,75
+BOR,Bordeaux,,
+BOR_DW,Bordeaux downwind,,
+BOR_UW,Bordeaux upwind,,
+BRM212,Beromünster,,
+BRM213,,,
+BSC,Black Sea Coast,,
+CBW,,,
+CBW027,Cabauw 27m,,
+CBW067,Cabauw 67m,,
+CBW127,Cabauw 127m,,
+CBW207,Cabauw 207m,,
+CDO,,,
+CES020,Cabauw 20m,,
+CES050,Cabauw 120m,,
+CES200,Cabauw 200m,,
+CGR,,,
+CIB100,,,
+CLT900,,,
+CMN760,Monte Cimone,CMN,8
+CMN_test,,,
+DAO,,,
+DAV,,,
+DEC,Delta Ebre,,
+DRX,,,
+EGH,Egham,,
+ERERER,,,
+FIK,Finokalia,,
+FRE,Freinsheim,,
+GAT030,Gartow 30m,GAT,30
+GAT060,Gartow 60m,GAT,60
+GAT132,Gartow 132m,GAT,132
+GAT216,Gartow 216m,GAT,216
+GAT344,Gartow 344m,GAT,341
+GIF,Gif-sur-Yvette 2m,,
+GIF010,Gif-sur-Yvette 10m,,
+GIF050,Gif-sur-Yvette 50m,,
+GOL,,,
+HAM,Hamburg,,
+HAM_DW,Hamburg downwind,,
+HAM_UW,Hamburg upwind,,
+HEI,Heidelberg,,
+HEL,Helgoland,,
+HEL110,Helgoland 110m,HEL,110
+HFD,Heathfield 135m,,
+HPB010,Hohenpeissenberg 10m,,
+HPB050,Hohenpeissenberg 50m,HPB,50
+HPB093,Hohenpeissenberg 93m,HPB,93
+HPB131,Hohenpeissenberg 131m,HPB,131
+HTM030,Hyltemossa 30m,HTM,30
+HTM070,Hyltemossa 70m,HTM,70
+HTM150,Hyltemossa 150m,HTM,150
+HUN096,Hegyhátsál 96m,,
+HUN115,Hegyhátsál 115m,,
+IDA,,,
+IDS,,,
+IPR015,Ispra 15m,,
+IPR060,Ispra 60m,IPR,60
+IPR100,Ispra 100m,IPR,100
+ISEN,,,
+ISN,,,
+IZN,Iznajar,,
+JENA,Jena,,
+JFJ,Jungfraujoch,JFJ,5
+JFJ960,Jungfraujoch,JFJ,5
+JUE,Jülich 100m,,
+JUE050,Jülich 50m,JUE,50
+JUE080,Jülich 80m,JUE,80
+JUE120,Jülich 120m,JUE,120
+KAS,Kasprowy Wierch,,
+KIT030,Karlsruhe 30m,KIT,30
+KIT050,Karlsruhe 50m,,
+KIT060,Karlsruhe 60m,KIT,60
+KIT100,Karlsruhe 100m,KIT,100
+KIT200,Karlsruhe 200m,KIT,200
+KRE010,Křešín u Pacova 10m,KRE,10
+KRE050,Křešín u Pacova 50m,KRE,50
+KRE125,Křešín u Pacova 125m,KRE,125
+KRE250,Křešín u Pacova 250m,KRE,250
+LEI,,,
+LIL,Lille,,
+LIL_DW,Lille downwind,,
+LIL_UW,Lille upwind,,
+LIN040,Lindenberg 40m,LIN,40
+LIN099,Lindenberg 99m,LIN,98
+LMP,Lampedusa,LMP,8
+LMU080,La Muela 80m,,
+LON,London,,
+LPO,Ile Grande,,
+LUT,Lutjewad 60m,LUT,60
+LUX,Luxembourg,,
+LUX_DW,Luxembourg downwind,,
+LUX_UW,Luxembourg upwind,,
+LYO,Lyon,,
+LYO_DW,Lyon downwind,,
+LYO_UW,Lyon upwind,,
+MAH,Malin Head,,
+MED-1,,,
+MED-2,,,
+MED-3,,,
+MED-4,,,
+MED-5,,,
+MHD,Mace Head,,
+MIL,Milano,,
+MUN,Munich,,
+MUN_DW,Munich downwind,,
+MUN_UW,Munich upwind,,
+NOR032,Norunda 32m,NOR,32
+NOR058,Norunda 58m,NOR,58
+NOR100,Norunda 100m,NOR,100
+OES,Östergarnsholm,,
+OHP100,Observatoire Haute Provence,,
+OPE010,Observatoire pérenne de l'environnement,OPE,10
+OPE050,Observatoire pérenne de l'environnement,OPE,50
+OPE120,Observatoire pérenne de l'environnement,OPE,120
+OPO,Porto,,
+OST,Østerild,,
+OTTA,,,
+OXK090,Ochsenkopf 90m,OXK,90
+OXK163,Ochsenkopf 163m,OXK,163
+PAL,Pallas-Sammaltunturi,PAL,12
+PAR,Paris,,
+PAR_DW,Paris downwind,,
+PDM,Pic du Midi,,
+POING,,,
+POING5,,,
+POLAND,,,
+POTT,,,
+PRA,Prague,,
+PRA_DW,Prague downwind,,
+PRS,Plateau Rosa,PRS,10
+PTL,,,
+PTZ800,,,
+PUI,Puijo 176m,,
+PUI084,Puijo 84m,PUI,84
+PUY,Puy de Dôme,PUY,10
+RGL,Ridge Hill 152m,,
+RIS,Risø 100m,,
+RMS,Reims,,
+ROC140,Roc Tredudon,,
+ROM1,,,
+ROT,Rotterdam,,
+ROT_UW,Rotterdam upwind,,
+RUH,,,
+RUH_UW,,,
+SAC060,Saclay 60m,SAC,60
+SAC100,Saclay 100m,SAC,100
+SCHOEN,,,
+SET,,,
+SKK,Selkirk,,
+SMR067,Hyytiälä 67m,SMR,67.2
+SMR125,Hyytiälä 125m,SMR,125
+SMR127,Hyytiälä 127m,,
+SSL,Schauinsland,,
+SSL12,,,
+STE082,Steinkimmen 82m,STE,82
+STE127,Steinkimmen 127m,STE,127
+STE187,Steinkimmen 187m,STE,187
+STE252,Steinkimmen 252m,STE,252
+STH,Stockholm,,
+STH_DW,Stockholm downwind,,
+STK200,,,
+STR,Stromboli,,
+SVB085,Svartberget 85m,SVB,85
+SVB150,Svartberget 150m,SVB,150
+TAC191,Tacolneston 191m,,
+TEST,,,
+THRB,Thornton Buoy,,
+TOH076,Torfhaus 76m,TOH,76
+TOH110,Torfhaus 110m,TOH,110
+TOH147,Torfhaus 147m,TOH,147
+TRN050,Trainou 50m,TRN,50
+TRN100,Trainou 100m,TRN,100
+TRN180,Trainou 180m,TRN,180
+TST,,,
+TTA050,Angus 50m,,
+TTA222,Angus 222m,,
+UTO,Utö - Baltic sea,UTO,57
+VIE,Vienna,,
+VIE_DW,Vienna downwind,,
+VIE_UW,Vienna upwind,,
+VND,,,
+VOI,Voeikovo,,
+WAO,Weybourne,WAO,10
+WES,Westerland,WES,14
+ZRH,Zurich,,
+ZRK,,,
+ZSF,Zugspitze,ZSF,3

@@ -24,7 +24,7 @@ object StiltJsonSupport {
 	given RootJsonFormat[WhoamiResult] = jsonFormat2(WhoamiResult.apply)
 
 	given RootJsonFormat[StiltStationInfo] with {
-		private given JsonFormat[StiltStationIds] = jsonFormat5(StiltStationIds.apply)
+		private given JsonFormat[StiltStationIds] = jsonFormat4(StiltStationIds.apply)
 		private val simple: JsonFormat[StiltStationInfo] = jsonFormat5(StiltStationInfo.apply)
 
 		def write(si: StiltStationInfo): JsValue = {
