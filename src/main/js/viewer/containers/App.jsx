@@ -29,8 +29,8 @@ class App extends Component {
 					<h1>
 						{title}
 						<span style={{float:'right'}}>
-							<a className="btn btn-info" href="https://www.icos-cp.eu/about-stilt-viewer" target="_blank">
-								<span className="glyphicon glyphicon-question-sign" /> Help
+							<a className="btn btn-info text-white" href="https://www.icos-cp.eu/about-stilt-viewer" target="_blank">
+								<i className="fas fa-question-circle" /> Help
 							</a>
 						</span>
 					</h1>
@@ -56,7 +56,7 @@ class App extends Component {
 
 				<div className="row">
 					<div className="col-md-12">
-						<Copyright rootStyleOverride={{position:'absolute', bottom:2, right:15}} />
+						<Copyright rootStyleOverride={{float:'right', marginTop:10}} />
 					</div>
 				</div>
 

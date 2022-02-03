@@ -7,8 +7,8 @@ import Select from '../../common/components/Select.jsx';
 import StationsMap from '../../common/components/LMap.jsx';
 
 
-export default props => <div className="panel panel-default">
-	<div className="panel-body">
+export default props =>
+	<div className="border" style={{padding: 15}}>
 		<div className="row">
 			<div className="col-md-5" style={{paddingRight:0}}>
 				<StationSelectingMap {...props} />
@@ -31,7 +31,6 @@ export default props => <div className="panel panel-default">
 			</div>
 		</div>
 	</div>
-</div>
 
 
 const StationSelectingMap = ({stations, selectedStation, selectStation}) => {
@@ -130,12 +129,15 @@ const StiltComponentSelector = ({label, comment, disabled, updateVisibility, opt
 	};
 
 	const visibility = options.modelComponentsVisibility || {};
+	const style = {marginRight: 3, position: 'relative', top: 2};
+	if (disabled)
+		Object.assign(style, {cursor: 'not-allowed'})
 
 	return <span key={label} title={disabled ? 'Not available' : comment} style={{marginLeft: 7}}>
 		<input type="checkbox"
 			checked={disabled ? false : !!visibility[label]}
 			onChange={visibilityChangeHandler}
-			style={{marginRight: 3, position: 'relative', top: 2}}
+			style={style}
 			disabled={disabled}
 		/>
 		{label}
@@ -162,7 +164,7 @@ const MovieControl = props => {
 
 	const navDisabled = props.playingMovie || !props.footprint;
 
-	const playClass = "glyphicon glyphicon-" + (props.playingMovie ? 'pause' : 'play');
+	const playClass = "fas fa-" + (props.playingMovie ? 'pause' : 'play');
 	const playTitle = props.playingMovie ? 'Pause playback' : 'Play';
 
 	return <div className="row">
@@ -171,14 +173,14 @@ const MovieControl = props => {
 		</div>
 		<div className="col-md-4">
 			<div className="btn-group" style={{minWidth: 120}}>
-				<button title="To previous footprint" type="button" className="btn btn-default" onClick={toPrevious} disabled={navDisabled}>
-					<span className="glyphicon glyphicon-triangle-left" />
+				<button title="To previous footprint" type="button" className="btn btn-outline-secondary" onClick={toPrevious} disabled={navDisabled}>
+					<i className="fas fa-chevron-left" />
 				</button>
-				<button title={playTitle} type="button" className="btn btn-default" onClick={props.pushPlay} disabled={!props.footprint}>
-					<span className={playClass} />
+				<button title={playTitle} type="button" className="btn btn-outline-secondary" onClick={props.pushPlay} disabled={!props.footprint}>
+					<i className={playClass} />
 				</button>
-				<button  title="To next footprint" type="button" className="btn btn-default" onClick={toNext} disabled={navDisabled}>
-					<span className="glyphicon glyphicon-triangle-right" />
+				<button  title="To next footprint" type="button" className="btn btn-outline-secondary" onClick={toNext} disabled={navDisabled}>
+				<i className="fas fa-chevron-right" />
 				</button>
 			</div>
 		</div>

@@ -57,7 +57,7 @@ function tasks(project){
 	return {
 		build: function(){
 			watch(
-				[paths.js, paths.js, paths.commonjs, paths.commonjsx],
+				[paths.js, paths.jsx, paths.commonjs, paths.commonjsx],
 				{ignoreInitial: false},
 				series(clean, compileJs)
 			)
