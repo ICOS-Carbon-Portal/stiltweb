@@ -59,7 +59,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		subdirectories(archiver.stationsDir).map{directory =>
 			val id = directory.getFileName.toString
 
-			val ids = idToIds.get(id).getOrElse(StiltStationIds(id))
+			val ids = idToIds.getOrElse(id, StiltStationIds(id))
 
 			val pos = stiltPos(directory)
 
@@ -68,7 +68,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 			}
 
 			StiltStationInfo(ids, pos.lat, pos.lon, pos.alt, years)
-		}
+		}.filter(!_.years.isEmpty)
 	}
 
 	private def stiltPos(stationDir: Path): StiltPosition = {
