@@ -7,6 +7,8 @@ import DashboardView from '../components/DashboardView.jsx';
 import {stationSelected, jobDefUpdated, datesUpdated, useExistingStationData, startJob, cancelJob} from '../actions';
 import {MAP_VIEW, DASHBOARD_VIEW} from '../actions';
 
+export const cardHeaderInfo = "card-header alert-info fs-5 text-dark";
+
 class App extends Component {
 	constructor(props) {
 		super(props);
@@ -49,12 +51,12 @@ class App extends Component {
 				maxWidth={400}
 			/>
 
-			<div className="page-header">
+			<div className="page-header mb-3">
 					<h1>
-						STILT calculation service <small>{subtitle}</small>
+						STILT calculation service <span className="fs-3 text-secondary">{subtitle}</span>
 						<span style={{float:'right'}}>
-							<a className="btn btn-info" href="https://www.icos-cp.eu/about-stilt-calculator" target="_blank">
-								<span className="glyphicon glyphicon-question-sign" /> Help
+							<a className="btn btn-info text-white" href="https://www.icos-cp.eu/about-stilt-calculator" target="_blank">
+								<i className="fas fa-question-circle" /> Help
 							</a>
 						</span>
 					</h1>

@@ -23,26 +23,27 @@ export default class JobInfoView extends Component {
 
 	render() {
 		const props = this.props;
+		const {showCancelJobDialog} = this.state;
 		const jinfo = props.jobInfo;
 		const job = jinfo.job;
 		const allowCancel = !!props.cancelJob &&
 			(props.currUser.email === job.userId || props.currUser.isAdmin);
-		const showLink = (jinfo.nSlotsFinished == jinfo.nSlots);
+		const showLink = (jinfo.nSlotsFinished === jinfo.nSlots);
 		const hasFailures = !!jinfo.failures.length;
 		const failuresMustBeShown = hasFailures && this.state.showErrors;
 
-		return <div className={"panel panel-" + (hasFailures? "warning" : "default")}>
-			<div className="panel-heading" onClick={this.toggleShowErrors.bind(this)} style={hasFailures ? {cursor: 'pointer'} : {}}>
+		return <div className={"mb-3 card text-dark bg-" + (hasFailures? "warning" : "light")}>
+			<div className="card-header" onClick={this.toggleShowErrors.bind(this)} style={hasFailures ? {cursor: 'pointer'} : {}}>
 				{allowCancel
-					? <button className="btn btn-primary" onClick={this.toggleCancelJobDialog.bind(this)}>
-						<GlyphSign name="remove"/>
-						{this.state.showCancelJobDialog ? "Keep running" : "Cancel job"}
+					? <button className="btn btn-primary" style={{marginRight: 10}} onClick={this.toggleCancelJobDialog.bind(this)}>
+						<Icon name="times-circle"/>
+						{showCancelJobDialog ? "Keep running" : "Cancel job"}
 					</button>
 					: null
 				}
 				{showLink
 					? <a href={config.scopedViewLink(job)} target="_blank" onClick={e => e.stopPropagation()}>
-						<button className="btn btn-primary"><GlyphSign name="info"/>View results</button>
+						<button className="btn btn-primary" style={{marginRight: 10}}><Icon name="info-circle"/>View results</button>
 					</a>
 					: null
 				}
@@ -53,10 +54,10 @@ export default class JobInfoView extends Component {
 					<span> - submitted by {job.userId}</span>
 				</span>
 			</div>
-			{allowCancel || failuresMustBeShown
-				? <div className="panel-body">
+			{showCancelJobDialog || failuresMustBeShown
+				? <div className="card-body">
 					<YesNoView
-						visible={this.state.showCancelJobDialog}
+						visible={showCancelJobDialog}
 						title={'Cancel job'}
 						question={'Are you sure you want to cancel this job?'}
 						actionYes={this.confirmJobCancel.bind(this)}
@@ -69,16 +70,12 @@ export default class JobInfoView extends Component {
 		</div>;
 	}
 }
-
-const GlyphSign = props => <span
-	className={`glyphicon glyphicon-${props.name}-sign`}
-	style={{marginRight: 10, top: 3, fontSize:'130%'}}
-/>;
+const Icon = ({name}) => <i className={`fas fa-${name}`} style={{marginRight: 10, top: 3, fontSize:'130%'}} />;
 
 const FailureList = props => props.visible
-	? <div className="panel panel-danger">
-		<div className="panel-heading">Slot calculation failures</div>
-		<div className="panel-body">
+	? <div className="card text-dark bg-light">
+		<div className="card-header">Slot calculation failures</div>
+		<div className="card-body">
 			<table className="table">
 				<thead>
 					<tr><th>Slots</th><th>Error messages</th><th>Logs</th></tr>
@@ -87,7 +84,7 @@ const FailureList = props => props.visible
 					<tr key={logsFilename}>
 						<td>{timeStr(slot.time)}</td>
 						<td>{
-							errorMessages.map(msg => <div>{msg}</div>)
+							errorMessages.map((msg, i) => <div key={'i'+i}>{msg}</div>)
 						}</td>
 						<td><a href={config.workerOutputDir + logsFilename} target="_blanck">logs</a></td>
 					</tr>

@@ -4,6 +4,7 @@ import Select from '../../common/components/Select.jsx';
 import TextInput from '../components/TextInput.jsx';
 import StationInfo from '../models/StationInfo';
 import DatePickerWrapper from './DatePickerWrapper.jsx';
+import {cardHeaderInfo} from '../containers/App.jsx';
 
 
 const geoBoundary = {
@@ -51,8 +52,8 @@ export default class MapView extends Component {
 			<div className="col-md-8">
 				<h4>Existing STILT footprints</h4>
 
-				<div className="panel panel-default">
-					<div className="panel-body">
+				<div className="card card-secondary">
+					<div className="card-body">
 
 						<div style={{marginBottom: 10}}>
 							<Select
@@ -83,8 +84,8 @@ export default class MapView extends Component {
 			<div className="col-md-2" style={{minWidth: 310}}>
 				<h4>Create new STILT footprint</h4>
 
-				<div className="panel panel-default">
-					<div className="panel-body">
+				<div className="card card-secondary">
+					<div className="card-body">
 
 						<label style={labelStyle}>Latitude (decimal degree)</label>
 						<TextInput style={verticalMargin} value={formData.lat} action={this.getJobDefUpdater('lat')}
@@ -151,8 +152,8 @@ export default class MapView extends Component {
 			<div className="col-md-2" style={{minWidth: 310}}>
 				<h4>Submitted STILT jobs</h4>
 
-				<div className="panel panel-default">
-					<div className="panel-body">
+				<div className="card card-secondary">
+					<div className="card-body">
 						<button style={{display: 'block', clear: 'both', marginBottom: 20}} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
 						{ ds.queue && (ds.queue.length || ds.done.length || ds.running.length)
 							? <div>
@@ -171,11 +172,11 @@ export default class MapView extends Component {
 }
 
 const JobList = props => props.jobs.length
-	? <div className="panel panel-info">
-		<div className="panel-heading">
-			<h3 className="panel-title">{props.title}</h3>
+	? <div className="card mb-4">
+		<div className={cardHeaderInfo}>
+			{props.title}
 		</div>
-		<div className="panel-body">{
+		<div className="card-body">{
 			props.jobs.map(job => <JobLabel user={props.user} job={job.job} key={job.job.id} />)
 		}
 		</div>
@@ -186,7 +187,7 @@ const JobLabel = props => {
 	const job = props.job;
 	const lbl = {
 		txt: "Site '" + job.siteId + "'",
-		cls: "label label-default",
+		cls: "bg-dark bg-opacity-50 fw-bold text-white",
 		title: `Site Id: ${job.siteId}
 Latitude: ${job.lat}
 Longitude: ${job.lon}
@@ -196,16 +197,23 @@ To: ${job.stop}`
 	};
 
 	const myJob = props.user ? props.user.email === job.userId : undefined;
+	const alertCls = "cp-help alert alert-dark p-1 d-inline-block";
 
-	return <h4>
-		<span title={lbl.title} className={"cp-help " + lbl.cls} style={{verticalAlign: 'middle'}}>
-			{myJob
-				? <span className="glyphicon glyphicon-star" style={{ top: 2, marginRight: 5}}></span>
-				: null
-			}
-			{lbl.txt}
-		</span>
-	</h4>;
+	if (myJob === undefined){
+		return (
+			<div>
+				<span title={lbl.title} className={alertCls}>{lbl.txt}</span>
+			</div>
+		);
+	}
+
+	return (
+		<div>
+			<span title={lbl.title} className={alertCls}>
+				<i className="fas fa-star" style={{ fontSize: 10, top: -2, position: 'relative', marginRight: 5}} />{lbl.txt}
+			</span>
+		</div>
+	);
 };
 
 function getDatesFromProps(props){

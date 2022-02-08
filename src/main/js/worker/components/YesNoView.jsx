@@ -9,15 +9,15 @@ export default class YesNoView extends Component {
 		const props = this.props;
 
 		const style = props.visible
-			? {}
+			? {width: '21rem'}
 			: {display: 'none'};
 
 		return (
-			<div className="panel panel-default" style={style}>
-				<div className="panel-heading">
-					<h3 className="panel-title">{props.title}</h3>
-				</div>
-				<div className="panel-body">
+			<div className="card" style={style}>
+				<h5 className="card-header">
+					{props.title}
+				</h5>
+				<div className="card-body">
 					<div style={{margin: '0px 0px 30px 0px'}}>
 						{props.question}
 					</div>

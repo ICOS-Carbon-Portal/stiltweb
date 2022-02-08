@@ -3,7 +3,7 @@ import { Provider } from 'react-redux';
 import getStore from '../store';
 import App from './App.jsx';
 
-import '../customStyles.css';
+import '../../common/customStyles.css';
 
 const store = getStore();
 

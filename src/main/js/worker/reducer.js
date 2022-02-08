@@ -46,6 +46,7 @@ export default function(state, action){
 			return update({workerData: state.workerData.resetAndAddNewStation(newStation)});
 
 		case GOT_DASHBOARD_STATE:
+			// return update(copyprops(mockActivity(action), ['dashboardState']));
 			return updateWith(['dashboardState']);
 
 		case DASHBOARD_VIEW:
@@ -56,10 +57,6 @@ export default function(state, action){
 
 		default:
 			return state;
-	}
-
-	function keep(props, updatesObj){
-		return Object.assign(copyprops(state, props), updatesObj); 
 	}
 
 	function update(){
@@ -75,15 +72,69 @@ export default function(state, action){
 
 }
 
+function mockActivity(action){
+	const getRndStr = () => 'rnd' + Math.floor(Math.random() * 9999999);
+	const duplicateJob = (job) => {
+		return Object.assign({}, job, {id: getRndStr()})
+	};
 
-function jobdefIsComplete(job){
-	return !!job
-		&& job.lat !== undefined
-		&& job.lon !== undefined
-		&& job.alt !== undefined
-		&& !!job.siteId
-		&& !!job.start
-		&& !!job.stop
-		&& Date.parse(job.stop) >= Date.parse(job.start);
+	return Object.assign({}, action, {dashboardState: {
+		done: [
+			{
+				failures: [],
+				job: action.dashboardState.queue[0].job,
+				nSlots: 10,
+				nSlotsFinished: 10,
+			},
+			{
+				failures: [{
+					slot: {time: Date.now()},
+					errorMessages: ['first error'],
+					logsFilename: getRndStr()
+				}],
+				job: duplicateJob(action.dashboardState.queue[0].job),
+				nSlots: 12,
+				nSlotsFinished: 10,
+			}
+		],
+		infra: [
+			{
+				address: "akka://somewhere...",
+				nCpusFree: 3,
+				nCpusTotal: 45,
+			},
+			{
+				address: "akka://somewhere else...",
+				nCpusFree: 0,
+				nCpusTotal: 10,
+			}
+		],
+		queue: action.dashboardState.queue,
+		running: [
+			{
+				failures: [],
+				job: duplicateJob(action.dashboardState.queue[0].job),
+				nSlots: 10,
+				nSlotsFinished: 5,
+			},
+			{
+				failures: [],
+				job: duplicateJob(action.dashboardState.queue[0].job),
+				nSlots: 10,
+				nSlotsFinished: 10,
+			},
+			{
+				failures: [],
+				job: duplicateJob(action.dashboardState.queue[0].job),
+				nSlots: 10,
+				nSlotsFinished: 23,
+			},
+			{
+				failures: [],
+				job: duplicateJob(action.dashboardState.queue[0].job),
+				nSlots: 10,
+				nSlotsFinished: 10,
+			}
+		],
+	}});
 }
-
