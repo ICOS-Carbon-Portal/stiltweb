@@ -55,11 +55,12 @@ function getStationInfo(){
 
 		return stInfos.map(stInfo => {
 			const name = stInfo.name || stInfo.icosId || stInfo.id;
+			const isICOS = stInfo.icosId !== undefined;
 			const years = stInfo.years.map(year =>
 				({year, dataObject: dobjByStation(stInfo, year)})
 			);
 
-			return Object.assign(copyprops(stInfo, ['id', 'lat', 'lon', 'alt']), {name, years})
+			return Object.assign(copyprops(stInfo, ['id', 'lat', 'lon', 'alt']), {name, years, isICOS})
 		});
 	});
 }
@@ -84,7 +85,10 @@ export function getStationData(stationId, scope, icosFormat){
 	});
 
 	return Promise.all([observationsPromise, modelResultsPromise, footprintsListPromise])
-		.then(([obsBinTable, modelResults, footprints]) => {return {obsBinTable, modelResults, footprints};});
+		.then(
+			([obsBinTable, modelResults, footprints]) => ({obsBinTable, modelResults, footprints}),
+			err => console.error(err)
+		);
 }
 
 function getIcosBinaryTable(dataObject, icosFormat){

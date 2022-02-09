@@ -62,7 +62,8 @@ function gotStationData(stationData, stationId, fromDate, toDate){
 export const fetchStationData = (dispatch, getState) => {
 	const state = getState();
 	const scope = state.selectedScope;
-	if(!scope) return;
+	if (!scope || state.selectedStation === null) return;
+
 	const stationId = state.selectedStation.id;
 
 	dispatch({type: SHOW_SPINNER});

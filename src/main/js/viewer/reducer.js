@@ -55,10 +55,16 @@ export default function(state, action){
 		case FETCHED_STATIONDATA:
 			if(checkStationId(action.stationId) && checkScope(action)){
 
-				const footprints = new FootprintsRegistry(action.footprints);
-				const footprintsFetcher = new FootprintsFetcher(footprints, action.stationId);
+				const footprints = action.footprints
+					? new FootprintsRegistry(action.footprints)
+					: state.footprints;
+				const footprintsFetcher = action.footprints
+					? new FootprintsFetcher(footprints, action.stationId)
+					: state.footprintsFetcher;
 				const seriesId = action.stationId + '_' + action.fromDate + '_' + action.toDate;
-				const timeSeriesData = makeTimeSeriesGraphData(action, seriesId);
+				const timeSeriesData = action.footprints
+					? makeTimeSeriesGraphData(action, seriesId)
+					: state.timeSeriesData;
 
 				return update({timeSeriesData, footprints, footprintsFetcher});
 			} else return state;

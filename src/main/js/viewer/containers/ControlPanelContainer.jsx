@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import {copyprops} from 'icos-cp-utils';
-import {visibilityUpdate, setSelectedScope, setSelectedStation, setStationVisibility, incrementFootprint, pushPlayButton, setDelay} from '../actions';
+import {visibilityUpdate, setSelectedScope, setSelectedStation, incrementFootprint, pushPlayButton, setDelay} from '../actions';
 import ControlPanel from '../components/ControlPanel.jsx';
 import config from '../config';
 

@@ -5,6 +5,7 @@ import config from '../config';
 import {formatDate} from '../models/formatting';
 import Select from '../../common/components/Select.jsx';
 import StationsMap from '../../common/components/LMap.jsx';
+import Dropdown from "./Dropdown.jsx";
 
 
 export default props =>
@@ -65,17 +66,17 @@ const StationAndYearSelector = ({selectYear, selectStation, selectedScope, selec
 	const yearsDisabled = !yearInfos.length;
 
 	return <div className="row">
-		<div className="col-md-7">
-			<Select
-				selectValue={selectStation}
-				infoTxt="Select station here or on the map"
-				availableValues={stations}
-				value={selectedStation}
+		<div className="col">
+			<Dropdown
+				buttonLbl="Select station here or on the map"
 				presenter={station => station ? `${station.id} (${station.name}, ${station.alt} m)` : station}
+				itemClickAction={selectStation}
+				availableValues={stations}
+				selectedValue={selectedStation}
 				sort={true}
 			/>
 		</div>
-		<div className="col-md-5">
+		<div className="col">
 			<Select
 				selectValue={selectYear}
 				infoTxt={yearsDisabled ? "Select station first" : "Select year"}
