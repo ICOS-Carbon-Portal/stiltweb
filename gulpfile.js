@@ -9,7 +9,7 @@ var source = require('vinyl-source-stream');
 var babelify = require('babelify');
 const { watch, dest, series, parallel } = require('gulp');
 
-var SCALA_VERSION = 'scala-3.1.0';
+var SCALA_VERSION = 'scala-3.1.1';
 var PROD = 'production'
 
 function applyProd() {

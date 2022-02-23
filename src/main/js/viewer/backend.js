@@ -4,11 +4,10 @@ import {icosAtmoReleaseQuery} from './sparqlQueries';
 import {copyprops} from 'icos-cp-utils';
 import {feature} from 'topojson';
 import config from './config';
-import { BinTableSlice } from 'icos-cp-backend/lib/BinTable';
 
 export function getInitialData(){
 	return Promise.all([
-		tableFormatForSpecies(config.icosCo2Spec, config),
+		tableFormatForSpecies(config.icosCo2Spec, config, true),
 		getStationInfo(),
 		getCountriesGeoJson()
 	]).then(([icosFormat, stations, countriesTopo]) => {return {icosFormat, stations, countriesTopo};});
@@ -23,7 +22,7 @@ function getStationInfo(){
 
 	return Promise.all([
 		getJson('stationinfo'),
-		sparql(icosAtmoReleaseQuery(config.icosCo2Spec), config.sparqlEndpoint)
+		sparql(icosAtmoReleaseQuery(config.icosCo2Spec), config.sparqlEndpoint, true)
 	])
 	.then(([stInfos, sparqlResult]) => {
 

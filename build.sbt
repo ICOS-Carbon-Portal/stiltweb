@@ -1,4 +1,4 @@
-ThisBuild / scalaVersion := "3.1.0"
+ThisBuild / scalaVersion := "3.1.1"
 
 Global / cancelable := true
 
@@ -94,12 +94,15 @@ lazy val stiltweb = (project in file("."))
 		// Override the "assembly" command so that we always run "npm publish"
 		// first - thus generating javascript files - before we package the
 		// "fat" jarfile used for deployment.
-		assembly := (Def.taskDyn{
-			val original = assembly.taskValue
-			// Referencing the task's 'value' field will trigger the npm command
-			if(npmPublish.value != 0) throw new IllegalStateException("Front end build error")
-			// Then just return the original "assembly command"
-			Def.task(original.value)
-		}).value
+		assembly := {
+			streams.value.log.warn(s"MAKE SURE THAT SCALA_VERSION variable in gulpfile.js is equal to ${scalaVersion.value}")
+			(Def.taskDyn{
+				val original = assembly.taskValue
+				// Referencing the task's 'value' field will trigger the npm command
+				if(npmPublish.value != 0) throw new IllegalStateException("Front end build error")
+				// Then just return the original "assembly command"
+				Def.task(original.value)
+			}).value
+		}
 
 	)

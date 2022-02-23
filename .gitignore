@@ -22,9 +22,6 @@ src/main/resources/bundle.js
 .bsp
 metals.sbt
 
-#Front end specific
-src/main/resources/www/
-
 nohup.out
 /outText.txt
 *.*~
