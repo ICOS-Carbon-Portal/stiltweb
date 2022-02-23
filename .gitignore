@@ -30,3 +30,4 @@ nohup.out
 /debug_script.sh
 /fake_log_output.sh
 /fakejob.txt
+src/main/resources/www/

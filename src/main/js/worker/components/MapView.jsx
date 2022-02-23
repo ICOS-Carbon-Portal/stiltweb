@@ -13,6 +13,7 @@ const geoBoundary = {
 	latMax: 72.9166666666667,
 	lonMax: 34.875
 };
+const marginBottom = 30;
 
 export default class MapView extends Component {
 	constructor(props) {
@@ -49,7 +50,7 @@ export default class MapView extends Component {
 
 		return <div className="row">
 
-			<div className="col-md-8">
+			<div className="col-md-7 col-sm-12" style={{marginBottom}}>
 				<h4>Existing STILT footprints</h4>
 
 				<div className="card card-secondary">
@@ -81,91 +82,95 @@ export default class MapView extends Component {
 				</div>
 			</div>
 
-			<div className="col-md-2" style={{minWidth: 310}}>
-				<h4>Create new STILT footprint</h4>
+			<div className="col">
+				<div className="row">
+					<div className="col" style={{minWidth: 310, marginBottom}}>
+						<h4>Create new STILT footprint</h4>
 
-				<div className="card card-secondary">
-					<div className="card-body">
+						<div className="card card-secondary">
+							<div className="card-body">
 
-						<label style={labelStyle}>Latitude (decimal degree)</label>
-						<TextInput style={verticalMargin} value={formData.lat} action={this.getJobDefUpdater('lat')}
-								   converter={validateLatLngVal(geoBoundary.latMin, geoBoundary.latMax)} disabled={isExisting}/>
+								<label style={labelStyle}>Latitude (decimal degree)</label>
+								<TextInput style={verticalMargin} value={formData.lat} action={this.getJobDefUpdater('lat')}
+										converter={validateLatLngVal(geoBoundary.latMin, geoBoundary.latMax)} disabled={isExisting}/>
 
-						<label style={labelStyle}>Longitude (decimal degree)</label>
-						<TextInput style={verticalMargin} value={formData.lon} action={this.getJobDefUpdater('lon')}
-								   converter={validateLatLngVal(geoBoundary.lonMin, geoBoundary.lonMax)} disabled={isExisting}/>
+								<label style={labelStyle}>Longitude (decimal degree)</label>
+								<TextInput style={verticalMargin} value={formData.lon} action={this.getJobDefUpdater('lon')}
+										converter={validateLatLngVal(geoBoundary.lonMin, geoBoundary.lonMax)} disabled={isExisting}/>
 
-						<label style={labelStyle}>Altitude above ground (meters)</label>
-						<TextInput style={verticalMargin} value={formData.alt} action={this.getJobDefUpdater('alt')} converter={toInt} disabled={isExisting}/>
+								<label style={labelStyle}>Altitude above ground (meters)</label>
+								<TextInput style={verticalMargin} value={formData.alt} action={this.getJobDefUpdater('alt')} converter={toInt} disabled={isExisting}/>
 
-						<label style={labelStyle}>Site id (usually a 3 letter code)</label>
-						<div className="input-group" style={verticalMargin}>
-							<TextInput value={formData.siteId} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="6"/>
-							<span className="input-group-btn">
-								<button className="btn btn-primary cp-pointer"
-										onClick={this.onLoadDataBtnClick.bind(this)}
-										disabled={!isExisting}>Load data</button>
-							</span>
+								<label style={labelStyle}>Site id (usually a 3 letter code)</label>
+								<div className="input-group" style={verticalMargin}>
+									<TextInput value={formData.siteId} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="6"/>
+									<span className="input-group-btn">
+										<button className="btn btn-primary cp-pointer"
+												onClick={this.onLoadDataBtnClick.bind(this)}
+												disabled={!isExisting}>Load data</button>
+									</span>
+								</div>
+
+								<label style={labelStyle}>Start date (YYYY-MM-DD)</label>
+								<DatePickerWrapper
+									name="start"
+									minDate={minDate}
+									maxDate={maxDate}
+									style={verticalMargin}
+									value={start}
+									siblingValue={stop}
+									hasLogicError={errorStart}
+									updateDates={props.updateDates}
+									disabledDates={disabledDates}
+									disabledMonths={disabledMonths}
+									toastWarning={props.toastWarning}
+									toastError={props.toastError}
+								/>
+
+								<label style={labelStyle}>End date (YYYY-MM-DD)</label>
+								<DatePickerWrapper
+									name="stop"
+									minDate={minDate}
+									maxDate={maxDate}
+									style={verticalMargin}
+									value={stop}
+									siblingValue={start}
+									hasLogicError={errorStop}
+									updateDates={props.updateDates}
+									disabledDates={disabledDates}
+									disabledMonths={disabledMonths}
+									toastWarning={props.toastWarning}
+									toastError={props.toastError}
+								/>
+
+								<button style={buttonStyle}
+										className="btn btn-primary cp-pointer"
+										disabled={!props.workerData.isJobDefComplete || !props.currUser.email}
+										onClick={props.startJob}>Submit STILT job</button>
+
+							</div>
+						</div>
+					</div>
+
+					<div className="col" style={{minWidth: 310, marginBottom}}>
+						<h4>Submitted STILT jobs</h4>
+
+						<div className="card card-secondary">
+							<div className="card-body">
+								<button style={{display: 'block', clear: 'both', marginBottom: 20}} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
+								{ ds.queue && (ds.queue.length || ds.done.length || ds.running.length)
+									? <div>
+										<JobList title="Job queue" user={props.currUser} jobs={ds.queue}/>
+										<JobList title="Running computations" user={props.currUser} jobs={ds.running} />
+										<JobList title="Finished computations" user={props.currUser} jobs={ds.done} />
+									</div>
+									: <div>No jobs have been submitted</div>
+								}
+							</div>
 						</div>
 
-						<label style={labelStyle}>Start date (YYYY-MM-DD)</label>
-						<DatePickerWrapper
-							name="start"
-							minDate={minDate}
-							maxDate={maxDate}
-							style={verticalMargin}
-							value={start}
-							siblingValue={stop}
-							hasLogicError={errorStart}
-							updateDates={props.updateDates}
-							disabledDates={disabledDates}
-							disabledMonths={disabledMonths}
-							toastWarning={props.toastWarning}
-							toastError={props.toastError}
-						/>
-
-						<label style={labelStyle}>End date (YYYY-MM-DD)</label>
-						<DatePickerWrapper
-							name="stop"
-							minDate={minDate}
-							maxDate={maxDate}
-							style={verticalMargin}
-							value={stop}
-							siblingValue={start}
-							hasLogicError={errorStop}
-							updateDates={props.updateDates}
-							disabledDates={disabledDates}
-							disabledMonths={disabledMonths}
-							toastWarning={props.toastWarning}
-							toastError={props.toastError}
-						/>
-
-						<button style={buttonStyle}
-								className="btn btn-primary cp-pointer"
-								disabled={!props.workerData.isJobDefComplete || !props.currUser.email}
-								onClick={props.startJob}>Submit STILT job</button>
-
 					</div>
 				</div>
-			</div>
-
-			<div className="col-md-2" style={{minWidth: 310}}>
-				<h4>Submitted STILT jobs</h4>
-
-				<div className="card card-secondary">
-					<div className="card-body">
-						<button style={{display: 'block', clear: 'both', marginBottom: 20}} className="btn btn-primary cp-pointer" onClick={props.showDashboard}>Show details</button>
-						{ ds.queue && (ds.queue.length || ds.done.length || ds.running.length)
-							? <div>
-								<JobList title="Job queue" user={props.currUser} jobs={ds.queue}/>
-								<JobList title="Running computations" user={props.currUser} jobs={ds.running} />
-								<JobList title="Finished computations" user={props.currUser} jobs={ds.done} />
-							</div>
-							: <div>No jobs have been submitted</div>
-						}
-					</div>
-				</div>
-
 			</div>
 		</div>;
 	}
