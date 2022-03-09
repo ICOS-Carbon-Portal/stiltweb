@@ -13,7 +13,8 @@ case class StiltStationIds(
 	id: String,
 	name: Option[String],
 	icosId: Option[String],
-	icosHeight: Option[Float]
+	icosHeight: Option[Float],
+	countryCode: Option[String]
 )
 
 object StiltStationIds{
@@ -21,7 +22,8 @@ object StiltStationIds{
 	val STILT_name = "STILT name"
 	val ICOS_id = "ICOS id"
 	val ICOS_height = "ICOS height"
-	def apply(id: String): StiltStationIds = StiltStationIds(id, None, None, None)
+	val Country = "Country"
+	def apply(id: String): StiltStationIds = StiltStationIds(id, None, None, None, None)
 }
 
 case class StiltStationInfo(id: StiltStationIds, lat: Double, lon: Double, alt: Int, years: Seq[Int])

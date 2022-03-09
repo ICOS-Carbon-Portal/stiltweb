@@ -34,14 +34,14 @@ object StationInfoMarshalling{
 	given ToResponseMarshaller[Stations] = Marshaller.oneOf(csvMarshaller, jsonMarshaller)
 
 	private def getText(stations: Stations, contentType: WithCharset): HttpResponse = {
-		import se.lu.nateko.cp.stiltweb.StiltStationIds.{STILT_id, STILT_name, ICOS_id, ICOS_height}
+		import se.lu.nateko.cp.stiltweb.StiltStationIds.{STILT_id, STILT_name, ICOS_id, ICOS_height, Country}
 
 		val lines: Seq[String] = Array(
-			STILT_id, STILT_name, ICOS_id, ICOS_height, "STILT lat", "STILT lon", "STILT alt"
+			STILT_id, STILT_name, ICOS_id, ICOS_height, Country, "STILT lat", "STILT lon", "STILT alt"
 		).mkString(",") +: stations.map{station =>
 			import station.id
 			val cells = id.id +:
-				Seq(id.name, id.icosId, id.icosHeight).map(_.getOrElse("")) ++:
+				Seq(id.name, id.icosId, id.icosHeight, id.countryCode).map(_.getOrElse("")) ++:
 				Seq(station.lat, station.lon, station.alt)
 			cells.mkString(",")
 		}
