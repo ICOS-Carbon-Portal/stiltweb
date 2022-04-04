@@ -29,6 +29,8 @@ import se.lu.nateko.cp.stiltweb.state.Archiver
 import spray.json.JsNull
 import spray.json.JsNumber
 import spray.json.JsValue
+import spray.json.JsObject
+import spray.json.JsArray
 
 class StiltResultsPresenter(config: StiltWebConfig) {
 	import StiltResultsPresenter._
@@ -79,19 +81,23 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	def getStiltResults(req: StiltResultsRequest): Iterator[Seq[JsValue]] = fetchStiltResults(listSlotRows, req)
-	def getStiltRawResults(req: StiltResultsRequest): Iterator[Seq[JsValue]] = fetchStiltResults(listRawSlotRows, req)
+	def getStiltResults(req: StiltResultsRequest): Iterator[JsValue] = fetchStiltResults(listSlotRows, req)
+	def getStiltRawResults(req: StiltResultsRequest): Iterator[JsValue] = fetchStiltResults(listRawSlotRows, req)
 
-	private def fetchStiltResults(fetcher: SlotCsvRowFetcher, req: StiltResultsRequest): Iterator[Seq[JsValue]] =
+	private def fetchStiltResults(fetcher: SlotCsvRowFetcher, req: StiltResultsRequest): Iterator[JsValue] =
 		reduceToSingleYearOp(fetcher(req.stationId, _, _, _))(req.fromDate, req.toDate)
 			.map{ case (dt, row) =>
-				req.columns
-					.map{
-						case "isodate" =>
-							JsNumber(dt.toEpochSecond(ZoneOffset.UTC))
-						case col =>
-							row.get(col).fold[JsValue](JsNull)(n => JsNumber(n))
-					}
+				def jsFromCol(col: String): JsValue = col match {
+					case "isodate" =>
+						JsNumber(dt.toEpochSecond(ZoneOffset.UTC))
+					case col =>
+						row.get(col).fold[JsValue](JsNull)(n => JsNumber(n))
+				}
+				req.columns.fold{
+					JsObject(row.keys.map(col => col -> jsFromCol(col)).toMap)
+				}{columns =>
+					JsArray(columns.map(jsFromCol).toVector)
+				}
 			}
 
 	def listFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[LocalDateTime] =

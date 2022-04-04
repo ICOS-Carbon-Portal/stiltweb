@@ -19,7 +19,10 @@ object ResultRowMaker {
 	def makeRow(in: RawRow): Map[String, Double] = {
 
 		def fuelAssignments(gas: Gas.Gas): Vector[Assignment] =
-			for((fuel, sum) <- in.byFuelReport(gas).toVector) yield s"$gas.fuel.$fuel" -> sum
+			for((fuel, sum) <- in.byFuelReport(None)(gas).toVector) yield s"$gas.fuel.$fuel" -> sum
+
+		def otherFuelAssignment(gas: Gas.Gas, specifier: String, label: String): Option[Assignment] =
+			in.byFuelReport(Some(specifier))(gas).get(Fuel.OtherFuel).map(s"$gas.fuel.$label" -> _)
 
 		def categoryAssignments(categName: String, filter: Category => Boolean): Vector[Assignment] =
 			for((gas, sum) <- in.byCategoryReport(filter).toVector) yield s"$gas.$categName" -> sum
@@ -39,6 +42,7 @@ object ResultRowMaker {
 			categoryAssignments("transport", _.isTransport) ++
 			categoryAssignments("others", _.isOther) ++
 			cementAssignments ++
+			Seq(Gas.CO2, Gas.CO).flatMap(otherFuelAssignment(_, "solid_waste", "waste")) ++
 			co2FuelAssignments ++
 			coFuelAssignments :+
 			"co2.fuel" -> co2FuelAssignments.map(_._2).sum :+

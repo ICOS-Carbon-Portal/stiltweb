@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 case class StiltResultsRequest(
 	stationId: String,
-	columns: Seq[String],
+	columns: Option[Seq[String]],
 	fromDate: LocalDate,
 	toDate: LocalDate
 )

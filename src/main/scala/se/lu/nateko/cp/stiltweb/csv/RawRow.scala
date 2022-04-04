@@ -11,9 +11,9 @@ class RawRow private(val vals: Map[Variable, Double]) {
 	def sum(toVar: String, fromVars: Seq[String]): Assignment =
 		toVar -> fromVars.map(v => vals(PlainVariable(v))).sum
 
-	val byFuelReport: Map[Gas, Map[Fuel, Double]] = vals.keys
+	def byFuelReport(subFuel: Option[String]): Map[Gas, Map[Fuel, Double]] = vals.keys
 		.collect{
-			case fi: FuelInfoVariable if fi.tracer != Gas.OtherGas => fi
+			case fi: FuelInfoVariable if fi.tracer != Gas.OtherGas && subFuel.fold(true)(_ == fi.fuelSubtype) => fi
 		}
 		.groupBy(_.tracer).view.mapValues(
 			_.groupMapReduce(_.fuel)(vals.apply)(_ + _)

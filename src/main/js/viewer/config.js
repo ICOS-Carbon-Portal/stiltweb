@@ -48,6 +48,10 @@ const stiltResultColumns = [dateSeries, {
 	comment: 'CO2 from biofuel combustion',
 	options: {axis: 'y2', color: 'rgb(216,131,255)'}
 }, {
+	label: 'co2.fuel.waste',
+	comment: 'CO2 from solid waste',
+	options: {axis: 'y2', color: 'rgb(216,131,127)'}
+}, {
 	label: 'co2.energy',
 	comment: 'CO2 from energy production',
 	options: {axis: 'y2', color: 'rgb(197,90,17)', strokePattern: Dygraph.DASHED_LINE}
@@ -60,6 +64,10 @@ const stiltResultColumns = [dateSeries, {
 	comment: 'CO2 from industry',
 	options: {axis: 'y2', color: 'rgb(255,64,255)', strokePattern: Dygraph.DASHED_LINE}
 }, {
+	label: 'co2.cement',
+	comment: 'CO2 from cement production',
+	options: {axis: 'y2', color: 'rgb(128,128,128)', strokePattern: Dygraph.DASHED_LINE}
+}, {
 	label: 'co2.others',
 	comment: 'CO2 from other categories',
 	options: {axis: 'y2', color: 'rgb(216,131,255)', strokePattern: Dygraph.DASHED_LINE}
@@ -69,8 +77,8 @@ const stiltResultColumnGrouping = {
 	'Biosperic CO2': ['co2.bio'],
 	'Biosperic CO2 split into Photosynthetic uptake and respiration': ['co2.bio.gee', 'co2.bio.resp'],
 	'Anthropogenic CO2': ['co2.fuel'],
-	'Anthropogenic CO2 split into Fuel types': ['co2.fuel.coal', 'co2.fuel.oil', 'co2.fuel.gas', 'co2.fuel.bio'],
-	'Anthropogenic CO2 split into Source categories': ['co2.energy', 'co2.transport', 'co2.industry', 'co2.others']
+	'Anthropogenic CO2 split into Fuel types': ['co2.fuel.coal', 'co2.fuel.oil', 'co2.fuel.gas', 'co2.fuel.bio', 'co2.fuel.waste'],
+	'Anthropogenic CO2 split into Source categories': ['co2.energy', 'co2.transport', 'co2.industry', 'co2.cement', 'co2.others']
 };
 
 const secondaryComponents = Object.keys(stiltResultColumnGrouping).reduce((acc, key) => {
