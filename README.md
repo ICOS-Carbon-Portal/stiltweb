@@ -14,6 +14,8 @@ To fetch STILT results:
 
 `curl -X POST -H "Content-Type: application/json" --data '{"columns": ["isodate", "co2.stilt"], "fromDate": "2008-01-01", "toDate": "2008-01-02", "stationId": "BAL"}'  https://stilt.icos-cp.eu/viewer/stiltresult`
 
-Property '"columns"' is optional. If provided, the returned result is a JSON array of JSON arrays with corresponding values. If omitted, the result is a JSON array of JSON objects with all the available properties and values.
+Column `isodate` is synthetic, will contain timestamp (seconds since Unix epoch in UTC).
+
+Property `"columns"` is optional. If provided, the returned result is a JSON array of JSON arrays with corresponding values. If omitted, the result is a JSON array of JSON objects with all the available properties and values (useful to discover the available columns).
 
 To get raw STILT results instead of "pre-packaged" summaries, post the same type of request to a similar URL that ends in `stiltrawresult` istead of `stiltresult`.
