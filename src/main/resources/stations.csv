@@ -82,7 +82,7 @@ ISN,,,,DE
 IZN,Iznajar,,,ES
 JENA,Jena,,,DE
 JFJ,Jungfraujoch,JFJ,5,CH
-JFJ960,Jungfraujoch,JFJ,5,CH
+JFJ960,Jungfraujoch,,,CH
 JUE,Jülich 100m,,,DE
 JUE050,Jülich 50m,JUE,50,DE
 JUE080,Jülich 80m,JUE,80,DE
@@ -144,6 +144,7 @@ OXK163,Ochsenkopf 163m,OXK,163,DE
 PAL,Pallas-Sammaltunturi,PAL,12,FI
 PAR,Paris,,,FR
 PAR_DW,Paris downwind,,,FR
+PCW150,,,,PL
 PDM,Pic du Midi,,,FR
 POING,,,,DE
 POING5,,,,DE
@@ -152,6 +153,7 @@ POTT,,,,DE
 PRA,Prague,,,CZ
 PRA_DW,Prague downwind,,,CZ
 PRS,Plateau Rosa,PRS,10,IT
+PSE150,,,,PL
 PTL,,,,IT
 PTZ800,,,,IT
 PUI,Puijo 176m,,,FI
@@ -176,7 +178,7 @@ SKK,Selkirk,,,GB
 SMR017,Hyytiälä 17m,SMR,16.8,FI
 SMR067,Hyytiälä 67m,SMR,67.2,FI
 SMR125,Hyytiälä 125m,SMR,125,FI
-SMR127,Hyytiälä 127m,SMR,125,FI
+SMR127,Hyytiälä 127m,,,FI
 SSL,Schauinsland,,,DE
 SSL12,,,,DE
 STE032,Steinkimmen 32m,STE,32,DE
