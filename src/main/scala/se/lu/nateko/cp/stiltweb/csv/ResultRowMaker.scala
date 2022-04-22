@@ -40,7 +40,8 @@ object ResultRowMaker {
 			categoryAssignments("energy", _.isEnergy) ++
 			categoryAssignments("industry", _.isIndustry) ++
 			categoryAssignments("transport", _.isTransport) ++
-			categoryAssignments("others", _.isOther) ++
+			categoryAssignments("residential", _.isResidential) ++
+			categoryAssignments("other_categories", _.isOther) ++
 			cementAssignments ++
 			Seq(Gas.CO2, Gas.CO).flatMap(otherFuelAssignment(_, "solid_waste", "waste")) ++
 			co2FuelAssignments ++

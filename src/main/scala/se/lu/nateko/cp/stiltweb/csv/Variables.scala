@@ -67,7 +67,8 @@ object CategoryNames{
 	val energies = Set("1a1a","1a1bcr")
 	val transports = Set("1a3b","1a3ce","1a3a+1c1","1a3d+1c2")
 	val industries = Set("1a2+6cd","2a","2befg+3","2c")
-	val others = Set("1b2abc","7a","1a4","4f")
+	val residentials = Set("1a4")
+	val others = Set("1b2abc","7a","4f")
 }
 
 case class Category(name: String){
@@ -75,5 +76,6 @@ case class Category(name: String){
 	def isEnergy = energies.contains(name)
 	def isTransport = transports.contains(name)
 	def isIndustry = industries.contains(name)
+	def isResidential = residentials.contains(name)
 	def isOther = others.contains(name)
 }
