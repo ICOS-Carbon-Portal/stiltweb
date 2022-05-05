@@ -59,7 +59,7 @@ lazy val stiltweb = (project in file("."))
 
 		libraryDependencies := {
 			libraryDependencies.value.map{
-				case m if m.name.startsWith("twirl-api") => 
+				case m if m.name.startsWith("twirl-api") =>
 					m.cross(CrossVersion.for3Use2_13)
 				case m => m
 			}
@@ -69,7 +69,7 @@ lazy val stiltweb = (project in file("."))
 			"com.typesafe.akka"  %% "akka-http-spray-json"               % akkaHttpVersion cross CrossVersion.for3Use2_13,
 			"com.typesafe.akka"  %% "akka-stream"                        % akkaVersion cross CrossVersion.for3Use2_13,
 			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.6.5" cross CrossVersion.for3Use2_13,
-			"se.lu.nateko.cp"    %% "views-core"                         % "0.4.8" cross CrossVersion.for3Use2_13,
+			"se.lu.nateko.cp"    %% "views-core"                         % "0.5.1" cross CrossVersion.for3Use2_13,
 			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.1.4" cross CrossVersion.for3Use2_13,
 			"edu.ucar"            % "netcdf4"                            % "4.6.11" excludeAll(
 				ExclusionRule(organization = "edu.ucar", name = "cdm")

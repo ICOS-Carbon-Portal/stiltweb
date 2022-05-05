@@ -104,11 +104,9 @@ export default class MapView extends Component {
 								<label style={labelStyle}>Site id (usually a 3 letter code)</label>
 								<div className="input-group" style={verticalMargin}>
 									<TextInput value={formData.siteId} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="6"/>
-									<span className="input-group-btn">
-										<button className="btn btn-primary cp-pointer"
+									<button className="btn btn-primary cp-pointer"
 												onClick={this.onLoadDataBtnClick.bind(this)}
 												disabled={!isExisting}>Load data</button>
-									</span>
 								</div>
 
 								<label style={labelStyle}>Start date (YYYY-MM-DD)</label>
