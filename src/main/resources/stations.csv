@@ -34,7 +34,8 @@ CES020,Cabauw 20m,,,NL
 CES050,Cabauw 120m,,,NL
 CES200,Cabauw 200m,,,NL
 CGR,,,,IT
-CIB100,,,,ES
+CHA100,,,,CH
+CIB100,CIBA 100m,,,ES
 CLT900,,,,IT
 CMN760,Monte Cimone,CMN,8,IT
 CMN_test,,,,IT
@@ -44,7 +45,9 @@ DEC,Delta Ebre,,,ES
 DRX,,,,FR
 EGH,Egham,,,GB
 ERERER,,,,SE
-FIK,Finokalia,,,GR
+EST110,,,,EE
+FIK,Finokalia 150m,,,GR
+FKL015,Finokalia 15m,,,GR
 FRE,Freinsheim,,,DE
 GAT030,Gartow 30m,GAT,30,DE
 GAT060,Gartow 60m,GAT,60,DE
@@ -55,6 +58,7 @@ GIF,Gif-sur-Yvette 2m,,,FR
 GIF010,Gif-sur-Yvette 10m,,,FR
 GIF050,Gif-sur-Yvette 50m,,,FR
 GOL,,,,DE
+HAC,Helmos,,,GR
 HAM,Hamburg,,,DE
 HAM_DW,Hamburg downwind,,,DE
 HAM_UW,Hamburg upwind,,,DE
@@ -116,7 +120,7 @@ LYO,Lyon,,,FR
 LYO_DW,Lyon downwind,,,FR
 LYO_UW,Lyon upwind,,,FR
 MAH,Malin Head,,,IE
-MAJ100,,,,ES
+MAJ100,Majadas de Tiétar 100m,,,ES
 MED-1,,,,
 MED-2,,,,
 MED-3,,,,
@@ -131,10 +135,10 @@ NOR032,Norunda 32m,NOR,32,SE
 NOR058,Norunda 58m,NOR,58,SE
 NOR100,Norunda 100m,NOR,100,SE
 OES,Östergarnsholm,,,SE
-OHP100,Observatoire Haute Provence,,,FR
-OPE010,Observatoire pérenne de l'environnement,OPE,10,FR
-OPE050,Observatoire pérenne de l'environnement,OPE,50,FR
-OPE120,Observatoire pérenne de l'environnement,OPE,120,FR
+OHP100,Observatoire Haute Provence 100m,,,FR
+OPE010,Observatoire pérenne de l'environnement 10m,OPE,10,FR
+OPE050,Observatoire pérenne de l'environnement 50m,OPE,50,FR
+OPE120,Observatoire pérenne de l'environnement 120m,OPE,120,FR
 OPO,Porto,,,PT
 OST,Østerild,,,DK
 OTTA,,,,NO
@@ -161,6 +165,8 @@ PUI047,Puijo 47m,PUI,47,FI
 PUI084,Puijo 84m,PUI,84,FI
 PUY,Puy de Dôme,PUY,10,FR
 RGL,Ridge Hill 152m,,,GB
+RGL090,Ridge Hill 90m,RGL,90,GB
+RIB,,,,SE
 RIS,Risø 100m,,,DK
 RMS,Reims,,,FR
 ROC140,Roc Tredudon,,,FR
@@ -179,6 +185,8 @@ SMR017,Hyytiälä 17m,SMR,16.8,FI
 SMR067,Hyytiälä 67m,SMR,67.2,FI
 SMR125,Hyytiälä 125m,SMR,125,FI
 SMR127,Hyytiälä 127m,,,FI
+SNZ,Sniezka,,,PL
+SOT,,,,CH
 SSL,Schauinsland,,,DE
 SSL12,,,,DE
 STE032,Steinkimmen 32m,STE,32,DE
@@ -195,6 +203,7 @@ SVB085,Svartberget 85m,SVB,85,SE
 SVB150,Svartberget 150m,SVB,150,SE
 TAC191,Tacolneston 191m,,,GB
 TEST,,,,NO
+THI005,Thissio 5m,,,GR
 THRB,Thornton Buoy,,,
 TOH010,Torfhaus 10m,TOH,10,DE
 TOH076,Torfhaus 76m,TOH,76,DE
