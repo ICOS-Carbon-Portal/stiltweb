@@ -29,7 +29,7 @@ object Variable{
 		case fuelVarPattern(Gas(gas), cat, Fuel(fuel), subFuel) =>
 			if(fuel == Fuel.OtherFuel){
 				//need to use the full specifier instead of subFuel here to avoid duplicates
-				val categoryVarPattern(_, _, specifier) = name
+				val categoryVarPattern(_, _, specifier) = name : @unchecked
 				FuelInfoVariable(name, gas, Category(cat), fuel, specifier)
 			}
 			else FuelInfoVariable(name, gas, Category(cat), fuel, subFuel)

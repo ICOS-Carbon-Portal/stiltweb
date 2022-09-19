@@ -25,7 +25,7 @@ class JsonTest extends AnyFunSuite {
 		// Since the order of the keys can vary, we convert it to lines and sort
 		// them before testing.
 		val j = job.toJson
-		val s = j.toString()
+		val s = j.toString
 		val t = s.slice(1, s.length-1).split(",").map(_.trim).sorted.mkString("\n")
 
 		// This particular test checks that the timeStarted and timeStopped

@@ -8,7 +8,7 @@ class StiltTimeTest extends AnyFunSuite {
 
 	test("from/to string") {
 		val s = "2012x01x01x03"
-		val StiltTime(t) = s
+		val StiltTime(t) = s : @unchecked
 		assert(t.year == 2012)
 		assert(t.month == 1)
 		assert(t.day == 1)
@@ -22,14 +22,14 @@ class StiltTimeTest extends AnyFunSuite {
 class StiltPositionTest extends AnyFunSuite {
 
 	test("from/to string, negative") {
-		val StiltPosition(p) = "20.01Sx150.01Wx01234"
+		val StiltPosition(p) = "20.01Sx150.01Wx01234" : @unchecked
 		assert(p.lat == -20.01)
 		assert(p.lon == -150.01)
 		assert(p.alt == 1234)
 	}
 
 	test("from/to string, positive") {
-		val StiltPosition(p) = "20.01Nx050.01Ex01234"
+		val StiltPosition(p) = "20.01Nx050.01Ex01234" : @unchecked
 		assert(p.lat == 20.01)
 		assert(p.lon == 50.01)
 		assert(p.alt == 1234)
@@ -47,7 +47,7 @@ class StiltSlotTest extends AnyFunSuite {
 		val expected = "2012x12x01x00x56.10Nx013.42Wx00150"
 		assert(slt.toString == expected)
 
-		val StiltSlot(slt2) = expected
+		val StiltSlot(slt2) = expected : @unchecked
 		assert (slt2 == slt)
 	}
 

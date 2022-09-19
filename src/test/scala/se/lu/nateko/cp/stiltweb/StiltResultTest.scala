@@ -6,7 +6,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import se.lu.nateko.cp.stiltcluster.{StiltResult, StiltSlot, StiltResultFileType}
 
 object StiltResultTest{
-	val StiltSlot(sampleSlot) = "2012x12x08x18x46.55Nx007.98Ex00720"
+	val StiltSlot(sampleSlot) = "2012x12x08x18x46.55Nx007.98Ex00720" : @unchecked
 	val sampleSlotDir = Paths.get(getClass.getResource("/stilt-sample-run/output").getFile)
 	assert(Files.exists(sampleSlotDir))
 
