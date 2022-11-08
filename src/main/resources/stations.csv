@@ -1,10 +1,13 @@
 STILT id,STILT name,ICOS id,ICOS height,Country
 322,,,,RU
 777,,,,RU
+ABD,,,,GB
+AMO,,,,GB
 AMS,Amsterdam,,,NL
 AMS_DW,Amsterdam downwind,,,NL
-ARN100,,,,ES
+ARN100,El Arenosillo,,,ES
 ARR,Andoya,,,NO
+BAK014,,,,DE
 BAL,Baltic Sea,,,
 BAN112,,,,CH
 BAN953,,,,CH
@@ -15,9 +18,9 @@ BGU,Begur,,,ES
 BIK180,Bialystok 180m,,,PL
 BIK300,Bialystok 300m,,,PL
 BIR,Birkenes 40m,,,NO
-BIR010,Birkenes 10m,BIR,10,NO
-BIR050,Birkenes 50m,BIR,50,NO
-BIR075,Birkenes 75m,BIR,75,NO
+BIR010,Birkenes 10m,BIR,10.0,NO
+BIR050,Birkenes 50m,BIR,50.0,NO
+BIR075,Birkenes 75m,BIR,75.0,NO
 BOR,Bordeaux,,,FR
 BOR_DW,Bordeaux downwind,,,FR
 BOR_UW,Bordeaux upwind,,,FR
@@ -35,9 +38,10 @@ CES050,Cabauw 120m,,,NL
 CES200,Cabauw 200m,,,NL
 CGR,,,,IT
 CHA100,,,,CH
+CHUR,,,,CZ
 CIB100,CIBA 100m,,,ES
 CLT900,,,,IT
-CMN760,Monte Cimone,CMN,8,IT
+CMN760,Monte Cimone,CMN,8.0,IT
 CMN_test,,,,IT
 DAO,,,,CH
 DAV,,,,CH
@@ -45,15 +49,16 @@ DEC,Delta Ebre,,,ES
 DRX,,,,FR
 EGH,Egham,,,GB
 ERERER,,,,SE
-EST110,,,,EE
+EST110,SMEAR Estonia 110m,,,EE
+ET-ACD,,,,SE
 FIK,Finokalia 150m,,,GR
 FKL015,Finokalia 15m,,,GR
 FRE,Freinsheim,,,DE
-GAT030,Gartow 30m,GAT,30,DE
-GAT060,Gartow 60m,GAT,60,DE
-GAT132,Gartow 132m,GAT,132,DE
-GAT216,Gartow 216m,GAT,216,DE
-GAT344,Gartow 344m,GAT,341,DE
+GAT030,Gartow 30m,GAT,30.0,DE
+GAT060,Gartow 60m,GAT,60.0,DE
+GAT132,Gartow 132m,GAT,132.0,DE
+GAT216,Gartow 216m,GAT,216.0,DE
+GAT344,Gartow 344m,GAT,341.0,DE
 GIF,Gif-sur-Yvette 2m,,,FR
 GIF010,Gif-sur-Yvette 10m,,,FR
 GIF050,Gif-sur-Yvette 50m,,,FR
@@ -64,55 +69,59 @@ HAM_DW,Hamburg downwind,,,DE
 HAM_UW,Hamburg upwind,,,DE
 HEI,Heidelberg,,,DE
 HEL,Helgoland,,,DE
-HEL110,Helgoland 110m,HEL,110,DE
+HEL110,Helgoland 110m,HEL,110.0,DE
 HFD,Heathfield 135m,,,GB
 HPB010,Hohenpeissenberg 10m,,,DE
-HPB050,Hohenpeissenberg 50m,HPB,50,DE
-HPB093,Hohenpeissenberg 93m,HPB,93,DE
-HPB131,Hohenpeissenberg 131m,HPB,131,DE
-HTM030,Hyltemossa 30m,HTM,30,SE
-HTM070,Hyltemossa 70m,HTM,70,SE
-HTM150,Hyltemossa 150m,HTM,150,SE
+HPB050,Hohenpeissenberg 50m,HPB,50.0,DE
+HPB093,Hohenpeissenberg 93m,HPB,93.0,DE
+HPB131,Hohenpeissenberg 131m,HPB,131.0,DE
+HTM030,Hyltemossa 30m,HTM,30.0,SE
+HTM070,Hyltemossa 70m,HTM,70.0,SE
+HTM150,Hyltemossa 150m,HTM,150.0,SE
 HUN096,Hegyhátsál 96m,,,HU
 HUN115,Hegyhátsál 115m,,,HU
 IDA,,,,LV
 IDS,,,,SE
 IPR015,Ispra 15m,,,IT
-IPR040,Ispra 40m,IPR,40,IT
-IPR060,Ispra 60m,IPR,60,IT
-IPR100,Ispra 100m,IPR,100,IT
+IPR040,Ispra 40m,IPR,40.0,IT
+IPR060,Ispra 60m,IPR,60.0,IT
+IPR100,Ispra 100m,IPR,100.0,IT
 ISEN,,,,DE
 ISN,,,,DE
 IZN,Iznajar,,,ES
 JENA,Jena,,,DE
-JFJ,Jungfraujoch,JFJ,5,CH
-JFJ960,Jungfraujoch,,,CH
+JES,,,,CZ
+JFJ,Jungfraujoch,JFJ,5.0,CH
+JFJ960,Jungfraujoch,JFJ,5.0,CH
 JUE,Jülich 100m,,,DE
-JUE050,Jülich 50m,JUE,50,DE
-JUE080,Jülich 80m,JUE,80,DE
-JUE120,Jülich 120m,JUE,120,DE
+JUE050,Jülich 50m,JUE,50.0,DE
+JUE080,Jülich 80m,JUE,80.0,DE
+JUE120,Jülich 120m,JUE,120.0,DE
 KAS,Kasprowy Wierch,,,PL
-KIT030,Karlsruhe 30m,KIT,30,DE
+KIT030,Karlsruhe 30m,KIT,30.0,DE
 KIT050,Karlsruhe 50m,,,DE
-KIT060,Karlsruhe 60m,KIT,60,DE
-KIT100,Karlsruhe 100m,KIT,100,DE
-KIT200,Karlsruhe 200m,KIT,200,DE
-KRE010,Křešín u Pacova 10m,KRE,10,CZ
-KRE050,Křešín u Pacova 50m,KRE,50,CZ
-KRE125,Křešín u Pacova 125m,KRE,125,CZ
-KRE250,Křešín u Pacova 250m,KRE,250,CZ
+KIT060,Karlsruhe 60m,KIT,60.0,DE
+KIT100,Karlsruhe 100m,KIT,100.0,DE
+KIT200,Karlsruhe 200m,KIT,200.0,DE
+KRE,,,,CZ
+KRE010,Křešín u Pacova 10m,KRE,10.0,CZ
+KRE050,Křešín u Pacova 50m,KRE,50.0,CZ
+KRE125,Křešín u Pacova 125m,KRE,125.0,CZ
+KRE250,Křešín u Pacova 250m,KRE,250.0,CZ
+LAH032,Lahemaa 32m,,,EE
 LEI,,,,DE
 LIL,Lille,,,FR
 LIL_DW,Lille downwind,,,BE
 LIL_UW,Lille upwind,,,FR
-LIN010,Lindenberg 10m,LIN,10,DE
-LIN040,Lindenberg 40m,LIN,40,DE
-LIN099,Lindenberg 99m,LIN,98,DE
-LMP,Lampedusa,LMP,8,IT
+LIN010,Lindenberg 10m,LIN,10.0,DE
+LIN040,Lindenberg 40m,LIN,40.0,DE
+LIN099,Lindenberg 99m,LIN,98.0,DE
+LMP,Lampedusa,LMP,8.0,IT
+LMT,,,,IT
 LMU080,La Muela 80m,,,ES
 LON,London,,,GB
 LPO,Ile Grande,,,FR
-LUT,Lutjewad 60m,LUT,60,NL
+LUT,Lutjewad 60m,LUT,60.0,NL
 LUX,Luxembourg,,,LU
 LUX_DW,Luxembourg downwind,,,DE
 LUX_UW,Luxembourg upwind,,,FR
@@ -121,7 +130,7 @@ LYO_DW,Lyon downwind,,,FR
 LYO_UW,Lyon upwind,,,FR
 MAH,Malin Head,,,IE
 MAJ100,Majadas de Tiétar 100m,,,ES
-MED-1,,,,
+MED-1,,,,ES
 MED-2,,,,
 MED-3,,,,
 MED-4,,,,
@@ -131,21 +140,21 @@ MIL,Milano,,,IT
 MUN,Munich,,,DE
 MUN_DW,Munich downwind,,,DE
 MUN_UW,Munich upwind,,,DE
-NOR032,Norunda 32m,NOR,32,SE
-NOR058,Norunda 58m,NOR,58,SE
-NOR100,Norunda 100m,NOR,100,SE
+NOR032,Norunda 32m,NOR,32.0,SE
+NOR058,Norunda 58m,NOR,58.0,SE
+NOR100,Norunda 100m,NOR,100.0,SE
 OES,Östergarnsholm,,,SE
 OHP100,Observatoire Haute Provence 100m,,,FR
-OPE010,Observatoire pérenne de l'environnement 10m,OPE,10,FR
-OPE050,Observatoire pérenne de l'environnement 50m,OPE,50,FR
-OPE120,Observatoire pérenne de l'environnement 120m,OPE,120,FR
+OPE010,Observatoire pérenne de l'environnement 10m,OPE,10.0,FR
+OPE050,Observatoire pérenne de l'environnement 50m,OPE,50.0,FR
+OPE120,Observatoire pérenne de l'environnement 120m,OPE,120.0,FR
 OPO,Porto,,,PT
 OST,Østerild,,,DK
 OTTA,,,,NO
-OXK023,Ochsenkopf 23m,OXK,23,DE
-OXK090,Ochsenkopf 90m,OXK,90,DE
-OXK163,Ochsenkopf 163m,OXK,163,DE
-PAL,Pallas-Sammaltunturi,PAL,12,FI
+OXK023,Ochsenkopf 23m,OXK,23.0,DE
+OXK090,Ochsenkopf 90m,OXK,90.0,DE
+OXK163,Ochsenkopf 163m,OXK,163.0,DE
+PAL,Pallas-Sammaltunturi,PAL,12.0,FI
 PAR,Paris,,,FR
 PAR_DW,Paris downwind,,,FR
 PCW150,,,,PL
@@ -156,16 +165,17 @@ POLAND,,,,PL
 POTT,,,,DE
 PRA,Prague,,,CZ
 PRA_DW,Prague downwind,,,CZ
-PRS,Plateau Rosa,PRS,10,IT
+PRS,Plateau Rosa,PRS,10.0,IT
 PSE150,,,,PL
 PTL,,,,IT
+PTZ100,,,,IT
 PTZ800,,,,IT
 PUI,Puijo 176m,,,FI
-PUI047,Puijo 47m,PUI,47,FI
-PUI084,Puijo 84m,PUI,84,FI
-PUY,Puy de Dôme,PUY,10,FR
+PUI047,Puijo 47m,PUI,47.0,FI
+PUI084,Puijo 84m,PUI,84.0,FI
+PUY,Puy de Dôme,PUY,10.0,FR
 RGL,Ridge Hill 152m,,,GB
-RGL090,Ridge Hill 90m,RGL,90,GB
+RGL090,Ridge Hill 90m,RGL,90.0,GB
 RIB,,,,SE
 RIS,Risø 100m,,,DK
 RMS,Reims,,,FR
@@ -175,54 +185,60 @@ ROT,Rotterdam,,,NL
 ROT_UW,Rotterdam upwind,,,NL
 RUH,,,,DE
 RUH_UW,,,,DE
-SAC015,Saclay 15m,SAC,15,FR
-SAC060,Saclay 60m,SAC,60,FR
-SAC100,Saclay 100m,SAC,100,FR
+SAC015,Saclay 15m,SAC,15.0,FR
+SAC060,Saclay 60m,SAC,60.0,FR
+SAC100,Saclay 100m,SAC,100.0,FR
 SCHOEN,,,,DE
 SET,,,,BE
 SKK,Selkirk,,,GB
 SMR017,Hyytiälä 17m,SMR,16.8,FI
 SMR067,Hyytiälä 67m,SMR,67.2,FI
-SMR125,Hyytiälä 125m,SMR,125,FI
+SMR125,Hyytiälä 125m,SMR,125.0,FI
 SMR127,Hyytiälä 127m,,,FI
 SNZ,Sniezka,,,PL
 SOT,,,,CH
-SSL,Schauinsland,,,DE
-SSL12,,,,DE
-STE032,Steinkimmen 32m,STE,32,DE
-STE082,Steinkimmen 82m,STE,82,DE
-STE127,Steinkimmen 127m,STE,127,DE
-STE187,Steinkimmen 187m,STE,187,DE
-STE252,Steinkimmen 252m,STE,252,DE
+SSL,Schauinsland 12m,SSL,12.0,DE
+SSL12,Schauinsland,,,DE
+SSL255,Schauinsland 35m,SSL,35.0,DE
+STE032,Steinkimmen 32m,STE,32.0,DE
+STE082,Steinkimmen 82m,STE,82.0,DE
+STE127,Steinkimmen 127m,STE,127.0,DE
+STE187,Steinkimmen 187m,STE,187.0,DE
+STE252,Steinkimmen 252m,STE,252.0,DE
 STH,Stockholm,,,SE
 STH_DW,Stockholm downwind,,,SE
+STI,,,,CZ
 STK200,,,,DE
 STR,Stromboli,,,IT
-SVB035,Svartberget 35m,SVB,35,SE
-SVB085,Svartberget 85m,SVB,85,SE
-SVB150,Svartberget 150m,SVB,150,SE
+SVB035,Svartberget 35m,SVB,35.0,SE
+SVB085,Svartberget 85m,SVB,85.0,SE
+SVB150,Svartberget 150m,SVB,150.0,SE
 TAC191,Tacolneston 191m,,,GB
 TEST,,,,NO
 THI005,Thissio 5m,,,GR
 THRB,Thornton Buoy,,,
-TOH010,Torfhaus 10m,TOH,10,DE
-TOH076,Torfhaus 76m,TOH,76,DE
-TOH110,Torfhaus 110m,TOH,110,DE
-TOH147,Torfhaus 147m,TOH,147,DE
-TRN050,Trainou 50m,TRN,50,FR
-TRN100,Trainou 100m,TRN,100,FR
-TRN180,Trainou 180m,TRN,180,FR
+TOB010,,,,DE
+TOB100,,,,DE
+TOH010,Torfhaus 10m,TOH,10.0,DE
+TOH076,Torfhaus 76m,TOH,76.0,DE
+TOH110,Torfhaus 110m,TOH,110.0,DE
+TOH147,Torfhaus 147m,TOH,147.0,DE
+TRN050,Trainou 50m,TRN,50.0,FR
+TRN100,Trainou 100m,TRN,100.0,FR
+TRN180,Trainou 180m,TRN,180.0,FR
 TST,,,,
 TTA050,Angus 50m,,,GB
 TTA222,Angus 222m,,,GB
-UTO,Utö - Baltic sea,UTO,57,FI
+UTO,Utö - Baltic sea,UTO,57.0,FI
 VIE,Vienna,,,AT
 VIE_DW,Vienna downwind,,,AT
 VIE_UW,Vienna upwind,,,AT
 VND,,,,IT
 VOI,Voeikovo,,,RU
-WAO,Weybourne,WAO,10,GB
-WES,Westerland,WES,14,DE
+VSD006,Vilsandi 6m,,,EE
+VTO014,Valenia 14m,,,IE
+WAO,Weybourne,WAO,10.0,GB
+WES,Westerland,WES,14.0,DE
 ZRH,Zurich,,,CH
 ZRK,,,,DE
-ZSF,Zugspitze,ZSF,3,DE
+ZSF,Zugspitze,ZSF,3.0,DE
