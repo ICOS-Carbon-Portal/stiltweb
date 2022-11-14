@@ -21,28 +21,21 @@ class WorkReceptionist(archiver: Archiver) extends StreamPublisher[DashboardInfo
 
 	override def getStreamElement = state.getDashboardInfo
 
-	override def specificReceive: Receive = coreReceive.andThen{_ =>
-		for((w, command) <- state.distributeWork()){
-			w ! command
-			log.debug(s"Sent ${command.slots.size} slots to ${w}")
-		}
-	}
-
-	def coreReceive: Receive = {
+	override def specificReceive: Receive =
 		case jobRequest: Job =>
 			val jdir = archiver.save(jobRequest.copySetStarted)
 
 			log.info(s"Received $jobRequest, saved to ${jdir.dir}")
 
 			startJob(jdir.job)
+			distributeWork()
 
-		case CancelJob(id) => state.cancelJob(id) match{
+		case CancelJob(id) => state.cancelJob(id) match
 			case Some(job) =>
 				log.info(s"Cancelling $job")
 				jobDir(job).delete()
 			case None =>
 				log.warning(s"Job with id '$id' not found, therefore cannot cancel it")
-		}
 
 		case wms: WorkMasterStatus =>
 			val wm = sender()
@@ -54,6 +47,7 @@ class WorkReceptionist(archiver: Archiver) extends StreamPublisher[DashboardInfo
 			if(!lostWork.isEmpty){
 				log.warning(s"Work lost (and re-queued): " + lostWork.mkString(", "))
 			}
+			distributeWork()
 
 		case Terminated(watched) if(state.isKnownWorker(watched)) =>
 			log.info(s"Computational node terminated: ${watched.path}")
@@ -62,37 +56,43 @@ class WorkReceptionist(archiver: Archiver) extends StreamPublisher[DashboardInfo
 		case PleaseSendDashboardInfo =>
 			sender() ! state.getDashboardInfo
 
-		case SlotCalculated(result) => {
+		case SlotCalculated(result) =>
 			log.debug(s"Got ${result.slot} calculated, saving to the slot archive")
 			archiver.save(result)
 			finishSlot(result.slot)
-		}
+			distributeWork()
 
 		case StiltFailure(slot, errMsgs, logsZip) =>
 			state.onSlotFailure(slot, errMsgs, logPathMaker(slot)).foreach{job =>
 				logsZip.foreach(jobDir(job).saveLogs(slot, _))
 			}
 			finishSlot(slot)
-	}
+
+		case DistributeWork =>
+			distributeWork()
+
+	end specificReceive
+
 
 	def finishSlot(slot: StiltSlot): Unit = state.onSlotDone(sender(), slot).foreach(finishJob)
 
-	def finishJob(job: Job): Unit = {
+	def finishJob(job: Job): Unit =
 		log.info(s"Done: $job")
 		jobDir(job).markAsDone()
-	}
 
-	def startJob(job: Job): Unit = {
+	def startJob(job: Job): Unit =
 		log.info(s"Starting $job")
 		val thereIsWorkToBeDone = state.startJob(job)
 		if(!thereIsWorkToBeDone) finishJob(job)
-	}
+
+	def distributeWork(): Unit = for (w, command) <- state.distributeWork() do
+		w ! command
+		log.debug(s"Sent ${command.slots.size} slots to ${w}")
 
 	def jobDir(job: Job) = new JobDir(job, archiver.getJobDir(job))
 
 	def logPathMaker(slot: StiltSlot)(job: Job) = archiver.stateDir.relativize(jobDir(job).logsPath(slot)).toString
 }
 
-object WorkReceptionist{
+object WorkReceptionist:
 	def props(archiver: Archiver) = Props.create(classOf[WorkReceptionist], archiver)
-}

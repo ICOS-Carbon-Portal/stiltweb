@@ -51,3 +51,4 @@ case class DashboardInfo(
 
 case object PleaseSendDashboardInfo
 case object Subscribe
+case object DistributeWork

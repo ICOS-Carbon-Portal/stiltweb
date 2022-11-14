@@ -22,6 +22,7 @@ class StiltClusterApi {
 	private val conf = ConfigLoader.frontNode()
 
 	private val system = ActorSystem("StiltBoss", conf)
+	import system.dispatcher
 
 	val stiltConf = ConfigReader.default
 
@@ -32,13 +33,8 @@ class StiltClusterApi {
 
 	val archiver = new Archiver(stateDir, stiltConf.slotStepInMinutes)
 
-	val receptionist = ActorSelection(
-		system.actorOf(WorkReceptionist.props(archiver), name = "receptionist"),
-		Iterable.empty
-	)
-
-
-	import system.dispatcher
+	private val receptionist = system.actorOf(WorkReceptionist.props(archiver), name = "receptionist")
+	system.scheduler.scheduleAtFixedRate(5.seconds, 5.seconds, receptionist, DistributeWork)
 
 	def enqueueJob(job: Job): Unit = receptionist ! job
 
@@ -46,7 +42,7 @@ class StiltClusterApi {
 
 	def queryOwner(jobId: String): Future[Option[String]] = {
 		// The assumption is that this query will run on the same JVM as the responding actor.
-		implicit val timeout: Timeout = Timeout(1.second)
+		given Timeout(1.second)
 		ask(receptionist, PleaseSendDashboardInfo).mapTo[DashboardInfo].map{ dbi =>
 			dbi.findCancellableJobById(jobId).map(_.userId)
 		}
