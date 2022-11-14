@@ -32,8 +32,9 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 		),
 
 		cpDeployTarget := "stiltcluster",
-		cpDeployPlaybook := "stilt.yml",
+		cpDeployPlaybook := "stiltcluster.yml",
 		cpDeployBuildInfoPackage := "se.lu.nateko.cp.stiltcluster",
+		cpDeployPreAssembly := (Test / test).value,
 
 		run / fork := true,
 		run / connectInput := true,
@@ -43,10 +44,13 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 		}
 	)
 
-val npmPublish = taskKey[Int]("runs 'npm run publish'")
+val npmPublish = taskKey[Unit]("runs 'npm run publish'")
 npmPublish := {
 	import scala.sys.process.Process
-	(Process("npm ci") #&& Process("npm run publish")).!
+	val log = streams.value.log
+	val exitCode = (Process("npm ci") #&& Process("npm run publish")).!
+	if(exitCode == 0) log.info("Front end build successfull")
+	else sys.error("Front end build error")
 }
 
 lazy val stiltweb = (project in file("."))
@@ -55,7 +59,7 @@ lazy val stiltweb = (project in file("."))
 	.settings(commonSettings: _*)
 	.settings(
 		name := "stiltweb",
-		version := "0.4.2",
+		version := "0.4.3",
 
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka"  %% "akka-http-spray-json"               % akkaHttpVersion excludeAll("io.spray") cross CrossVersion.for3Use2_13,
@@ -71,8 +75,12 @@ lazy val stiltweb = (project in file("."))
 		),
 
 		cpDeployTarget := "stiltweb",
-		cpDeployPlaybook := "stilt.yml",
+		cpDeployPlaybook := "stiltweb.yml",
 		cpDeployBuildInfoPackage := "se.lu.nateko.cp.stiltweb",
+		cpDeployPreAssembly := {
+			streams.value.log.warn(s"MAKE SURE THAT SCALA_VERSION variable in gulpfile.js is equal to ${scalaVersion.value}")
+			Def.sequential(Test / test, npmPublish).value
+		},
 
 		//Could not get SBT to include hidden files; changing filter settings didn't help
 		Test / unmanagedResources := {
@@ -82,19 +90,5 @@ lazy val stiltweb = (project in file("."))
 				java.nio.file.Files.walk(dir.toPath).iterator.asScala.map(_.toFile)
 			}
 		},
-
-		// Override the "assembly" command so that we always run "npm publish"
-		// first - thus generating javascript files - before we package the
-		// "fat" jarfile used for deployment.
-		assembly := {
-			streams.value.log.warn(s"MAKE SURE THAT SCALA_VERSION variable in gulpfile.js is equal to ${scalaVersion.value}")
-			(Def.taskDyn{
-				val original = assembly.taskValue
-				// Referencing the task's 'value' field will trigger the npm command
-				if(npmPublish.value != 0) throw new IllegalStateException("Front end build error")
-				// Then just return the original "assembly command"
-				Def.task(original.value)
-			}).value
-		}
 
 	)
