@@ -5,13 +5,14 @@ import se.lu.nateko.cp.stiltcluster.ConfigLoader
 import spray.json._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigRenderOptions
+import se.lu.nateko.cp.data.formats.netcdf.NetCdfViewServiceConfig
 
 case class NetCdfConfig(
 	dateVars: Seq[String],
 	latitudeVars: Seq[String],
 	longitudeVars: Seq[String],
 	elevationVars: Seq[String]
-)
+) extends NetCdfViewServiceConfig
 
 case class StiltWebConfig(
 	admins: Seq[String],

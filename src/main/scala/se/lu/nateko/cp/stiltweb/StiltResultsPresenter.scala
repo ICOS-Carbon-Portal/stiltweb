@@ -15,8 +15,8 @@ import scala.jdk.CollectionConverters._
 import scala.io.{ Source => IoSource }
 import scala.util.Try
 
-import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
-import se.lu.nateko.cp.data.formats.netcdf.viewing.impl.ViewServiceFactoryImpl
+import se.lu.nateko.cp.data.formats.netcdf.Raster
+// import se.lu.nateko.cp.data.formats.netcdf.ViewServiceFactory
 import se.lu.nateko.cp.stiltcluster.StiltPosition
 import se.lu.nateko.cp.stiltcluster.StiltResultFileType
 import se.lu.nateko.cp.stiltcluster.StiltTime
@@ -31,6 +31,7 @@ import spray.json.JsNumber
 import spray.json.JsValue
 import spray.json.JsObject
 import spray.json.JsArray
+import se.lu.nateko.cp.data.formats.netcdf.ViewServiceFactory
 
 class StiltResultsPresenter(config: StiltWebConfig) {
 	import StiltResultsPresenter._
@@ -184,11 +185,11 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		val factory = {
 			import config.netcdf._
 			val footprintDir = archiver.getSlotDir(stationId, StiltTime.fromJava(dt)).toString + File.separator
-			new ViewServiceFactoryImpl(footprintDir, dateVars.asJava, latitudeVars.asJava, longitudeVars.asJava, elevationVars.asJava)
+			val netCdfConfig = NetCdfConfig(dateVars, latitudeVars, longitudeVars, elevationVars)
+			new ViewServiceFactory(Path.of(footprintDir), netCdfConfig)
 		}
 		val service = factory.getNetCdfViewService(StiltResultFileType.Foot.toString)
-		val date = service.getAvailableDates()(0)
-		service.getRaster(date, "foot", null)
+		service.getRaster(0, "foot", null)
 	}
 
 	/** List the months for which available meteorology input data is available.

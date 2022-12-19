@@ -5,7 +5,7 @@ import akka.actor.Address
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
-import se.lu.nateko.cp.data.formats.netcdf.viewing.Raster
+import se.lu.nateko.cp.data.formats.netcdf.Raster
 import se.lu.nateko.cp.stiltcluster._
 import spray.json._
 import se.lu.nateko.cp.stiltweb.StiltResultsRequest

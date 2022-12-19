@@ -2,7 +2,7 @@ package se.lu.nateko.cp.stiltweb.netcdf
 
 import java.nio.file.Path
 import java.nio.file.Files
-import ucar.nc2.NetcdfFile
+import ucar.nc2.NetcdfFiles
 import ucar.nc2.NetcdfFileWriter
 import java.nio.file.StandardCopyOption._
 
@@ -24,7 +24,7 @@ object FootprintJoiner {
 				val timeVar = w.findVariable("time")
 
 				for((footPath, i) <- fs.tail.zipWithIndex){
-					val nc = NetcdfFile.open(footPath.toString)
+					val nc = NetcdfFiles.open(footPath.toString)
 
 					val footArr = nc.findVariable("foot").read()
 					val timeArr = nc.findVariable("time").read()

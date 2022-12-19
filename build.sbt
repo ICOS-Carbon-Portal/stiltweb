@@ -66,10 +66,7 @@ lazy val stiltweb = (project in file("."))
 			"com.typesafe.akka"  %% "akka-stream"                        % akkaVersion cross CrossVersion.for3Use2_13,
 			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.7.0",
 			"se.lu.nateko.cp"    %% "views-core"                         % "0.6.2",
-			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.2.0",
-			"edu.ucar"            % "netcdf4"                            % "4.6.11" excludeAll(
-				ExclusionRule(organization = "edu.ucar", name = "cdm")
-			),
+			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.3.0",
 			"com.typesafe.akka"  %% "akka-testkit"                       % akkaVersion % "test" cross CrossVersion.for3Use2_13,
 			scalaTest
 		),
