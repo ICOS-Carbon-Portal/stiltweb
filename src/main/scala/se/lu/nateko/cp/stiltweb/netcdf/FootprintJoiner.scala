@@ -3,8 +3,8 @@ package se.lu.nateko.cp.stiltweb.netcdf
 import java.nio.file.Path
 import java.nio.file.Files
 import ucar.nc2.NetcdfFiles
-import ucar.nc2.NetcdfFileWriter
 import java.nio.file.StandardCopyOption._
+import ucar.nc2.write.NetcdfFormatWriter
 
 object FootprintJoiner {
 
@@ -18,7 +18,7 @@ object FootprintJoiner {
 			Files.copy(first, target, REPLACE_EXISTING)
 			target.toFile.deleteOnExit()
 
-			val w = NetcdfFileWriter.openExisting(target.toString)
+			val w = NetcdfFormatWriter.openExisting(target.toString).build()
 			try{
 				val footVar = w.findVariable("foot")
 				val timeVar = w.findVariable("time")
