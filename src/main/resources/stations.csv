@@ -21,12 +21,14 @@ BIR,Birkenes 40m,,,NO
 BIR010,Birkenes 10m,BIR,10.0,NO
 BIR050,Birkenes 50m,BIR,50.0,NO
 BIR075,Birkenes 75m,BIR,75.0,NO
+BIS047,Biscarrosse 47m,,,FR
 BOR,Bordeaux,,,FR
 BOR_DW,Bordeaux downwind,,,FR
 BOR_UW,Bordeaux upwind,,,FR
 BRM212,Beromünster 212m,,,CH
 BRM213,,,,CH
-BSC,Black Sea Coast,,,RO
+BSC,Black Sea Constanta,,,RO
+BSD248,Bilsdale 248m,,,GB
 CBW,,,,NL
 CBW027,Cabauw 27m,,,NL
 CBW067,Cabauw 67m,,,NL
@@ -43,12 +45,16 @@ CIB100,CIBA 100m,,,ES
 CLT900,,,,IT
 CMN760,Monte Cimone,CMN,8.0,IT
 CMN_test,,,,IT
+CRA060,Centre de Recherches Atmospheriques 60m,,,FR
+CRP014,Carnsore Point 14m,,,IE
 DAO,,,,CH
 DAV,,,,CH
 DEC,Delta Ebre,,,ES
 DRX,,,,FR
 EGH,Egham,,,GB
 ERERER,,,,SE
+ERS040,Ersa,,,FR
+ERS290,Ersa,,,FR
 EST110,SMEAR Estonia 110m,,,EE
 ET-ACD,,,,SE
 FIK,Finokalia 150m,,,GR
@@ -63,6 +69,7 @@ GIF,Gif-sur-Yvette 2m,,,FR
 GIF010,Gif-sur-Yvette 10m,,,FR
 GIF050,Gif-sur-Yvette 50m,,,FR
 GOL,,,,DE
+GVS,,,,NO
 HAC,Helmos,,,GR
 HAM,Hamburg,,,DE
 HAM_DW,Hamburg downwind,,,DE
@@ -75,6 +82,7 @@ HPB010,Hohenpeissenberg 10m,,,DE
 HPB050,Hohenpeissenberg 50m,HPB,50.0,DE
 HPB093,Hohenpeissenberg 93m,HPB,93.0,DE
 HPB131,Hohenpeissenberg 131m,HPB,131.0,DE
+HPB300,,,,DE
 HTM030,Hyltemossa 30m,HTM,30.0,SE
 HTM070,Hyltemossa 70m,HTM,70.0,SE
 HTM150,Hyltemossa 150m,HTM,150.0,SE
@@ -198,7 +206,7 @@ SMR127,Hyytiälä 127m,,,FI
 SNZ,Sniezka,,,PL
 SOT,,,,CH
 SSL,Schauinsland 12m,SSL,12.0,DE
-SSL12,Schauinsland,,,DE
+SSL12,,,,DE
 SSL255,Schauinsland 35m,SSL,35.0,DE
 STE032,Steinkimmen 32m,STE,32.0,DE
 STE082,Steinkimmen 82m,STE,82.0,DE
@@ -223,6 +231,7 @@ TOH010,Torfhaus 10m,TOH,10.0,DE
 TOH076,Torfhaus 76m,TOH,76.0,DE
 TOH110,Torfhaus 110m,TOH,110.0,DE
 TOH147,Torfhaus 147m,TOH,147.0,DE
+TOH300,,,,DE
 TRN050,Trainou 50m,TRN,50.0,FR
 TRN100,Trainou 100m,TRN,100.0,FR
 TRN180,Trainou 180m,TRN,180.0,FR
@@ -236,9 +245,10 @@ VIE_UW,Vienna upwind,,,AT
 VND,,,,IT
 VOI,Voeikovo,,,RU
 VSD006,Vilsandi 6m,,,EE
-VTO014,Valenia 14m,,,IE
+VTO014,Valentia Island 14m,,,IE
 WAO,Weybourne,WAO,10.0,GB
 WES,Westerland,WES,14.0,DE
 ZRH,Zurich,,,CH
+ZRH112,Zurich Hardau 112m,,,CH
 ZRK,,,,DE
 ZSF,Zugspitze,ZSF,3.0,DE
