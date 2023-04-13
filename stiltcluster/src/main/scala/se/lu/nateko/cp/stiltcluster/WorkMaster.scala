@@ -4,12 +4,13 @@ import java.nio.file.{ Files, Paths }
 
 import scala.collection.mutable.Set
 import scala.concurrent.Future
-import scala.concurrent.duration._
+import scala.concurrent.duration.DurationInt
 import scala.io.Source
 import scala.util.Success
 
 import akka.actor.{ Actor, ActorRef, Props, Terminated }
 import akka.actor.ActorLogging
+import akka.actor.Cancellable
 import akka.util.Timeout
 import java.nio.file.Path
 
@@ -19,13 +20,21 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 
 	var receptionist: ActorRef = context.system.deadLetters
 	val work = Set.empty[StiltSlot]
+	private var connAliveKeeper: Cancellable = Cancellable.alreadyCancelled
 
 	log.info("WorkMaster starting up")
 
-	override def preStart(): Unit = findReceptionist()
+	override def preStart(): Unit =
+		import context.dispatcher
+		findReceptionist()
+		connAliveKeeper = context.system.scheduler.scheduleAtFixedRate(3.minute, 3.minute){
+			() => receptionist ! myStatus()
+		}
+
+	override def postStop(): Unit = connAliveKeeper.cancel()
 
 	def findReceptionist(): Unit = {
-		implicit val timeout: Timeout = Timeout(3.seconds)
+		given Timeout(3.seconds)
 		import context.dispatcher
 
 		def findIt(): Unit = context.actorSelection(receptionistAddr).resolveOne().onComplete{
