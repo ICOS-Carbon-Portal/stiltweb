@@ -27,7 +27,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 	override def preStart(): Unit =
 		import context.dispatcher
 		findReceptionist()
-		connAliveKeeper = context.system.scheduler.scheduleAtFixedRate(3.minute, 3.minute){
+		connAliveKeeper = context.system.scheduler.scheduleAtFixedRate(58.seconds, 58.seconds){
 			() => receptionist ! myStatus()
 		}
 
