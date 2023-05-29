@@ -1,39 +1,71 @@
 @import se.lu.nateko.cp.cpauth.core.PublicAuthConfig
+@import se.lu.nateko.cp.stiltweb.AtmoAccessConfig
 
-(conf: PublicAuthConfig, hasCpLogin: Boolean)
+@(authConf: PublicAuthConfig, atmoConf: AtmoAccessConfig)
 @AtmoAccessPage("Request access to ICOS footprint services"){
+	<script>
+		function atmoAccessLoginUrl(targetLastSegment){
+			const cliendId = "@{atmoConf.ssoClientId}"
+			const authEndpointUrl = "@{atmoConf.openidEndpointUrl}auth"
+			const redirectUri = "https://@{authConf.authHost}/oauth/atmoAccess"
+			const targetUrl = window.location.origin + '/' + targetLastSegment + '/'
+			return (
+				authEndpointUrl + '?client_id=' + encodeURIComponent(cliendId) + '&response_type=code&scope=openid&redirect_uri=' +
+				encodeURIComponent(redirectUri) + '&state=' + encodeURIComponent(targetUrl)
+			)
+		}
+		window.onload = function(){
+			document.getElementById('stiltWorkerLink').href = atmoAccessLoginUrl('worker')
+			document.getElementById('stiltViewerLink').href = atmoAccessLoginUrl('viewer')
+		}
+	</script>
+	<style>
+		.stilt-action{
+			color: #0dcaf0;
+			font-size: xx-large;
+		}
+		.card{
+			margin-right: 10px;
+		}
+		h1,h2{
+			color:#535458
+		}
+	</style>
 }{
-	<h1 class="display-6 fw-bold text-center" style="color:#535458;">ATMO-ACCESS</h1>
-	<h2 style="color:#535458;">STILT station footprint calculation and viewing services</h2>
+	<h1 class="display-6 fw-bold text-center"">ATMO-ACCESS</h1>
+	<h2 class="text-center">STILT station footprint calculation and viewing services</h2>
 
-	<p class="text-center text-muted">The services are provided by ICOS Carbon Portal in the context of ATMO-ACCESS project. Therefore an ATMO-ACCESS login is required to use the services.</p>
+	<p class="text-center text-muted">
+		The services are provided by ICOS Carbon Portal in the context of ATMO-ACCESS project.
+		Therefore an ATMO-ACCESS login is required to use the services.
+	</p>
 
 	<div class="row g-4 py-5 row-cols-1 row-cols-lg-4 justify-content-center">
 
 		<div class="card" >
 			<div class="card-body text-secondary">
-				<h5 class="card-title">STILT Model Run</h5>
-				<p><img src="/static/img/data-curation.png" alt="logo" width="30%"></p>
+				<h5 class="card-title"><i class="fas fa-rocket stilt-action"></i> STILT Model Run</h5>
 				<p class="card-text">Login and proceed to STILT model run</p>
-				<div class="inner"><a href="/request" class="btn btn-danger" role="button">Login</a></div>
+				<div class="inner"><a id="stiltWorkerLink" href="" class="btn btn-info" role="button">Log in</a></div>
 			</div>
 		</div>
 
 		<div class="card" >
 			<div class="card-body text-secondary">
-				<h5 class="card-title">STILT Products and Information</h5>
-				<p><img src="/static/img/data-access.png" alt="logo" width="30%"></p>
+				<h5 class="card-title"><i class="fas fa-search stilt-action"></i> STILT Products and Information</h5>
 				<p class="card-text">Login and proceed to STILT results viewer</p>
-				<div class="inner"><a href="/data-access" class="btn btn-danger" role="button">Access Data</a></div>
+				<div class="inner"><a id="stiltViewerLink" href="" class="btn btn-info" role="button">Log in</a></div>
 			</div>
 		</div>
 
 		<div class="card">
 			<div class="card-body text-secondary">
-				<h5 class="card-title">Support</h5>
-				<p><img src="/static/img/general-support.png" alt="logo" width="30%"></p>
-				<p class="card-text">Do you have questions regarding the STILT products in ATMO-ACCESS?</p>
-				<div class="inner"><a href="/support" class="btn btn-danger" role="button">Get Support</a></div>
+				<h5 class="card-title"><i class="fas fa-question-circle stilt-action"></i> Support</h5>
+				<p class="card-text">Do you have questions regarding STILT model runner or results viewer?</p>
+				<div class="inner">
+					<a href="https://www.icos-cp.eu/about-stilt-calculator" class="btn btn-info" role="button">Runner support</a>
+					<a href="https://www.icos-cp.eu/about-stilt-viewer" class="btn btn-info" role="button">Viewer support</a>
+				</div>
 			</div>
 		</div>
 	</div>

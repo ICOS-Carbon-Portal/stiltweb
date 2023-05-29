@@ -56,7 +56,7 @@ class AtmoAccessClient(conf: AtmoAccessConfig)(using system: ActorSystem):
 	private def fetchNewAccessToken(): Future[AccessToken] =
 		val req = HttpRequest(
 			method = HttpMethods.POST,
-			uri = conf.tokenEndpointUrl,
+			uri = conf.openidEndpointUrl + "token",
 			entity = FormData(
 				"grant_type" -> "password",
 				"client_id"  -> conf.clientId,

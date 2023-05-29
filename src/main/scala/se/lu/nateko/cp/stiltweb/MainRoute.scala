@@ -83,7 +83,10 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			} ~
 			redirectToTrailingSlashIfMissing(StatusCodes.Found){
 				pathSingleSlash {
-					complete(views.html.ViewerPage(config.auth))
+					user{userId =>
+						complete(views.html.ViewerPage(config.auth))
+					} ~
+					complete(views.html.LoginPage(config.auth, config.atmoAccess))
 				}
 			}
 		} ~
@@ -106,7 +109,10 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		get {
 			pathEnd{redirect("worker/", StatusCodes.Found)} ~
 			pathSingleSlash {
-				complete(views.html.WorkerPage(config.auth))
+				user{userId =>
+					complete(views.html.WorkerPage(config.auth))
+				} ~
+				complete(views.html.LoginPage(config.auth, config.atmoAccess))
 			} ~
 			path("worker.js"){
 				getFromResource("www/worker.js")
@@ -131,7 +137,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 					} ~
 					complete((StatusCodes.BadRequest, "Wrong request payload, expected a proper Job object"))
 				} ~
-				complete((StatusCodes.Forbidden, "Please log in with Carbon Portal"))
+				complete((StatusCodes.Forbidden, "Please log in with ATMO ACCESS"))
 			} ~
 			path("deletejob" / Segment) { jobId =>
 				user{userId =>
@@ -151,10 +157,10 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 								complete((StatusCodes.BadRequest, "No such Job ID"))
 						}
 					}
-				}
+				} ~
+				complete(StatusCodes.Forbidden -> "Please log in with ATMO ACCESS")
 			}
 		}
-
 	} ~
 	get{
 		pathEndOrSingleSlash{

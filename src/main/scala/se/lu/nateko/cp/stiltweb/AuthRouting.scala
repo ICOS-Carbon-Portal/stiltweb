@@ -17,20 +17,16 @@ import scala.util.Success
 
 class AuthRouting(authConfig: PublicAuthConfig):
 
-	private[this] val authenticator = Authenticator(authConfig).get
+	private val authenticator = Authenticator(authConfig).get
 
-	val authToken: Directive1[AuthToken] = cookie(authConfig.authCookieName).flatMap{cookie =>
+	val user: Directive1[UserId] = cookie(authConfig.authCookieName).flatMap{cookie =>
 		CookieToToken.recoverToken(cookie.value).flatMap(authenticator.unwrapToken) match
+			case Success(token) if token.source == AuthSource.AtmoAccess =>
+				provide(token.userId)
 			case Success(token) =>
-				provide(token)
+				reject(CpauthAuthFailedRejection("User did not log in through ATMO ACCESS"))
 			case Failure(err) =>
 				reject(CpauthAuthFailedRejection("Authentication cookie invalid or absent: " + toMessage(err)))
-	}
-
-	val user: Directive1[UserId] = authToken.flatMap{token =>
-		if token.source != AuthSource.AtmoAccess then
-			reject(CpauthAuthFailedRejection("User did not log in through ATMO ACCESS"))
-		else provide(token.userId)
 	}
 
 	private def toMessage(err: Throwable): String =
