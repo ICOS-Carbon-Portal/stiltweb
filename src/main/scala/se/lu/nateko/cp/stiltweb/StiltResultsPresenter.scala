@@ -110,9 +110,8 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	}
 
 	private def listSlotsWithFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[Slot] =
-		reduceToSingleYearOp(listSlots(stationId, _, _, _))(fromDate, toDate).collect{
-			case slot @ (fpDir, _) if Files.exists(fpDir.resolve(StiltResultFileType.Foot.toString)) => slot
-		}
+		//Assuming here that if the slot folder exists, then the footprint has been saved to disk
+		reduceToSingleYearOp(listSlots(stationId, _, _, _))(fromDate, toDate)
 
 	private def yearPath(stationId: String, year: Year) = archiver.getYearDir(stationId, year.getValue)
 
