@@ -19,7 +19,9 @@ import spray.json.*
 
 import java.time.Instant
 import scala.concurrent.Future
+import scala.util.Failure
 import scala.util.Success
+import scala.util.control.NoStackTrace
 
 class AtmoAccessClient(conf: AtmoAccessConfig)(using system: ActorSystem):
 	import AtmoAccessClient.*
@@ -29,7 +31,7 @@ class AtmoAccessClient(conf: AtmoAccessConfig)(using system: ActorSystem):
 	private val http = Http()
 
 	def log(info: AppInfo): Future[Done] =
-		for
+		val doneFut = for
 			token <- getAccessToken()
 			entity <- Marshal(info).to[RequestEntity]
 			req = HttpRequest(
@@ -41,8 +43,14 @@ class AtmoAccessClient(conf: AtmoAccessConfig)(using system: ActorSystem):
 			res <- http.singleRequest(req)
 			resTxt <- Unmarshal(res.entity).to[String]
 			_ <- if res.status.isSuccess then Future.successful(Done)
-				else Future.failed(Exception(s"Failed to log application info to ATMO ACCESS VA API: $resTxt"))
+				else Future.failed(new Exception(resTxt) with NoStackTrace)
 		yield Done
+		doneFut.recover{
+			case exc =>
+				system.log.warning(s"Failed to log application info to ATMO ACCESS VA API: ${exc.getMessage}")
+				Done
+		}
+	end log
 
 	private def getAccessToken(): Future[AccessToken] = token
 		.filter(_.isFresh())
