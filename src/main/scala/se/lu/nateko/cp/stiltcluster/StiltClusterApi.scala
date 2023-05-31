@@ -15,6 +15,7 @@ import akka.util.Timeout
 import se.lu.nateko.cp.stiltweb.ConfigReader
 import se.lu.nateko.cp.stiltweb.state.Archiver
 import akka.stream.ThrottleMode
+import se.lu.nateko.cp.stiltweb.AtmoAccessClient
 
 
 class StiltClusterApi {
@@ -32,8 +33,9 @@ class StiltClusterApi {
 	}
 
 	val archiver = new Archiver(stateDir, stiltConf.slotStepInMinutes)
+	val atmoClient = AtmoAccessClient(stiltConf.atmoAccess)(using system)
 
-	private val receptionist = system.actorOf(WorkReceptionist.props(archiver), name = "receptionist")
+	private val receptionist = system.actorOf(WorkReceptionist.props(archiver, atmoClient), name = "receptionist")
 	system.scheduler.scheduleAtFixedRate(5.seconds, 5.seconds, receptionist, DistributeWork)
 
 	def enqueueJob(job: Job): Unit = receptionist ! job

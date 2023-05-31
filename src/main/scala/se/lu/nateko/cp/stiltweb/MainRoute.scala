@@ -33,7 +33,8 @@ import DefaultJsonProtocol.{StringJsonFormat, JsValueFormat, immSeqFormat}
 class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 
 	val authRouting = new AuthRouting(config.auth)
-	import authRouting.user
+	import cluster.atmoClient
+	import authRouting.{user, userReq}
 
 	private val service = new StiltResultsPresenter(config)
 
@@ -126,7 +127,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		} ~
 		post{
 			path("enqueuejob"){
-				user{userId =>
+				userReq{userId =>
 					entity(as[Job]){job =>
 						if(job.userId == userId.email){
 							cluster.enqueueJob(job)
@@ -136,11 +137,10 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 						}
 					} ~
 					complete((StatusCodes.BadRequest, "Wrong request payload, expected a proper Job object"))
-				} ~
-				complete((StatusCodes.Forbidden, "Please log in with ATMO ACCESS"))
+				}
 			} ~
 			path("deletejob" / Segment) { jobId =>
-				user{userId =>
+				userReq{userId =>
 					if (config.admins.exists(_ == userId.email)) {
 						cluster.cancelJob(jobId)
 						complete(StatusCodes.OK)
@@ -157,8 +157,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 								complete((StatusCodes.BadRequest, "No such Job ID"))
 						}
 					}
-				} ~
-				complete(StatusCodes.Forbidden -> "Please log in with ATMO ACCESS")
+				}
 			}
 		}
 	} ~

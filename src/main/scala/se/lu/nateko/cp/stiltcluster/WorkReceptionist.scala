@@ -6,8 +6,10 @@ import akka.actor.Terminated
 import se.lu.nateko.cp.stiltweb.JobDir
 import se.lu.nateko.cp.stiltweb.state.Archiver
 import se.lu.nateko.cp.stiltweb.state.State
+import se.lu.nateko.cp.stiltweb.AtmoAccessClient
+import se.lu.nateko.cp.stiltweb.AtmoAccessClient.AppInfo
 
-class WorkReceptionist(archiver: Archiver) extends StreamPublisher[DashboardInfo] with ActorLogging {
+class WorkReceptionist(archiver: Archiver, atmoClient: AtmoAccessClient) extends StreamPublisher[DashboardInfo] with ActorLogging {
 
 	val state = new State(archiver)
 
@@ -78,7 +80,12 @@ class WorkReceptionist(archiver: Archiver) extends StreamPublisher[DashboardInfo
 
 	def finishJob(job: Job): Unit =
 		log.info(s"Done: $job")
+		atmoClient.log(AppInfo(
+			user = UserId(job.userId),
+			
+		))
 		jobDir(job).markAsDone()
+
 
 	def startJob(job: Job): Unit =
 		log.info(s"Starting $job")
@@ -95,4 +102,4 @@ class WorkReceptionist(archiver: Archiver) extends StreamPublisher[DashboardInfo
 }
 
 object WorkReceptionist:
-	def props(archiver: Archiver) = Props.create(classOf[WorkReceptionist], archiver)
+	def props(archiver: Archiver, atmoClient: AtmoAccessClient) = Props.create(classOf[WorkReceptionist], archiver, atmoClient)

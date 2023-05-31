@@ -14,6 +14,7 @@ import se.lu.nateko.cp.cpauth.core.UserId
 
 import scala.util.Failure
 import scala.util.Success
+import akka.http.scaladsl.model.StatusCodes
 
 class AuthRouting(authConfig: PublicAuthConfig):
 
@@ -28,6 +29,8 @@ class AuthRouting(authConfig: PublicAuthConfig):
 			case Failure(err) =>
 				reject(CpauthAuthFailedRejection("Authentication cookie invalid or absent: " + toMessage(err)))
 	}
+
+	val userReq: Directive1[UserId] = user | complete(StatusCodes.Unauthorized -> "Please log in with ATMO ACCESS")
 
 	private def toMessage(err: Throwable): String =
 		val msg = err.getMessage
