@@ -5,6 +5,7 @@ import java.nio.file.Files
 import ucar.nc2.NetcdfFiles
 import java.nio.file.StandardCopyOption._
 import ucar.nc2.write.NetcdfFormatWriter
+import ucar.nc2.write.NetcdfFileFormat
 
 object FootprintJoiner {
 
@@ -18,7 +19,11 @@ object FootprintJoiner {
 			Files.copy(first, target, REPLACE_EXISTING)
 			target.toFile.deleteOnExit()
 
-			val w = NetcdfFormatWriter.openExisting(target.toString).build()
+			val w = NetcdfFormatWriter.builder()
+				.setFormat(NetcdfFileFormat.NETCDF4)
+				.setNewFile(false)
+				.setLocation(target.toString)
+				.build()
 			try{
 				val footVar = w.findVariable("foot")
 				val timeVar = w.findVariable("time")
