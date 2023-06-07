@@ -8,8 +8,6 @@ import akka.http.scaladsl.marshalling.ToResponseMarshallable.apply
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
-import akka.http.scaladsl.server.RouteResult.route2HandlerFlow
-import akka.stream.ActorMaterializer
 import scala.util.{ Failure, Success }
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import scala.concurrent.ExecutionContext

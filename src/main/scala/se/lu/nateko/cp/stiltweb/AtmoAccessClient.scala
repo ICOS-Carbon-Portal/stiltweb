@@ -19,7 +19,6 @@ import spray.json.*
 
 import java.time.Instant
 import scala.concurrent.Future
-import scala.util.Failure
 import scala.util.Success
 import scala.util.control.NoStackTrace
 

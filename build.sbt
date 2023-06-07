@@ -1,4 +1,4 @@
-ThisBuild / scalaVersion := "3.2.0"
+ThisBuild / scalaVersion := "3.3.0"
 
 Global / cancelable := true
 
@@ -10,11 +10,13 @@ lazy val commonSettings = Seq(
 		"-unchecked",
 		"-feature",
 		"-deprecation",
+		//"-Wvalue-discard"
+		//"-Wunused:all"
 	)
 )
 
-val akkaVersion = "2.6.17"
-val akkaHttpVersion = "10.2.7"
+val akkaVersion = "2.6.20"
+val akkaHttpVersion = "10.2.10"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "3.2.10" % "test"
 

@@ -4,7 +4,6 @@ package se.lu.nateko.cp.stiltweb
 import akka.http.javadsl.server.CustomRejection
 import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives.*
-import akka.http.scaladsl.server.Route
 import se.lu.nateko.cp.cpauth.core.AuthSource
 import se.lu.nateko.cp.cpauth.core.AuthToken
 import se.lu.nateko.cp.cpauth.core.Authenticator

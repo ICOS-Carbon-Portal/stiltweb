@@ -3,15 +3,12 @@ package se.lu.nateko.cp.stiltweb
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshalling.Marshaller.fromStatusCodeAndValue
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import akka.http.scaladsl.marshalling.{ToResponseMarshallable => TRM}
-import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString

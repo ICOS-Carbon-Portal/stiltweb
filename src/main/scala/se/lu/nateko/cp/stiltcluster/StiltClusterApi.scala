@@ -5,7 +5,6 @@ import java.nio.file.Paths
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
-import akka.actor.ActorSelection
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.ws.Message
 import akka.pattern.ask

@@ -2,7 +2,6 @@ package se.lu.nateko.cp.stiltweb.marshalling
 
 import java.time.{ Instant, LocalDate }
 import akka.actor.Address
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
 import se.lu.nateko.cp.data.formats.netcdf.Raster
@@ -15,8 +14,7 @@ import se.lu.nateko.cp.stiltweb.StiltStationIds
 import play.twirl.api.Html
 
 object StiltJsonSupport {
-	import SprayJsonSupport._
-	import DefaultJsonProtocol._
+	import DefaultJsonProtocol.*
 
 	given ToResponseMarshaller[Raster] = RasterMarshalling.marshaller
 	given ToResponseMarshaller[Html] = TemplatePageMarshalling.marshaller
