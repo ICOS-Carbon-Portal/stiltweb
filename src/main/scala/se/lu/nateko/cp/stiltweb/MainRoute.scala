@@ -73,20 +73,15 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 					complete(footprintsList.map(_.toString).toSeq)
 				}
 			} ~
-			path("joinfootprints") {
-				parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]) { (stationId, fromDate, toDate) =>
-					val netcdfPathFut = Future(service.mergeFootprintsToNetcdf(stationId, fromDate, toDate))(cluster.ioDispatcher)
-					withRequestTimeout(5.minutes){
-						onSuccess(netcdfPathFut){netcdf =>
-							onResponseStreamed(() => Files.deleteIfExists(netcdf)){
-								respondWithAttachment(stationId + ".nc"){
-									getFromFile(netcdf.toFile)
-								}
-							}
-						}
-					}
-				}
-			} ~
+			path("joinfootprints"):
+				parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]): (stationId, fromDate, toDate) =>
+					val zipPathFut = service.packageResults(stationId, fromDate, toDate)(using cluster.ioDispatcher)
+					withRequestTimeout(5.minutes):
+						onSuccess(zipPathFut): zipPath =>
+							onResponseStreamed(() => Files.deleteIfExists(zipPath)):
+								respondWithAttachment(zipPath.getFileName.toString):
+									getFromFile(zipPath.toFile)
+			~
 			path("stationinfo") {
 				import StationInfoMarshalling.given
 				complete(service.getStationInfos)
@@ -103,20 +98,18 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				}
 			}
 		} ~
-		post {
-			entity(as[StiltResultsRequest]) { req =>
-				withRequestTimeout(5.minutes){
-					path("stiltresult"){
+		post:
+			entity(as[StiltResultsRequest]): req =>
+				withRequestTimeout(5.minutes):
+					path("stiltresult"):
 						complete(service.getStiltResults(req).toSeq)
-					} ~
-					path("stiltrawresult") {
+					~
+					path("stiltrawresult"):
 						complete(service.getStiltRawResults(req).toSeq)
-					} ~
+					~
 					complete(StatusCodes.NotFound)
-				}
-			} ~
+			~
 			complete(StatusCodes.BadRequest -> "Expected a correct stilt result request JSON payload")
-		}
 	} ~
 	pathPrefix("worker"){
 		get {

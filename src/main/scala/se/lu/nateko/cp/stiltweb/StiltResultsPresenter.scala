@@ -1,20 +1,5 @@
 package se.lu.nateko.cp.stiltweb
 
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.MonthDay
-import java.time.Year
-import java.time.ZoneOffset
-
-import scala.jdk.CollectionConverters._
-import scala.io.{ Source => IoSource }
-import scala.util.Try
-
 import se.lu.nateko.cp.data.formats.netcdf.Raster
 import se.lu.nateko.cp.data.formats.netcdf.ViewServiceFactory
 import se.lu.nateko.cp.stiltcluster.StiltPosition
@@ -26,11 +11,30 @@ import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
 import se.lu.nateko.cp.stiltweb.csv.RowCache
 import se.lu.nateko.cp.stiltweb.netcdf.FootprintJoiner
 import se.lu.nateko.cp.stiltweb.state.Archiver
+import spray.json.JsArray
 import spray.json.JsNull
 import spray.json.JsNumber
-import spray.json.JsValue
 import spray.json.JsObject
-import spray.json.JsArray
+import spray.json.JsValue
+
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.MonthDay
+import java.time.Year
+import java.time.ZoneOffset
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.io.{ Source => IoSource }
+import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 class StiltResultsPresenter(config: StiltWebConfig) {
 	import StiltResultsPresenter._
@@ -81,6 +85,22 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
+	def getCsvRows(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[String] =
+		val slotRows = reduceToSingleYearOp(listSlotRows(stationId, _, _, _))(fromDate, toDate).to(LazyList)
+
+		val (_, row0) = slotRows.headOption.getOrElse:
+			throw Exception(s"No results available for $stationId from $fromDate to $toDate")
+
+		val cols = row0.keys.toIndexedSeq
+
+		val dataRows = slotRows.map:
+			(dt, row) => dt.toString +: cols.map(row.apply)
+
+		val headerCols = DateColName +: cols
+
+		(headerCols +: dataRows).iterator.map(_.mkString(","))
+	end getCsvRows
+
 	def getStiltResults(req: StiltResultsRequest): Iterator[JsValue] = fetchStiltResults(listSlotRows, req)
 	def getStiltRawResults(req: StiltResultsRequest): Iterator[JsValue] = fetchStiltResults(listRawSlotRows, req)
 
@@ -88,7 +108,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		reduceToSingleYearOp(fetcher(req.stationId, _, _, _))(req.fromDate, req.toDate)
 			.map{ case (dt, row) =>
 				def jsFromCol(col: String): JsValue = col match {
-					case "isodate" =>
+					case DateColName =>
 						JsNumber(dt.toEpochSecond(ZoneOffset.UTC))
 					case col =>
 						row.get(col).fold[JsValue](JsNull)(n => JsNumber(n))
@@ -108,6 +128,37 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 			.map(_._1.resolve(StiltResultFileType.Foot.toString))
 		FootprintJoiner.joinToTempFile(footPaths)
 	}
+
+	def packageResults(stationId: String, fromDate: LocalDate, toDate: LocalDate)(using ExecutionContext): Future[Path] =
+		val netcdfFut = Future(mergeFootprintsToNetcdf(stationId, fromDate, toDate))
+		val resPrefix = s"${stationId}_${fromDate}_${toDate}"
+		val zosFut = Future:
+			val zipPath = Files.createTempFile(s"StiltResult_${resPrefix}_", ".zip")
+			val zipFile = zipPath.toFile
+			zipFile.deleteOnExit()
+			val fos = FileOutputStream(zipFile)
+			val zos = ZipOutputStream(fos)
+			try
+				zos.setLevel(0)
+				zos.putNextEntry(ZipEntry(s"${resPrefix}_timeseries.csv"))
+				getCsvRows(stationId, fromDate, toDate).foreach:
+					row => zos.write(row.getBytes()); zos.write('\n')
+				zos.closeEntry()
+			catch ex =>
+				zos.close(); Files.deleteIfExists(zipPath); throw ex
+			zipPath -> zos
+
+		for netcdfPath <- netcdfFut; (zipPath, zos) <- zosFut yield
+			try
+				zos.putNextEntry(ZipEntry(s"${resPrefix}_footprint.nc"))
+				Files.copy(netcdfPath, zos)
+				zos.closeEntry()
+			catch ex =>
+				zos.close(); Files.deleteIfExists(zipPath); throw ex
+			finally
+				zos.close()
+			zipPath
+
 
 	private def listSlotsWithFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[Slot] =
 		//Assuming here that if the slot folder exists, then the footprint has been saved to disk
@@ -223,6 +274,7 @@ object StiltResultsPresenter{
 	type CsvRow = Map[String, Double]
 	type SlotCsvRow = (LocalDateTime, CsvRow)
 	type SlotCsvRowFetcher = (String, Year, Option[MonthDay], Option[MonthDay]) => Iterator[SlotCsvRow]
+	val DateColName = "isodate"
 
 	// ex: 2007
 	val yearDirPattern = """^(\d{4})$""".r
