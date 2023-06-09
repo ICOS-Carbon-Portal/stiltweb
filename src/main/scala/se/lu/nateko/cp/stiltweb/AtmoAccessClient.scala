@@ -29,6 +29,8 @@ class AtmoAccessClient(conf: AtmoAccessConfig)(using system: ActorSystem):
 	private var token: Option[AccessToken] = None
 	private val http = Http()
 
+	export conf.baseStiltUrl
+
 	def log(info: AppInfo): Future[Done] =
 		val doneFut = for
 			token <- getAccessToken()

@@ -7,7 +7,8 @@ import akka.http.scaladsl.marshalling.{ToResponseMarshallable => TRM}
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.Directive0
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directive1
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.scaladsl.Flow
@@ -45,6 +46,9 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 
 	given [T: RootJsonWriter]: ToEntityMarshaller[T] = SprayJsonSupport.sprayJsonMarshaller
 
+	val resultBatchSpec: Directive1[ResultBatch] =
+		parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]).as(ResultBatch.apply _)
+
 	def route: Route = pathPrefix("viewer"){
 		get{
 			path("footprint"){
@@ -56,31 +60,40 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			path("viewer.js") {
 				getFromResource("www/viewer.js")
 			} ~
-			(path("listfootprints") & userReq){user =>
-				parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]) { (stationId, fromDate, toDate) =>
+			path("listfootprints"):
+				resultBatchSpec: batch =>
 					val startD = Instant.now()
-					val footprintsList = service.listFootprints(stationId, fromDate, toDate)
-					atmoClient.log(
-						AppInfo(
-							user = user,
-							startDate = startD,
-							endDate = Some(Instant.now()),
-							resultUrl = s"https://stilt.icos-cp.eu/viewer/listfootprints?stationId=$stationId&fromDate=$fromDate&toDate=$toDate",
-							infoUrl = None,
-							comment = Some(s"Fetching a list of footprints for station $stationId")
-						)
-					)
+					val footprintsList = service.listFootprints(batch)
 					complete(footprintsList.map(_.toString).toSeq)
-				}
-			} ~
-			path("joinfootprints"):
-				parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]): (stationId, fromDate, toDate) =>
-					val zipPathFut = service.packageResults(stationId, fromDate, toDate)(using cluster.ioDispatcher)
+			~
+			(path("joinfootprints") & userReq){ user =>
+				resultBatchSpec: batch =>
+					val zipPathFut = service.packageResults(batch)(using cluster.ioDispatcher)
+					val startTime = Instant.now()
+					import batch.{stationId, fromDate, toDate}
 					withRequestTimeout(5.minutes):
 						onSuccess(zipPathFut): zipPath =>
-							onResponseStreamed(() => Files.deleteIfExists(zipPath)):
-								respondWithAttachment(zipPath.getFileName.toString):
-									getFromFile(zipPath.toFile)
+							val relPath = service.archiver.stationsDir.relativize(zipPath).toString
+							import atmoClient.baseStiltUrl
+							atmoClient.log:
+								AppInfo(
+									user = user,
+									startDate = startTime,
+									endDate = Some(Instant.now()),
+									resultUrl = s"$baseStiltUrl/viewer/downloadresults/$relPath",
+									infoUrl = Some(s"$baseStiltUrl/viewer/?stationId=${stationId}&fromDate=${fromDate}&toDate=${toDate}"),
+									comment = Some(s"Packaging STILT results for station $stationId from $fromDate to $toDate")
+								)
+							complete(relPath)
+							// onResponseStreamed(() => Files.deleteIfExists(zipPath)):
+			} ~
+			pathPrefix("downloadresults" / RemainingPath): path =>
+				val filePath = service.archiver.stationsDir.resolve(path.toString)
+				getFromFile(filePath.toFile)
+			~
+			path("listresults"):
+				resultBatchSpec: batch =>
+					complete(???)
 			~
 			path("stationinfo") {
 				import StationInfoMarshalling.given

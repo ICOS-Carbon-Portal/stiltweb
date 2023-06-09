@@ -83,16 +83,16 @@ class WorkReceptionist(archiver: Archiver, atmoClient: AtmoAccessClient) extends
 
 	def finishJob(job: Job): Unit =
 		log.info(s"Done: $job")
-		for startD <- job.timeStarted do atmoClient.log(
+		for startD <- job.timeStarted do atmoClient.log:
+			import atmoClient.baseStiltUrl
 			AppInfo(
 				user = UserId(job.userId),
 				startDate = startD,
 				endDate = job.timeStopped.orElse(Some(Instant.now)),
-				resultUrl = s"https://stilt.icos-cp.eu/viewer/?stationId=${job.siteId}&fromDate=${job.start}&toDate=${job.stop}",
+				resultUrl = s"$baseStiltUrl/viewer/?stationId=${job.siteId}&fromDate=${job.start}&toDate=${job.stop}",
 				infoUrl = None,
 				comment = Some(s"STILT run for station ${job.siteId} (lat = ${job.lat}, lon = ${job.lon}) from ${job.start} to ${job.stop}")
 			)
-		)
 		jobDir(job).markAsDone()
 
 

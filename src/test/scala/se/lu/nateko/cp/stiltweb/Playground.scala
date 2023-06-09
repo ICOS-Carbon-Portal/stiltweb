@@ -14,7 +14,7 @@ object Playground:
 		user = UserId("testing.dummy@icos-cp.eu"),
 		startDate = Instant.now(),
 		endDate = None,
-		resultUrl = "https://stilt.icos-cp.eu/dummyForTesting",
+		resultUrl = s"${atmo.baseStiltUrl}/dummyForTesting",
 		infoUrl = None,
 		comment = Some("This is a test from ICOS' footprints service")
 	)

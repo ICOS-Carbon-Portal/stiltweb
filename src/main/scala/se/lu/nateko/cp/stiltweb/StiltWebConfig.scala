@@ -20,7 +20,8 @@ case class AtmoAccessConfig(
 	clientId: String,
 	ssoClientId: String,
 	userName: String,
-	userPassword: String
+	userPassword: String,
+	baseStiltUrl: String,
 )
 
 case class StiltWebConfig(
@@ -37,7 +38,7 @@ object ConfigReader extends DefaultJsonProtocol{
 
 	given JsonFormat[PublicAuthConfig] = jsonFormat4(PublicAuthConfig.apply)
 	given JsonFormat[NetCdfConfig] = jsonFormat4(NetCdfConfig.apply)
-	given JsonFormat[AtmoAccessConfig] = jsonFormat6(AtmoAccessConfig.apply)
+	given JsonFormat[AtmoAccessConfig] = jsonFormat7(AtmoAccessConfig.apply)
 	given JsonFormat[StiltWebConfig] = jsonFormat7(StiltWebConfig.apply)
 
 	lazy val default: StiltWebConfig = fromAppConfig(ConfigLoader.localWithDefault())

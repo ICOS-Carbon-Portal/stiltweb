@@ -9,7 +9,7 @@ import se.lu.nateko.cp.stiltweb.csv.LocalDayTime
 import se.lu.nateko.cp.stiltweb.csv.RawRow
 import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
 import se.lu.nateko.cp.stiltweb.csv.RowCache
-import se.lu.nateko.cp.stiltweb.netcdf.FootprintJoiner
+import se.lu.nateko.cp.stiltweb.zip.Packager
 import se.lu.nateko.cp.stiltweb.state.Archiver
 import spray.json.JsArray
 import spray.json.JsNull
@@ -35,11 +35,14 @@ import scala.concurrent.Future
 import scala.io.{ Source => IoSource }
 import scala.jdk.CollectionConverters._
 import scala.util.Try
+import java.nio.file.StandardCopyOption
+
+case class ResultBatch(stationId: String, fromDate: LocalDate, toDate: LocalDate)
 
 class StiltResultsPresenter(config: StiltWebConfig) {
 	import StiltResultsPresenter._
 
-	private val archiver = new Archiver(Paths.get(config.stateDirectory), config.slotStepInMinutes)
+	val archiver = new Archiver(Paths.get(config.stateDirectory), config.slotStepInMinutes)
 
 	def getStationInfos: Seq[StiltStationInfo] = {
 		import StiltStationIds.{STILT_id, STILT_name, ICOS_id, ICOS_height, Country}
@@ -85,7 +88,8 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	def getCsvRows(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[String] =
+	def getCsvRows(batch: ResultBatch): Iterator[String] =
+		import batch.{stationId, fromDate, toDate}
 		val slotRows = reduceToSingleYearOp(listSlotRows(stationId, _, _, _))(fromDate, toDate).to(LazyList)
 
 		val (_, row0) = slotRows.headOption.getOrElse:
@@ -94,7 +98,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		val cols = row0.keys.toIndexedSeq
 
 		val dataRows = slotRows.map:
-			(dt, row) => dt.toString +: cols.map(row.apply)
+			(dt, row) => dt.toString +: cols.map(row.getOrElse(_, ""))
 
 		val headerCols = DateColName +: cols
 
@@ -120,47 +124,32 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 				}
 			}
 
-	def listFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[LocalDateTime] =
-		listSlotsWithFootprints(stationId, fromDate, toDate).map(_._2)
+	def listFootprints(batch: ResultBatch): Iterator[LocalDateTime] =
+		listSlotsWithFootprints(batch).map(_._2)
 
-	def mergeFootprintsToNetcdf(stationId: String, fromDate: LocalDate, toDate: LocalDate): Path = {
-		val footPaths = listSlotsWithFootprints(stationId, fromDate, toDate)
-			.map(_._1.resolve(StiltResultFileType.Foot.toString))
-		FootprintJoiner.joinToTempFile(footPaths)
-	}
+	def packageResults(batch: ResultBatch)(using ExecutionContext): Future[Path] =
+		val footPathsFut = Future:
+			listSlotsWithFootprints(batch)
+				.map(_._1.resolve(StiltResultFileType.Foot.toString))
+		val csvRowsFut = Future(getCsvRows(batch))
 
-	def packageResults(stationId: String, fromDate: LocalDate, toDate: LocalDate)(using ExecutionContext): Future[Path] =
-		val netcdfFut = Future(mergeFootprintsToNetcdf(stationId, fromDate, toDate))
-		val resPrefix = s"${stationId}_${fromDate}_${toDate}"
-		val zosFut = Future:
-			val zipPath = Files.createTempFile(s"StiltResult_${resPrefix}_", ".zip")
-			val zipFile = zipPath.toFile
-			zipFile.deleteOnExit()
-			val fos = FileOutputStream(zipFile)
-			val zos = ZipOutputStream(fos)
-			try
-				zos.setLevel(0)
-				zos.putNextEntry(ZipEntry(s"${resPrefix}_timeseries.csv"))
-				getCsvRows(stationId, fromDate, toDate).foreach:
-					row => zos.write(row.getBytes()); zos.write('\n')
-				zos.closeEntry()
-			catch ex =>
-				zos.close(); Files.deleteIfExists(zipPath); throw ex
-			zipPath -> zos
+		val resPrefix = resultFilePrefix(batch)
+		for
+			footPaths <- footPathsFut
+			csvRows <- csvRowsFut
+			zipPath <- Packager.zipResults(footPaths, csvRows, resPrefix)
+			md5 <- Packager.md5Hex(zipPath)
+		yield
+			val resPath = archiver.stationsDir.resolve(batch.stationId).resolve(s"${resPrefix}_${md5}.zip")
+			Files.move(zipPath, resPath, StandardCopyOption.REPLACE_EXISTING)
+			resPath
+	end packageResults
 
-		for netcdfPath <- netcdfFut; (zipPath, zos) <- zosFut yield
-			try
-				zos.putNextEntry(ZipEntry(s"${resPrefix}_footprint.nc"))
-				Files.copy(netcdfPath, zos)
-				zos.closeEntry()
-			catch ex =>
-				zos.close(); Files.deleteIfExists(zipPath); throw ex
-			finally
-				zos.close()
-			zipPath
+	def resultFilePrefix(batch: ResultBatch): String =
+		s"${batch.stationId}_${batch.fromDate}_${batch.toDate}"
 
-
-	private def listSlotsWithFootprints(stationId: String, fromDate: LocalDate, toDate: LocalDate): Iterator[Slot] =
+	private def listSlotsWithFootprints(batch: ResultBatch): Iterator[Slot] =
+		import batch.{stationId, fromDate, toDate}
 		//Assuming here that if the slot folder exists, then the footprint has been saved to disk
 		reduceToSingleYearOp(listSlots(stationId, _, _, _))(fromDate, toDate)
 
