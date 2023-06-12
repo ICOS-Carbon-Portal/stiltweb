@@ -1,7 +1,7 @@
 import {
 	FETCHED_INITDATA, FETCHED_STATIONDATA, FETCHED_RASTER, SET_SELECTED_STATION, SET_SELECTED_SCOPE,
 	SET_DATE_RANGE, SET_VISIBILITY, INCREMENT_FOOTPRINT, PUSH_PLAY, SET_DELAY, ERROR,
-	SHOW_SPINNER, HIDE_SPINNER, SET_FOOTPRINT
+	SHOW_SPINNER, HIDE_SPINNER, SET_FOOTPRINT, FETCHED_RESULT_PACKS_LIST
 } from './actions';
 import {makeTimeSeriesGraphData} from './models/timeSeriesHelpers';
 import FootprintsRegistry from './models/FootprintsRegistry';
@@ -66,8 +66,11 @@ export default function(state, action){
 					? makeTimeSeriesGraphData(action, seriesId)
 					: state.timeSeriesData;
 
-				return update({timeSeriesData, footprints, footprintsFetcher});
+				return update({timeSeriesData, footprints, footprintsFetcher, resultPacks: action.packs});
 			} else return state;
+
+		case FETCHED_RESULT_PACKS_LIST:
+			return update({resultPacks: action.packs})
 
 		case SET_DATE_RANGE:
 			const dateRange = action.dateRange;

@@ -13,6 +13,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
+import se.lu.nateko.cp.cpauth.core.UserId
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import se.lu.nateko.cp.stiltweb.AtmoAccessClient.AppInfo
@@ -31,8 +32,9 @@ import scala.util.Try
 
 import SprayJsonSupport.sprayJsonUnmarshaller
 import DefaultJsonProtocol.{StringJsonFormat, JsValueFormat, immSeqFormat}
+import StiltResultsPresenter.{ResultRelPath, StiltResRelPath}
 
-class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
+class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 
 	val authRouting = new AuthRouting(config.auth)
 	import cluster.atmoClient
@@ -47,15 +49,15 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 	given [T: RootJsonWriter]: ToEntityMarshaller[T] = SprayJsonSupport.sprayJsonMarshaller
 
 	val resultBatchSpec: Directive1[ResultBatch] =
-		parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]).as(ResultBatch.apply _)
+		parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]).as(ResultBatch.apply _).or:
+			complete(StatusCodes.BadRequest -> "Expected 'stationId', 'fromDate', and 'toDate' URL parameters")
 
 	def route: Route = pathPrefix("viewer"){
 		get{
 			path("footprint"){
-				parameters("stationId", "footprint"){ (stationId, localDtStr) =>
+				parameters("stationId", "footprint"): (stationId, localDtStr) =>
 					val localDt = LocalDateTime.parse(localDtStr)
 					complete(service.getFootprintRaster(stationId, localDt))
-				}
 			} ~
 			path("viewer.js") {
 				getFromResource("www/viewer.js")
@@ -70,30 +72,20 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 				resultBatchSpec: batch =>
 					val zipPathFut = service.packageResults(batch)(using cluster.ioDispatcher)
 					val startTime = Instant.now()
-					import batch.{stationId, fromDate, toDate}
 					withRequestTimeout(5.minutes):
 						onSuccess(zipPathFut): zipPath =>
-							val relPath = service.archiver.stationsDir.relativize(zipPath).toString
-							import atmoClient.baseStiltUrl
-							atmoClient.log:
-								AppInfo(
-									user = user,
-									startDate = startTime,
-									endDate = Some(Instant.now()),
-									resultUrl = s"$baseStiltUrl/viewer/downloadresults/$relPath",
-									infoUrl = Some(s"$baseStiltUrl/viewer/?stationId=${stationId}&fromDate=${fromDate}&toDate=${toDate}"),
-									comment = Some(s"Packaging STILT results for station $stationId from $fromDate to $toDate")
-								)
-							complete(relPath)
-							// onResponseStreamed(() => Files.deleteIfExists(zipPath)):
+							logAppInfo(startTime, user, "Packaging", Some(batch), zipPath)
+							complete(service.listResultPackages(batch).get)
 			} ~
-			pathPrefix("downloadresults" / RemainingPath): path =>
-				val filePath = service.archiver.stationsDir.resolve(path.toString)
-				getFromFile(filePath.toFile)
+			pathPrefix("downloadresults" / StiltResRelPath): relPath =>
+				userReq: user =>
+					val startDt = Instant.now()
+					onResponseStreamed(() => logAppInfo(startDt, user, "Downloading", None, relPath)):
+						getFromFile(service.toResultPath(relPath).toFile)
 			~
-			path("listresults"):
+			path("listresultpackages"):
 				resultBatchSpec: batch =>
-					complete(???)
+					complete(service.listResultPackages(batch).get)
 			~
 			path("stationinfo") {
 				import StationInfoMarshalling.given
@@ -102,14 +94,12 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 			path("availablemonths"){
 				complete(service.availableInputMonths())
 			} ~
-			redirectToTrailingSlashIfMissing(StatusCodes.Found){
-				pathSingleSlash {
+			redirectToTrailingSlashIfMissing(StatusCodes.Found):
+				pathSingleSlash:
 					user{userId =>
 						complete(views.html.ViewerPage(config.auth))
 					} ~
 					complete(views.html.LoginPage(config.auth, config.atmoAccess))
-				}
-			}
 		} ~
 		post:
 			entity(as[StiltResultsRequest]): req =>
@@ -145,17 +135,15 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		} ~
 		post{
 			path("enqueuejob"){
-				userReq{userId =>
+				userReq: userId =>
 					entity(as[Job]){job =>
-						if(job.userId == userId.email){
+						if job.userId == userId.email then
 							cluster.enqueueJob(job)
 							complete(StatusCodes.OK)
-						}else{
+						else
 							complete((StatusCodes.Forbidden, "Wrong user id in the job definition!"))
-						}
 					} ~
 					complete((StatusCodes.BadRequest, "Wrong request payload, expected a proper Job object"))
-				}
 			} ~
 			path("deletejob" / Segment) { jobId =>
 				userReq{userId =>
@@ -211,4 +199,21 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi) {
 		`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> fileName))
 	)
 
-}
+	private def logAppInfo(startDt: Instant, user: UserId, action: String, batch: Option[ResultBatch], relPath: ResultRelPath) =
+		import atmoClient.baseStiltUrl
+		val basicInfo = AppInfo(
+			user = user,
+			startDate = startDt,
+			endDate = Some(Instant.now()),
+			resultUrl = s"$baseStiltUrl/viewer/downloadresults/$relPath",
+			infoUrl = None,
+			comment = Some(s"$action STILT results from $relPath")
+		)
+		val info = batch.fold(basicInfo): resBatch =>
+			import resBatch.{stationId, fromDate, toDate}
+			basicInfo.copy(
+				infoUrl = Some(s"$baseStiltUrl/viewer/?stationId=${stationId}&fromDate=${fromDate}&toDate=${toDate}"),
+				comment = Some(s"$action STILT results for station $stationId from $fromDate to $toDate")
+			)
+		atmoClient.log(info)
+end MainRoute

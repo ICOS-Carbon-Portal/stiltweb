@@ -14,6 +14,7 @@ const initState = {
 	selectedYear: null,
 	footprints: null,
 	footprint: null,
+	resultPacks: [],
 	desiredFootprint: null,
 	playingMovie: false,
 	options: {

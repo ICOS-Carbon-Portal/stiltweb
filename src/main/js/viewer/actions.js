@@ -4,6 +4,7 @@ import config from './config';
 
 export const FETCHED_INITDATA = 'FETCHED_INITDATA';
 export const FETCHED_STATIONDATA = 'FETCHED_STATIONDATA';
+export const FETCHED_RESULT_PACKS_LIST = 'FETCHED_RESULT_PACKS_LIST';
 export const FETCHED_RASTER = 'FETCHED_RASTER';
 export const SET_SELECTED_STATION = 'SET_SELECTED_STATION';
 export const SET_SELECTED_SCOPE = 'SET_SELECTED_SCOPE';
@@ -42,12 +43,19 @@ export function visibilityUpdate(name, visibility){
 	};
 }
 
-function failWithError(error){
+export function failWithError(error){
 	console.log(error);
 	return {
 		type: ERROR,
 		error
 	};
+}
+
+export function fetchedResultsPackList(packs){
+	return {
+		type: FETCHED_RESULT_PACKS_LIST,
+		packs
+	}
 }
 
 function gotStationData(stationData, stationId, fromDate, toDate){

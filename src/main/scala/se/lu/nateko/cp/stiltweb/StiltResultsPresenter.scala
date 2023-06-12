@@ -1,5 +1,8 @@
 package se.lu.nateko.cp.stiltweb
 
+import akka.http.scaladsl.model.Uri
+import akka.http.scaladsl.server.PathMatcher1
+import akka.http.scaladsl.server.PathMatchers.RemainingPath
 import se.lu.nateko.cp.data.formats.netcdf.Raster
 import se.lu.nateko.cp.data.formats.netcdf.ViewServiceFactory
 import se.lu.nateko.cp.stiltcluster.StiltPosition
@@ -9,8 +12,8 @@ import se.lu.nateko.cp.stiltweb.csv.LocalDayTime
 import se.lu.nateko.cp.stiltweb.csv.RawRow
 import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
 import se.lu.nateko.cp.stiltweb.csv.RowCache
-import se.lu.nateko.cp.stiltweb.zip.Packager
 import se.lu.nateko.cp.stiltweb.state.Archiver
+import se.lu.nateko.cp.stiltweb.zip.Packager
 import spray.json.JsArray
 import spray.json.JsNull
 import spray.json.JsNumber
@@ -22,6 +25,7 @@ import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -33,16 +37,16 @@ import java.util.zip.ZipOutputStream
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.io.{ Source => IoSource }
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.Try
-import java.nio.file.StandardCopyOption
+import scala.util.Using
 
 case class ResultBatch(stationId: String, fromDate: LocalDate, toDate: LocalDate)
 
 class StiltResultsPresenter(config: StiltWebConfig) {
-	import StiltResultsPresenter._
+	import StiltResultsPresenter.*
 
-	val archiver = new Archiver(Paths.get(config.stateDirectory), config.slotStepInMinutes)
+	private val archiver = new Archiver(Paths.get(config.stateDirectory), config.slotStepInMinutes)
 
 	def getStationInfos: Seq[StiltStationInfo] = {
 		import StiltStationIds.{STILT_id, STILT_name, ICOS_id, ICOS_height, Country}
@@ -88,7 +92,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 	}
 
-	def getCsvRows(batch: ResultBatch): Iterator[String] =
+	private def getCsvRows(batch: ResultBatch): Iterator[String] =
 		import batch.{stationId, fromDate, toDate}
 		val slotRows = reduceToSingleYearOp(listSlotRows(stationId, _, _, _))(fromDate, toDate).to(LazyList)
 
@@ -127,7 +131,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	def listFootprints(batch: ResultBatch): Iterator[LocalDateTime] =
 		listSlotsWithFootprints(batch).map(_._2)
 
-	def packageResults(batch: ResultBatch)(using ExecutionContext): Future[Path] =
+	def packageResults(batch: ResultBatch)(using ExecutionContext): Future[ResultRelPath] =
 		val footPathsFut = Future:
 			listSlotsWithFootprints(batch)
 				.map(_._1.resolve(StiltResultFileType.Foot.toString))
@@ -142,10 +146,24 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		yield
 			val resPath = archiver.stationsDir.resolve(batch.stationId).resolve(s"${resPrefix}_${md5}.zip")
 			Files.move(zipPath, resPath, StandardCopyOption.REPLACE_EXISTING)
-			resPath
+			toRelResPath(resPath)
 	end packageResults
 
-	def resultFilePrefix(batch: ResultBatch): String =
+	def listResultPackages(batch: ResultBatch): Try[IndexedSeq[ResultRelPath]] =
+		val prefix = resultFilePrefix(batch)
+		val stationDir = archiver.stationsDir.resolve(batch.stationId)
+		Using(Files.list(stationDir)): paths =>
+			paths.iterator().asScala
+				.filter: path =>
+					Files.isRegularFile(path) && path.getFileName.toString.startsWith(prefix)
+				.toIndexedSeq
+				.sortBy(path => - Files.getLastModifiedTime(path).toMillis)
+				.map(toRelResPath)
+
+	def toResultPath(relPath: ResultRelPath) = archiver.stationsDir.resolve(relPath)
+	private def toRelResPath(path: Path): ResultRelPath = StiltResultsPresenter.toRelResPath(path, archiver.stationsDir)
+
+	private def resultFilePrefix(batch: ResultBatch): String =
 		s"${batch.stationId}_${batch.fromDate}_${batch.toDate}"
 
 	private def listSlotsWithFootprints(batch: ResultBatch): Iterator[Slot] =
@@ -258,11 +276,13 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 	}
 }
 
-object StiltResultsPresenter{
+object StiltResultsPresenter:
 	type Slot = (Path, LocalDateTime)
 	type CsvRow = Map[String, Double]
 	type SlotCsvRow = (LocalDateTime, CsvRow)
 	type SlotCsvRowFetcher = (String, Year, Option[MonthDay], Option[MonthDay]) => Iterator[SlotCsvRow]
+	opaque type ResultRelPath <: String = String
+
 	val DateColName = "isodate"
 
 	// ex: 2007
@@ -325,4 +345,7 @@ object StiltResultsPresenter{
 
 	private class Throttler(val lastEmitted: LocalDateTime, val toEmit: Option[Slot])
 
-}
+	private def toRelResPath(path: Path, relTo: Path): ResultRelPath = relTo.relativize(path).toString
+	val StiltResRelPath: PathMatcher1[ResultRelPath] = RemainingPath.map(_.toString)
+
+end StiltResultsPresenter

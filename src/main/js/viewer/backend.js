@@ -83,11 +83,17 @@ export function getStationData(stationId, scope, icosFormat){
 		columns: config.stiltResultColumns.map(series => series.label)
 	});
 
-	return Promise.all([observationsPromise, modelResultsPromise, footprintsListPromise])
+	const packsPromise = getResultBatchJson('listresultpackages', stationId, fromDate, toDate)
+
+	return Promise.all([observationsPromise, modelResultsPromise, footprintsListPromise, packsPromise])
 		.then(
-			([obsBinTable, modelResults, footprints]) => ({obsBinTable, modelResults, footprints}),
+			([obsBinTable, modelResults, footprints, packs]) => ({obsBinTable, modelResults, footprints, packs}),
 			err => console.error(err)
 		);
+}
+
+export function packageResults(stationId, fromDate, toDate){
+	return getResultBatchJson('joinfootprints', stationId, fromDate, toDate)
 }
 
 function getIcosBinaryTable(dataObject, icosFormat){
@@ -108,5 +114,9 @@ function getStiltResults(resultsRequest){
 }
 
 function getFootprintsList(stationId, fromDate, toDate){
-	return getJson('listfootprints', ['stationId', stationId], ['fromDate', fromDate], ['toDate', toDate]).then(fpArray => fpArray.sort());
+	return getResultBatchJson('listfootprints', stationId, fromDate, toDate).then(fpArray => fpArray.sort());
+}
+
+function getResultBatchJson(apiUriSegment, stationId, fromDate, toDate){
+	return getJson(apiUriSegment, ['stationId', stationId], ['fromDate', fromDate], ['toDate', toDate]);
 }

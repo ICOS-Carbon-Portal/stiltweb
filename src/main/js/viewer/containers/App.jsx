@@ -7,6 +7,8 @@ import GraphsContainer from './GraphsContainer.jsx';
 import Spinner from '../components/Spinner.jsx';
 import config from '../config';
 import { Copyright } from 'icos-cp-copyright';
+import ResultsControl from '../components/ResultsControl.jsx';
+import { failWithError, fetchedResultsPackList } from '../actions.js';
 
 const marginTop = 10;
 
@@ -16,10 +18,20 @@ class App extends Component {
 	}
 
 	render() {
+		const {props} = this
 		const title = config.viewerScope
 			? "STILT single-site scoped viewer"
 			: "STILT results viewer";
-		const showSpinner = this.props.showSpinner;
+		const showSpinner = props.showSpinner;
+
+		const resControlProps = {
+			resultPacks: props.resultPacks,
+			stationId: props.selectedStation && props.selectedStation.siteId,
+			fromDate: props.selectedScope && props.selectedScope.fromDate,
+			toDate: props.selectedScope && props.selectedScope.toDate,
+			failWithError: props.failWithError,
+			updateResultPacks: props.updateResultPacks
+		}
 
 		return (
 			<div>
@@ -29,6 +41,7 @@ class App extends Component {
 					<h1>
 						{title}
 						<span style={{float:'right'}}>
+							<ResultsControl {...resControlProps}/>
 							<a className="btn btn-info text-white" href="https://www.icos-cp.eu/about-stilt-viewer" target="_blank">
 								<i className="fas fa-question-circle" /> Help
 							</a>
@@ -69,4 +82,11 @@ function stateToProps(state){
 	return Object.assign({}, state);
 }
 
-export default connect(stateToProps)(App)
+function dispatchToProps(dispatch){
+	return {
+		failWithError: err => dispatch(failWithError(err)),
+		updateResultPacks: packs => dispatch(fetchedResultsPackList(packs))
+	}
+}
+
+export default connect(stateToProps, dispatchToProps)(App)
