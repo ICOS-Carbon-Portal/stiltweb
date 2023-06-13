@@ -1,0 +1,71 @@
+{"model": {
+    "name": "STILT",
+    "version": "Revision 721",
+    "description": "STILT, the Stochastic Time-Inverted Lagrangian Transport model, is a Lagrangian particle dispersion model (LPDM) for atmospheric transport. It is used to derive the upstream influence region on atmospheric measurement locations, the so-called footprint. These footprints are combined with surface maps of natural and anthropogenic tracer fluxes, to simulate atmospheric tracer concentrations at stations. Particles are followed 10 days backward in time.",
+    "references" : [
+	"Lin et al., 2003, https://doi.org/10.1029/2002JD003161",
+	"Gerbig et al.,2003, https://doi.org/10.1029/2003JD003770"
+    ],
+    "uri": [
+	"https://stilt-model.org/index.php/Main/HomePage",
+	"https://www.icos-cp.eu/data-services/tools/stilt-footprint"
+    ],
+    "spatial": {
+	"geolocation": "Europe",
+	"resolution": "1/8 degrees longitude x 1/12 degrees latitude",
+	"crs" : "spherical earth with radius of 6371 km"
+        },
+    "temporal": {
+        "resolution": "3-hourly"
+	}
+    },
+    "meteorology": {
+	"name": "ECMWF IFS",
+	"description": "European Centre for Medium-Range Weather Forecast (ECMWF) Integrated Forecasting System (IFS) operational analysis and forecast.",
+	"uri": "https://www.ecmwf.int/en/forecasts/documentation-and-support",
+	"spatial": {
+	    "geolocation": "Global",
+	    "resolution": "0.25 degree longitude x 0.25 degree latitude"
+	},
+	"temporal": {
+	    "resolution": "3-hourly"
+	}
+    },
+    "biosphere fluxes": {
+	"name": "VPRM",
+	"description": "Biosphere-atmosphere exchange fluxes for CO2 simulated with the Vegetation Photosynthesis and Respiration Model VPRM (Mahadevan et al., 2008, https://doi.org/10.1029/2006GB002735) for the European domain. Simulations were performed using the following datasets: - Vegetation Photosynthesis and Respiration Model (VPRM) parameters optimized for the year 2007 using 46 sites within Europe (available from www.europe-fluxdata.eu) - VPRM preprocessor code version Rev.116 - VPRM optimization code version Rev.7 - VPRM offline code version Rev. 13 - MODIS Terra MOD09A1 surface reflectances version 6 - Downward shortwave radiation and 2m Temperature extracted from analysis and short-term forecast fields from the ECMWF IFS model - Landcover classification based on SYNMAP (Jung et al., 2006, https://doi.org/10.1016/j.rse.2006.01.020)",
+	"uri": "https://doi.org/10.18160/VX78-HVA1",
+	"spatial": {
+	    "geolocation": "Europe",
+	    "resolution": "1/8 degrees longitude x 1/12 degrees latitude"
+	},
+	"temporal": {
+	    "resolution": "1-hourly"
+	}
+    },
+    "anthropogenic emissions": {
+	"name": "EDGAR BP",
+	"description" : "Anthropogenic CO2 emissions for Europe based on EDGARv4.3 (Janssens-Maenhout et al., 2019, https://doi.org/10.5194/essd-11-959-2019, fuel type and category specific emissions were provided by Greet Janssens-Maenhout, EU-JRC), BP statistics 2021 (https://www.bp.com/content/dam/bp/business-sites/en/global/corporate/xlsx/energy-economics/statistical-review/bp-stats-review-2021-all-data.xlsx), temporal variations based on MACC-TNO (Denier van der Gon et al., 2011, https://atmosphere.copernicus.eu/sites/default/files/2019-07/MACC_TNO_del_1_3_v2.pdf), temporal extrapolation and disaggregation described in COFFEE (Steinbach et al. 2011, https://doi.org/10.5194/acp-11-6855-2011)",
+	"uri": "https://doi.org/10.18160/2M77-62E6",
+	"spatial": {
+	    "geolocation": "Europe",
+	    "resolution": "1/8 degree longitude x 1/12 degree latitude"
+	},
+	"temporal": {
+	    "resolution": "1-hourly"
+	}
+    },
+    "lateral boundary conditions": {
+	"name": "Jena CarboScope",
+	"description": "Atmospheric CO2 inversion results, global atmospheric fields of CO2 mixing ratios",
+	"version": "s10oc_v2021",
+	"uri": "https://doi.org/10.17871/CarboScope-s10oc_v2021",
+	"spatial": {
+	    "geolocation": "Global",
+	    "resolution": "5 degree longitude x 4 degree latitude"
+	},
+	"temporal": {
+	    "resolution": "3-hourly"
+	}
+    }
+}

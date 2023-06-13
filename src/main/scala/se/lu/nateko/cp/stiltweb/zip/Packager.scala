@@ -15,13 +15,18 @@ import java.security.MessageDigest
 
 object Packager:
 
-	def joinToTempFile(footprints: Iterator[Path]): Path = {
+	def joinToTempFile(footprints: Iterator[Path]): Path =
 		val fs = footprints.to(LazyList)
 		val first = fs.headOption.getOrElse(throw new Exception("No footprints available"))
 
 		val target = Files.createTempFile("footPrintsJoin_", ".nc")
 
-		try{
+		try
+			var lastModified = Files.getLastModifiedTime(first)
+			def updateLastModified(file: Path): Unit =
+				val ft = Files.getLastModifiedTime(file)
+				if lastModified.compareTo(ft) < 0 then lastModified = ft
+
 			Files.copy(first, target, REPLACE_EXISTING)
 			target.toFile.deleteOnExit()
 
@@ -30,11 +35,12 @@ object Packager:
 				.setNewFile(false)
 				.setLocation(target.toString)
 				.build()
-			try{
+			try
 				val footVar = w.findVariable("foot")
 				val timeVar = w.findVariable("time")
 
 				for((footPath, i) <- fs.tail.zipWithIndex){
+					updateLastModified(footPath)
 					val nc = NetcdfFiles.open(footPath.toString)
 
 					val footArr = nc.findVariable("foot").read()
@@ -46,48 +52,52 @@ object Packager:
 					w.write(timeVar, Array(i + 1), timeArr)
 
 				}
-			}finally{
+			finally
 				w.close()
-			}
+			Files.setLastModifiedTime(target, lastModified)
 			target
-		}catch{
-			case err: Throwable =>
-				Files.deleteIfExists(target)
-				throw err
-		}
-	}
+		catch case err: Throwable =>
+			Files.deleteIfExists(target)
+			throw err
+	end joinToTempFile
 
 	def zipResults(
 		footprints: Iterator[Path], csvRows: Iterator[String], fnamePrefix: String
 	)(using ExecutionContext): Future[Path] =
 		val netcdfFut = Future(joinToTempFile(footprints))
+		val csvRowsFut = Future(csvRows.toIndexedSeq)
 
-		val zosFut = Future:
+		for netcdfPath <- netcdfFut; csvRows <- csvRowsFut yield
+			val lastModified = Files.getLastModifiedTime(netcdfPath)
 			val zipPath = Files.createTempFile(s"StiltResult_${fnamePrefix}_", ".zip")
 			val zipFile = zipPath.toFile
 			zipFile.deleteOnExit()
 			val fos = FileOutputStream(zipFile)
 			val zos = ZipOutputStream(fos)
+			def mkEntry(fnameSuffix: String, prefix: String = fnamePrefix + "_")(write: => Unit): Unit =
+				val entry = ZipEntry(prefix + fnameSuffix)
+				entry.setCreationTime(lastModified)
+				entry.setLastModifiedTime(lastModified)
+				entry.setLastAccessTime(lastModified)
+				zos.putNextEntry(entry)
+				write
+				zos.closeEntry()
 			try
 				zos.setLevel(0)
-				zos.putNextEntry(ZipEntry(s"${fnamePrefix}_timeseries.csv"))
-				csvRows.foreach:
-					row => zos.write(row.getBytes()); zos.write('\n')
-				zos.closeEntry()
-			catch ex =>
-				zos.close(); Files.deleteIfExists(zipPath); throw ex
-			zipPath -> zos
-
-		for netcdfPath <- netcdfFut; (zipPath, zos) <- zosFut yield
-			try
-				zos.putNextEntry(ZipEntry(s"${fnamePrefix}_footprint.nc"))
-				Files.copy(netcdfPath, zos)
-				zos.closeEntry()
+				mkEntry("footprint.nc"):
+					Files.copy(netcdfPath, zos)
+				mkEntry("timeseries.csv"):
+					csvRows.foreach:
+						row => zos.write(row.getBytes()); zos.write('\n')
+				inline val jsonFname = "stilt_model_metadata.json"
+				mkEntry(jsonFname, ""):
+					val in = getClass().getResourceAsStream("/" + jsonFname)
+					if in == null then throw Exception(s"File $jsonFname was not present in the deployment package on the server")
+					in.transferTo(zos)
 			catch ex =>
 				zos.close(); Files.deleteIfExists(zipPath); throw ex
 			finally
 				zos.close()
-			
 			zipPath
 	end zipResults
 
