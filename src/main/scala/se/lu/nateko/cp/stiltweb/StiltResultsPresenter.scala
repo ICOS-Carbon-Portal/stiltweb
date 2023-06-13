@@ -12,6 +12,7 @@ import se.lu.nateko.cp.stiltweb.csv.LocalDayTime
 import se.lu.nateko.cp.stiltweb.csv.RawRow
 import se.lu.nateko.cp.stiltweb.csv.ResultRowMaker
 import se.lu.nateko.cp.stiltweb.csv.RowCache
+import se.lu.nateko.cp.stiltweb.csv.Variable
 import se.lu.nateko.cp.stiltweb.state.Archiver
 import se.lu.nateko.cp.stiltweb.zip.Packager
 import spray.json.JsArray
@@ -94,19 +95,16 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 
 	private def getCsvRows(batch: ResultBatch): Iterator[String] =
 		import batch.{stationId, fromDate, toDate}
-		val slotRows = reduceToSingleYearOp(listSlotRows(stationId, _, _, _))(fromDate, toDate).to(LazyList)
+		val slotRows = reduceToSingleYearOp(listSlotRows(stationId, _, _, _))(fromDate, toDate)
 
-		val (_, row0) = slotRows.headOption.getOrElse:
-			throw Exception(s"No results available for $stationId from $fromDate to $toDate")
-
-		val cols = row0.keys.toIndexedSeq
+		import Variable.{varNamesForPackaging => cols}
 
 		val dataRows = slotRows.map:
 			(dt, row) => dt.toString +: cols.map(row.getOrElse(_, ""))
 
 		val headerCols = DateColName +: cols
 
-		(headerCols +: dataRows).iterator.map(_.mkString(","))
+		(Iterator(headerCols) ++ dataRows).map(_.mkString(","))
 	end getCsvRows
 
 	def getStiltResults(req: StiltResultsRequest): Iterator[JsValue] = fetchStiltResults(listSlotRows, req)
@@ -136,21 +134,23 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 			listSlotsWithFootprints(batch)
 				.map(_._1.resolve(StiltResultFileType.Foot.toString))
 		val csvRowsFut = Future(getCsvRows(batch))
+		val stationDir = archiver.stationsDir.resolve(batch.stationId)
+		val pos = stiltPos(stationDir)
 
-		val resPrefix = resultFilePrefix(batch)
 		for
 			footPaths <- footPathsFut
 			csvRows <- csvRowsFut
-			zipPath <- Packager.zipResults(footPaths, csvRows, resPrefix)
+			zipPath <- Packager.zipResults(footPaths, csvRows, batch, pos)
 			md5 <- Packager.md5Hex(zipPath)
 		yield
-			val resPath = archiver.stationsDir.resolve(batch.stationId).resolve(s"${resPrefix}_${md5}.zip")
+			val resPrefix = Packager.resultFilePrefix(batch)
+			val resPath = stationDir.resolve(s"${resPrefix}_${md5}.zip")
 			Files.move(zipPath, resPath, StandardCopyOption.REPLACE_EXISTING)
 			toRelResPath(resPath)
 	end packageResults
 
 	def listResultPackages(batch: ResultBatch): Try[IndexedSeq[ResultRelPath]] =
-		val prefix = resultFilePrefix(batch)
+		val prefix = Packager.resultFilePrefix(batch)
 		val stationDir = archiver.stationsDir.resolve(batch.stationId)
 		Using(Files.list(stationDir)): paths =>
 			paths.iterator().asScala
@@ -162,9 +162,6 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 
 	def toResultPath(relPath: ResultRelPath) = archiver.stationsDir.resolve(relPath)
 	private def toRelResPath(path: Path): ResultRelPath = StiltResultsPresenter.toRelResPath(path, archiver.stationsDir)
-
-	private def resultFilePrefix(batch: ResultBatch): String =
-		s"${batch.stationId}_${batch.fromDate}_${batch.toDate}"
 
 	private def listSlotsWithFootprints(batch: ResultBatch): Iterator[Slot] =
 		import batch.{stationId, fromDate, toDate}

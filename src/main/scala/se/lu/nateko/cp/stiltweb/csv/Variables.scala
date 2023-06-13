@@ -38,6 +38,12 @@ object Variable{
 		case _ =>
 			PlainVariable(name)
 	}
+
+	val varNamesForPackaging = IndexedSeq(
+		"co2.stilt",  "co2.background", "co2.bio", "co2.bio.gee", "co2.bio.resp",
+		"co2.fuel", "co2.fuel.oil", "co2.fuel.coal", "co2.fuel.gas", "co2.fuel.bio", "co2.fuel.waste",
+		"co2.energy", "co2.transport",  "co2.industry", "co2.residential", "co2.cement", "co2.other_categories"
+	)
 }
 
 abstract class EnumerationWithDefault(defaultName: String) extends Enumeration{
