@@ -21,6 +21,16 @@ export default props =>
 						: <StationAndYearSelector {...props} />
 					}</li>
 					<li className="list-group-item"><FootprintState {...props} /></li>
+					<li className="list-group-item" title="CH4 support is being developed">
+						<div className="form-check form-check-inline">
+							<input className="form-check-input" type="radio" id="co2radio" value="co2" disabled checked/>
+							<label className="form-check-label" htmlFor="co2radio">CO2</label>
+						</div>
+						<div className="form-check form-check-inline">
+							<input className="form-check-input" type="radio" id="ch4radio" value="ch4" disabled/>
+							<label className="form-check-label" htmlFor="ch4radio">CH4</label>
+						</div>
+					</li>
 					<li className="list-group-item">
 						<AxisControlPrimary title="Primary Y-axis" components={config.primaryComponents(props.selectedScope)} {...props} />
 					</li>
