@@ -73,17 +73,15 @@ export function getStationData(stationId, scope, icosFormat){
 	//stationId: String
 	//scope: {fromDate: LocalDate(ISO), toDate: LocalDate(ISO), dataObject: {id: String, nRows: Int, start: Data(UTC), stop: Date(UTC)}}
 	//icosFormat: TableFormat
-	const {fromDate, toDate, dataObject} = scope;
-	const footprintsListPromise = getFootprintsList(stationId, fromDate, toDate);
-	const observationsPromise = getIcosBinaryTable(dataObject, icosFormat);
+	const resultBatch = Object.assign({stationId}, _.pick(scope, ['fromDate', 'toDate']))
+	const footprintsListPromise = getFootprintsList(resultBatch);
+	const observationsPromise = getIcosBinaryTable(scope.dataObject, icosFormat);
 	const modelResultsPromise = getStiltResults({
-		stationId,
-		fromDate,
-		toDate,
+		...resultBatch,
 		columns: config.stiltResultColumns.map(series => series.label)
 	});
 
-	const packsPromise = getResultBatchJson('listresultpackages', stationId, fromDate, toDate)
+	const packsPromise = getResultBatchJson('listresultpackages', resultBatch)
 
 	return Promise.all([observationsPromise, modelResultsPromise, footprintsListPromise, packsPromise])
 		.then(
@@ -92,8 +90,8 @@ export function getStationData(stationId, scope, icosFormat){
 		);
 }
 
-export function packageResults(stationId, fromDate, toDate){
-	return getResultBatchJson('joinfootprints', stationId, fromDate, toDate)
+export function packageResults(resultBatch){
+	return getResultBatchJson('joinfootprints', resultBatch)
 }
 
 function getIcosBinaryTable(dataObject, icosFormat){
@@ -113,10 +111,11 @@ function getStiltResults(resultsRequest){
 	.then(response => response.json());
 }
 
-function getFootprintsList(stationId, fromDate, toDate){
-	return getResultBatchJson('listfootprints', stationId, fromDate, toDate).then(fpArray => fpArray.sort());
+function getFootprintsList(resultBatch){
+	return getResultBatchJson('listfootprints', resultBatch).then(fpArray => fpArray.sort());
 }
 
-function getResultBatchJson(apiUriSegment, stationId, fromDate, toDate){
+function getResultBatchJson(apiUriSegment, resultBatch){
+	const {stationId, fromDate, toDate} = resultBatch
 	return getJson(apiUriSegment, ['stationId', stationId], ['fromDate', fromDate], ['toDate', toDate]);
 }

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { packageResults } from '../backend';
+import _ from 'lodash';
 
 export default class ResultsControl extends Component{
 	constructor(props){
@@ -15,15 +16,14 @@ export default class ResultsControl extends Component{
 		if(this.state.packaging) return
 		const {props} = this
 		this.setState({packaging: true})
-		const {stationId, fromDate, toDate} = props
-		packageResults(stationId, fromDate, toDate)
+		packageResults(props.resultBatch)
 			.then(props.updateResultPacks, props.failWithError)
 			.finally(() => this.setState({packaging: false}))
 	}
 
 	render(){
 		const {props, state} = this
-		const {stationId, fromDate, toDate} = props
+		const {stationId, fromDate, toDate} = props.resultBatch
 		if(!stationId || !fromDate || !toDate) return null
 
 		const packExists = props.resultPacks && props.resultPacks.length > 0

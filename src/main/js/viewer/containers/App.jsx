@@ -26,9 +26,11 @@ class App extends Component {
 
 		const resControlProps = {
 			resultPacks: props.resultPacks,
-			stationId: props.selectedStation && props.selectedStation.siteId,
-			fromDate: props.selectedScope && props.selectedScope.fromDate,
-			toDate: props.selectedScope && props.selectedScope.toDate,
+			resultBatch: {
+				stationId: props.selectedStation && props.selectedStation.siteId,
+				fromDate: props.selectedScope && props.selectedScope.fromDate,
+				toDate: props.selectedScope && props.selectedScope.toDate
+			},
 			failWithError: props.failWithError,
 			updateResultPacks: props.updateResultPacks
 		}
