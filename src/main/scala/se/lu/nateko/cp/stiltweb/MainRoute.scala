@@ -19,6 +19,7 @@ import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import se.lu.nateko.cp.stiltweb.AtmoAccessClient.AppInfo
 import se.lu.nateko.cp.stiltweb.marshalling.StationInfoMarshalling
 import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.given
+import se.lu.nateko.cp.stiltweb.zip.PackagingThrottler
 import spray.json.DefaultJsonProtocol
 import spray.json.RootJsonWriter
 
@@ -36,11 +37,12 @@ import StiltResultsPresenter.{ResultRelPath, StiltResRelPath}
 
 class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 
-	val authRouting = new AuthRouting(config.auth)
+	private val authRouting = new AuthRouting(config.auth)
 	import cluster.atmoClient
 	import authRouting.{user, userReq}
 
 	private val service = new StiltResultsPresenter(config)
+	private val throttler = new PackagingThrottler[ResultRelPath](using cluster.dispatcher)
 
 	given Unmarshaller[String, LocalDate] = Unmarshaller.apply[String, LocalDate](_ => s =>
 		Future.fromTry(Try(LocalDate.parse(s)))
@@ -70,12 +72,20 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 			~
 			(path("joinfootprints") & userReq){ user =>
 				resultBatchSpec: batch =>
-					val zipPathFut = service.packageResults(batch)(using cluster.ioDispatcher)
-					val startTime = Instant.now()
-					withRequestTimeout(5.minutes):
-						onSuccess(zipPathFut): zipPath =>
-							logAppInfo(startTime, user, "Packaging", Some(batch), zipPath)
-							complete(service.listResultPackages(batch).get)
+					throttler
+						.runFor(user, batch.stationId):
+							service.packageResults(batch)(using cluster.ioDispatcher)
+						.fold{
+							val msg = "You are already running a packaging job, or someone else is packaging " +
+								s"results for station ${batch.stationId} at the moment. Please wait a minute and try again."
+							complete(StatusCodes.ServiceUnavailable -> msg)
+						}{zipPathFut =>
+							val startTime = Instant.now()
+							withRequestTimeout(5.minutes):
+								onSuccess(zipPathFut): zipPath =>
+									logAppInfo(startTime, user, "Packaging", Some(batch), zipPath)
+									complete(service.listResultPackages(batch).get)
+						}
 			} ~
 			pathPrefix("downloadresults" / StiltResRelPath): relPath =>
 				userReq: user =>

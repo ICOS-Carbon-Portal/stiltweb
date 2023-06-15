@@ -22,7 +22,7 @@ class StiltClusterApi {
 	private val conf = ConfigLoader.frontNode()
 
 	private val system = ActorSystem("StiltBoss", conf)
-	import system.dispatcher
+	export system.dispatcher
 
 	val stiltConf = ConfigReader.default
 
