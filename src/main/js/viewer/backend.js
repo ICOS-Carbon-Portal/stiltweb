@@ -1,4 +1,5 @@
 import 'whatwg-fetch';
+import _ from 'lodash';
 import {checkStatus, sparql, getJson, getBinaryTable, getBinRaster, tableFormatForSpecies} from 'icos-cp-backend';
 import {icosAtmoReleaseQuery} from './sparqlQueries';
 import {copyprops} from 'icos-cp-utils';
@@ -76,10 +77,11 @@ export function getStationData(stationId, scope, icosFormat){
 	const resultBatch = Object.assign({stationId}, _.pick(scope, ['fromDate', 'toDate']))
 	const footprintsListPromise = getFootprintsList(resultBatch);
 	const observationsPromise = getIcosBinaryTable(scope.dataObject, icosFormat);
-	const modelResultsPromise = getStiltResults({
-		...resultBatch,
-		columns: config.stiltResultColumns.map(series => series.label)
-	});
+	const modelResultsPromise = getStiltResults(
+		Object.assign({}, resultBatch, {
+			columns: config.stiltResultColumns.map(series => series.label)
+		})
+	)
 
 	const packsPromise = getResultBatchJson('listresultpackages', resultBatch)
 
