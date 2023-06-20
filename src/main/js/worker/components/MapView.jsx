@@ -189,7 +189,7 @@ const JobList = props => props.jobs.length
 const JobLabel = props => {
 	const job = props.job;
 	const lbl = {
-		txt: "Site '" + job.siteId + "'",
+		txt: `Site '${job.siteId}' (${job.start} - ${job.stop})`,
 		cls: "bg-dark bg-opacity-50 fw-bold text-white",
 		title: `Site Id: ${job.siteId}
 Latitude: ${job.lat}
