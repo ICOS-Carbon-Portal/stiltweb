@@ -75,17 +75,15 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 					throttler
 						.runFor(user, batch.stationId):
 							service.packageResults(batch)(using cluster.ioDispatcher)
-						.fold{
-							val msg = "You are already running a packaging job, or someone else is packaging " +
-								s"results for station ${batch.stationId} at the moment. Please wait a minute and try again."
-							complete(StatusCodes.ServiceUnavailable -> msg)
-						}{zipPathFut =>
-							val startTime = Instant.now()
-							withRequestTimeout(5.minutes):
-								onSuccess(zipPathFut): zipPath =>
-									logAppInfo(startTime, user, "Packaging", Some(batch), zipPath)
-									complete(service.listResultPackages(batch).get)
-						}
+						.fold(
+							msg => complete(StatusCodes.ServiceUnavailable -> msg),
+							zipPathFut =>
+								val startTime = Instant.now()
+								withRequestTimeout(5.minutes):
+									onSuccess(zipPathFut): zipPath =>
+										logAppInfo(startTime, user, "Packaging", Some(batch), zipPath)
+										complete(service.listResultPackages(batch).get)
+						)
 			} ~
 			pathPrefix("downloadresults" / StiltResRelPath): relPath =>
 				userReq: user =>
