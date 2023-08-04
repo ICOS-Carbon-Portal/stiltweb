@@ -6,6 +6,22 @@
 	<head>
 		<link rel="stylesheet" href="https://static.icos-cp.eu/css/bootstrap/@{bootstrapCSS}/icos-bootstrap.css">
 		<link rel="stylesheet" href="https://static.icos-cp.eu/constant/fontawesome/@{fontAwesome}/css/all.min.css">
+		<style>
+			.header {
+				border-bottom: 5px solid #0b6cb4;
+				padding: 20px 0;
+			}
+			.logo {
+				height: 60px;
+			}
+			.footer {
+				text-align: center;
+				border-top: 1px solid #F2F2F2;
+			}
+			.footer-logo img {
+				height: 50px;
+			}
+		</style>
 
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,7 +32,45 @@
 	</head>
 
 	<body>
-		@body
+		<header class="header">
+			<div class="container-fluid d-flex justify-content-between align-items-center">
+				<a href="https://www.atmo-access.eu/">
+					<img class="logo" src="https://static.icos-cp.eu/images/ATMO-ACCESS-Logo.png" alt="ATMO ACCESS Logo">
+				</a>
+				<div class="d-flex align-items-center">
+					Provided by
+					<a href="https://www.icos-cp.eu/">
+						<img src="https://static.icos-cp.eu/images/Icos_Logo_CMYK_Regular.svg" alt="ICOS Logo" height="40">
+					</a>
+				</div>
+			</div>
+		</header>
+		<div class="container-fluid py-5">
+			@body
+		</div>
+		<footer class="footer d-flex flex-column gap-4 py-5">
+			<div class="footer-logo container d-flex justify-content-evenly">
+				<a href="https://www.actris.eu/">
+					<img src="https://static.icos-cp.eu/images/logo-ac_2.png" alt="ACTRIS Logo">
+				</a>
+				<a href="https://www.iagos.org/">
+					<img src="https://static.icos-cp.eu/images/IAGOS-logo.png" alt="IAGOS Logo">
+				</a>
+				<a href="https://www.icos-cp.eu/">
+					<img src="https://static.icos-cp.eu/images/Icos_Logo_CMYK_Regular.svg" alt="ICOS Logo">
+				</a>
+				<a href="https://ec.europa.eu/info/index_en">
+					<img src="https://static.icos-cp.eu/images/Flag_of_Europe.png" alt="EU Logo">
+				</a>
+			</div>
+			<div>
+				<a href="https://www.atmo-access.eu/legal-mentions/">Legal mentions</a>
+			</div>
+			<div>
+				<div>This project has received funding from the European Union’s Horizon 2020 research and innovation programme through the ATMO-ACCESS Integrating Activity under grant agreement No 101008004.</div>
+				<div>©Copyright ATMO-ACCESS - 2021 - <a href="https://www.sedoo.fr/">SEDOO (Service de Données OMP)</a></div>
+			</div>
+		</footer>
 	</body>
 
 </html>
