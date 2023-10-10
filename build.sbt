@@ -79,7 +79,12 @@ lazy val stiltweb = (project in file("."))
 		cpDeployBuildInfoPackage := "se.lu.nateko.cp.stiltweb",
 		cpDeployPreAssembly := {
 			streams.value.log.warn(s"MAKE SURE THAT SCALA_VERSION variable in gulpfile.js is equal to ${scalaVersion.value}")
-			Def.sequential(Test / test, npmPublish).value
+			Def.sequential(
+				stiltcluster / clean,
+				clean,
+				Test / test,
+				npmPublish
+			).value
 		},
 
 		//Could not get SBT to include hidden files; changing filter settings didn't help
