@@ -1,178 +1,404 @@
 STILT id,STILT name,ICOS id,ICOS height,Country
 322,,,,RU
+666,,,,RU
 777,,,,RU
+AAC200,Aachen,,,DE
 ABD,,,,GB
+ACQ020,,,,IT
+ADE020,,,,IT
+ADE050,,,,IT
+AHM200,,,,NL
+AKY,,,,GR
+ALK200,Alkmaar,,,NL
+ALM200,Almelo,,,NL
+ALP200,Alphen aan den Rijn,,,NL
+AME200,Amersfoort,,,NL
+AMI200,Amiens,,,FR
 AMO,,,,GB
 AMS,Amsterdam,,,NL
 AMS_DW,Amsterdam downwind,,,NL
+AMT200,Amsterdam,,,NL
+ANG200,Angers,,,FR
+ANT200,Antwerpen,,,BE
+APE200,Apeldoorn,,,NL
+ARA200,Arras,,,FR
 ARN100,El Arenosillo,,,ES
 ARR,Andoya,,,NO
+ASC200,Aschaffenburg,,,DE
+ASS200,Assen,,,NL
+AUG200,Augsburg,,,DE
 BAK014,,,,DE
 BAL,Baltic Sea,,,
+BAM200,Bamberg,,,DE
 BAN112,,,,CH
 BAN953,,,,CH
+BAS200,Basel,,,CH
+BAY200,Bayreuth,,,DE
+BBL,,,,NL
+BCN080,,,,ES
+BEA200,Beauvais,,,FR
+BEL200,Belfort,,,FR
 BER,Berlin,,,DE
+BER200,Berlin,,,DE
 BER_DW,Berlin downwind,,,DE
 BER_UW,Berlin upwind,,,DE
+BES200,Besancon,,,FR
 BGU,Begur,,,ES
+BIE200,Bielefeld,,,DE
 BIK180,Bialystok 180m,,,PL
 BIK300,Bialystok 300m,,,PL
+BIL200,Biel/Bienne,,,CH
 BIR,Birkenes 40m,,,NO
 BIR010,Birkenes 10m,BIR,10.0,NO
 BIR050,Birkenes 50m,BIR,50.0,NO
 BIR075,Birkenes 75m,BIR,75.0,NO
 BIS047,Biscarrosse 47m,,,FR
+BMN200,Bremen,,,DE
+BOC200,Bocholt,,,DE
+BON200,Bonn,,,DE
 BOR,Bordeaux,,,FR
 BOR_DW,Bordeaux downwind,,,FR
 BOR_UW,Bordeaux upwind,,,FR
+BOS200,Boulogne-sur-mer,,,FR
+BOU200,Bournemouth,,,GB
+BRA200,Brandenburg an der Havel,,,DE
+BRD200,Breda,,,NL
+BRE200,Bremerhaven,,,DE
+BRI200,Brighton and Hove,,,GB
 BRM212,Beromünster 212m,,,CH
 BRM213,,,,CH
+BRN200,Brno,,,CZ
+BRS200,Brussels,,,BE
+BRT200,Bratislava,,,SK
+BRU200,Brugge,,,BE
 BSC,Black Sea Constanta,,,RO
 BSD248,Bilsdale 248m,,,GB
+BSW200,Braunschweig-Salzgitter-Wolfsburg,,,DE
+BYD200,Bydgoszcz,,,PL
+BZO200,Bergen op Zoom,,,NL
+CAE200,Caen,,,FR
+CAL200,Calais,,,FR
+CAM200,Cambridge,,,GB
 CBW,,,,NL
-CBW027,Cabauw 27m,,,NL
-CBW067,Cabauw 67m,,,NL
-CBW127,Cabauw 127m,,,NL
-CBW207,Cabauw 207m,,,NL
+CBW027,Cabauw 27m,CBW,27.0,NL
+CBW067,Cabauw 67m,CBW,67.0,NL
+CBW127,Cabauw 127m,CBW,127.0,NL
+CBW207,Cabauw 207m,CBW,207.0,NL
 CDO,,,,NO
+CEK200,Ceske Budejovice,,,CZ
+CEL200,Celle,,,DE
 CES020,Cabauw 20m,,,NL
 CES050,Cabauw 120m,,,NL
 CES200,Cabauw 200m,,,NL
 CGR,,,,IT
 CHA100,,,,CH
+CHB200,Cherbourg,,,FR
+CHE200,Chemnitz,,,DE
+CHL200,Chalons-en-Champagne,,,FR
+CHO200,Chomutov-Jirkov,,,CZ
+CHR200,Charleville-Mezieres,,,FR
+CHT200,Chartres,,,FR
 CHUR,,,,CZ
 CIB100,CIBA 100m,,,ES
+CLE200,Charleroi,,,BE
+CLM200,Colmar,,,FR
 CLT900,,,,IT
 CMN760,Monte Cimone,CMN,8.0,IT
 CMN_test,,,,IT
+COL200,Colchester,,,GB
+COM200,Compiegne,,,FR
+COT200,Cottbus,,,DE
+COV200,Coventry,,,GB
+CP2,,,,IT
+CPH200,Copenhagen,,,DK
 CRA060,Centre de Recherches Atmospheriques 60m,,,FR
+CRE200,Creil,,,FR
 CRP014,Carnsore Point 14m,,,IE
+DAN,,,,DE
 DAO,,,,CH
+DAR200,Darmstadt,,,DE
 DAV,,,,CH
 DEC,Delta Ebre,,,ES
+DEC010,,,,ES
+DER200,Derby,,,GB
+DES200,Dessau-Roßlau,,,DE
+DEV200,Deventer,,,NL
+DIJ200,Dijon,,,FR
+DOU200,Douai,,,FR
+DRE200,Dresden,,,DE
 DRX,,,,FR
+DUN200,Dunkerque,,,FR
+DUR200,Duren,,,DE
+DUS200,Dusseldorf,,,DE
+EDE200,Ede,,,NL
 EGH,Egham,,,GB
+EIN200,Eindhoven,,,NL
+ENS200,Enschede,,,NL
 ERERER,,,,SE
+ERF200,Erfurt,,,DE
 ERS040,Ersa,,,FR
 ERS290,Ersa,,,FR
 EST110,SMEAR Estonia 110m,,,EE
 ET-ACD,,,,SE
+EVR200,Evreux,,,FR
+FBR200,Freiburg im Breisgau,,,DE
 FIK,Finokalia 150m,,,GR
 FKL015,Finokalia 15m,,,GR
+FLE200,Flensburg,,,DE
+FRA200,Frankfurt am Main,,,DE
 FRE,Freinsheim,,,DE
+FRI200,Friedrichshafen,,,DE
+FRO200,Frankfurt (Oder),,,DE
+FUL200,Fulda,,,DE
 GAT030,Gartow 30m,GAT,30.0,DE
 GAT060,Gartow 60m,GAT,60.0,DE
 GAT132,Gartow 132m,GAT,132.0,DE
 GAT216,Gartow 216m,GAT,216.0,DE
 GAT344,Gartow 344m,GAT,341.0,DE
+GDA200,Gdansk,,,PL
+GEN200,Gent,,,BE
+GER200,Gera,,,DE
+GIE200,Giessen,,,DE
 GIF,Gif-sur-Yvette 2m,,,FR
 GIF010,Gif-sur-Yvette 10m,,,FR
 GIF050,Gif-sur-Yvette 50m,,,FR
+GIO020,,,,IT
+GLC100,,,,PL
+GLO200,Glogow,,,PL
+GNI200,Gniezno,,,PL
 GOL,,,,DE
+GOR200,Gorzow Wielkopolski,,,PL
+GOT200,Gottingen,,,DE
+GOU200,Gouda,,,NL
+GOZ200,Gorlitz,,,DE
+GR1,,,,GR
+GRA200,'s-Gravenhage,,,NL
+GRE200,Greifswald,,,DE
+GRO200,Groningen,,,NL
+GRU200,Grudziadz,,,PL
+GRZ200,Graz,,,AT
+GUI200,Guildford,,,GB
 GVS,,,,NO
+GYO200,Gyor,,,HU
 HAC,Helmos,,,GR
+HAL200,Halle an der Saale,,,DE
 HAM,Hamburg,,,DE
 HAM_DW,Hamburg downwind,,,DE
 HAM_UW,Hamburg upwind,,,DE
+HAN200,Hannover,,,DE
+HAS200,Hastings,,,GB
+HEB200,Heilbronn,,,DE
+HEE200,Heerlen,,,NL
 HEI,Heidelberg,,,DE
 HEL,Helgoland,,,DE
 HEL110,Helgoland 110m,HEL,110.0,DE
+HEN200,Henin - Carvin,,,FR
+HER200,'s-Hertogenbosch,,,NL
 HFD,Heathfield 135m,,,GB
+HFD100,,,,GB
+HIL200,Hildesheim,,,DE
 HPB010,Hohenpeissenberg 10m,,,DE
 HPB050,Hohenpeissenberg 50m,HPB,50.0,DE
 HPB093,Hohenpeissenberg 93m,HPB,93.0,DE
 HPB131,Hohenpeissenberg 131m,HPB,131.0,DE
 HPB300,,,,DE
+HRA200,Hradec Kralove,,,CZ
+HTM,,,,SE
 HTM030,Hyltemossa 30m,HTM,30.0,SE
 HTM070,Hyltemossa 70m,HTM,70.0,SE
 HTM150,Hyltemossa 150m,HTM,150.0,SE
+HUN082,,,,HU
 HUN096,Hegyhátsál 96m,,,HU
 HUN115,Hegyhátsál 115m,,,HU
 IDA,,,,LV
 IDS,,,,SE
+ING200,Ingolstadt,,,DE
+INN200,Innsbruck,,,AT
+INO200,Inowroclaw,,,PL
 IPR015,Ispra 15m,,,IT
 IPR040,Ispra 40m,IPR,40.0,IT
 IPR060,Ispra 60m,IPR,60.0,IT
 IPR100,Ispra 100m,IPR,100.0,IT
+IPS200,Ipswich,,,GB
+ISE200,Iserlohn,,,DE
 ISEN,,,,DE
 ISN,,,,DE
 IZN,Iznajar,,,ES
+JAS200,Jastrzebie-Zdroj,,,PL
+JEL200,Jelenia Gora,,,PL
+JEN200,Jena,,,DE
 JENA,Jena,,,DE
 JES,,,,CZ
-JFJ,Jungfraujoch,JFJ,5.0,CH
-JFJ960,Jungfraujoch,JFJ,5.0,CH
+JFJ,Jungfraujoch,JFJ,13.9,CH
+JFJ960,Jungfraujoch,JFJ,13.9,CH
+JIH200,Jihlava,,,CZ
+JSW,,,,PL
 JUE,Jülich 100m,,,DE
 JUE050,Jülich 50m,JUE,50.0,DE
 JUE080,Jülich 80m,JUE,80.0,DE
 JUE120,Jülich 120m,JUE,120.0,DE
+KAI200,Kaiserslautern,,,DE
+KAL200,Kalisz,,,PL
+KAR200,Karlovy Vary,,,CZ
 KAS,Kasprowy Wierch,,,PL
+KEM200,Kempten (Allgau),,,DE
+KIE200,Kiel,,,DE
+KII,,,,FI
+KIN200,Kingston-upon-Hull,,,GB
 KIT030,Karlsruhe 30m,KIT,30.0,DE
 KIT050,Karlsruhe 50m,,,DE
 KIT060,Karlsruhe 60m,KIT,60.0,DE
 KIT100,Karlsruhe 100m,KIT,100.0,DE
 KIT200,Karlsruhe 200m,KIT,200.0,DE
+KLR200,Karlsruhe,,,DE
+KOB200,Koblenz,,,DE
+KOL200,Cologne,,,DE
+KON200,Konin,,,PL
+KOR200,Kortrijk,,,BE
+KOS200,Koszalin,,,PL
+KOZ200,Konstanz,,,DE
 KRE,,,,CZ
 KRE010,Křešín u Pacova 10m,KRE,10.0,CZ
 KRE050,Křešín u Pacova 50m,KRE,50.0,CZ
 KRE125,Křešín u Pacova 125m,KRE,125.0,CZ
 KRE250,Křešín u Pacova 250m,KRE,250.0,CZ
+KRF200,Krefeld,,,DE
+KRK,,,,PL
+KSS200,Kassel,,,DE
+KYIV,,,,UA
 LAH032,Lahemaa 32m,,,EE
+LAN200,Landshut,,,DE
+LEC200,Leicester,,,GB
+LED200,Leiden,,,NL
+LEE200,Leeds,,,GB
+LEG200,Legnica,,,PL
+LEH200,Le Havre,,,FR
 LEI,,,,DE
+LEL200,Lelystad,,,NL
+LEM200,Le Mans,,,FR
+LEN200,Lens - Lievin,,,FR
+LEP200,Leipzig,,,DE
+LES200,Leszno,,,PL
+LEU200,Leeuwarden,,,NL
+LEV200,Leuven,,,BE
+LIB200,Liberec,,,CZ
+LIC200,Lincoln,,,GB
+LIE200,Liege,,,BE
 LIL,Lille,,,FR
 LIL_DW,Lille downwind,,,BE
 LIL_UW,Lille upwind,,,FR
 LIN010,Lindenberg 10m,LIN,10.0,DE
 LIN040,Lindenberg 40m,LIN,40.0,DE
 LIN099,Lindenberg 99m,LIN,98.0,DE
+LIZ200,Linz,,,AT
+LLE200,Lille,,,FR
 LMP,Lampedusa,LMP,8.0,IT
 LMT,,,,IT
 LMU080,La Muela 80m,,,ES
+LOD200,London,,,GB
 LON,London,,,GB
 LPO,Ile Grande,,,FR
+LUB200,Lubeck,,,DE
+LUI200,Lubin,,,PL
+LUN200,Luneburg,,,DE
 LUT,Lutjewad 60m,LUT,60.0,NL
 LUX,Luxembourg,,,LU
+LUX200,Luxembourg,,,LU
 LUX_DW,Luxembourg downwind,,,DE
 LUX_UW,Luxembourg upwind,,,FR
 LYO,Lyon,,,FR
 LYO_DW,Lyon downwind,,,FR
 LYO_UW,Lyon upwind,,,FR
+MAA200,Maastricht,,,NL
+MAG200,Magdeburg,,,DE
 MAH,Malin Head,,,IE
+MAI810,,,,IT
 MAJ100,Majadas de Tiétar 100m,,,ES
+MAL200,Malmo,,,SE
+MAN200,Mannheim-Ludwigshafen,,,DE
+MAR200,Marburg,,,DE
+MAZ200,Mainz,,,DE
 MED-1,,,,ES
 MED-2,,,,
 MED-3,,,,
 MED-4,,,,
 MED-5,,,,
+MEL200,Melun,,,FR
+MET200,Metz,,,FR
 MHD,Mace Head,,,IE
+MIB200,Middelburg,,,NL
+MID100,,,,GB
+MID200,Middlesbrough,,,GB
 MIL,Milano,,,IT
+MNS200,Mons,,,BE
+MOB200,Montbelliard,,,FR
+MON200,Monchengladbach,,,DE
+MOS200,Most,,,CZ
+MUL200,Mulhouse,,,FR
 MUN,Munich,,,DE
 MUN_DW,Munich downwind,,,DE
 MUN_UW,Munich upwind,,,DE
+MUS200,Munster,,,DE
+NAM200,Namur,,,BE
+NAN200,Nancy,,,FR
+NAT200,Nantes,,,FR
+NEB200,Neubrandenburg,,,DE
+NEU200,Neumunster,,,DE
+NIJ200,Nijmegen,,,NL
+NIT200,Nitra,,,SK
+NOH200,Northampton,,,GB
 NOR032,Norunda 32m,NOR,32.0,SE
 NOR058,Norunda 58m,NOR,58.0,SE
 NOR100,Norunda 100m,NOR,100.0,SE
+NOT200,Greater Nottingham,,,GB
+NOW200,Norwich,,,GB
+NUR200,Nurnberg,,,DE
+ODE200,Odense,,,DK
 OES,Östergarnsholm,,,SE
+OFB200,Offenburg,,,DE
+OFF100,,,,DE
 OHP100,Observatoire Haute Provence 100m,,,FR
+OLD200,Oldenburg (Oldenburg),,,DE
+OLO200,Olomouc,,,CZ
+OOS200,Oostende,,,BE
 OPE010,Observatoire pérenne de l'environnement 10m,OPE,10.0,FR
 OPE050,Observatoire pérenne de l'environnement 50m,OPE,50.0,FR
 OPE120,Observatoire pérenne de l'environnement 120m,OPE,120.0,FR
+OPL200,Opole,,,PL
 OPO,Porto,,,PT
+ORL200,Orleans,,,FR
+OSN200,Osnabruck,,,DE
+OSR200,Ostrow Wielkopolski,,,PL
+OSS200,Oss,,,NL
 OST,Østerild,,,DK
+OSV200,Ostrava,,,CZ
 OTTA,,,,NO
+OXF200,Oxford,,,GB
 OXK023,Ochsenkopf 23m,OXK,23.0,DE
 OXK090,Ochsenkopf 90m,OXK,90.0,DE
 OXK163,Ochsenkopf 163m,OXK,163.0,DE
+PAD200,Paderborn,,,DE
 PAL,Pallas-Sammaltunturi,PAL,12.0,FI
 PAR,Paris,,,FR
 PAR_DW,Paris downwind,,,FR
+PAS200,Passau,,,DE
 PCW150,,,,PL
 PDM,Pic du Midi,,,FR
+PFO200,Pforzheim,,,DE
+PIL200,Pila,,,PL
+PLA200,Plauen,,,DE
+PLZ200,Plzen,,,CZ
 POING,,,,DE
 POING5,,,,DE
 POLAND,,,,PL
+POR200,Portsmouth,,,GB
+POS025,,,,IT
 POTT,,,,DE
+POZ200,Poznan,,,PL
 PRA,Prague,,,CZ
+PRA200,Prague,,,CZ
 PRA_DW,Prague downwind,,,CZ
+PRD200,Pardubice,,,CZ
 PRS,Plateau Rosa,PRS,10.0,IT
 PSE150,,,,PL
 PTL,,,,IT
@@ -182,49 +408,90 @@ PUI,Puijo 176m,,,FI
 PUI047,Puijo 47m,PUI,47.0,FI
 PUI084,Puijo 84m,PUI,84.0,FI
 PUY,Puy de Dôme,PUY,10.0,FR
+REA200,Reading,,,GB
+REG200,Regensburg,,,DE
+REI200,Reims,,,FR
+REM200,Remscheid,,,DE
+REN200,Rennes,,,FR
+REU200,Reutlingen,,,DE
 RGL,Ridge Hill 152m,,,GB
 RGL090,Ridge Hill 90m,RGL,90.0,GB
 RIB,,,,SE
 RIS,Risø 100m,,,DK
 RMS,Reims,,,FR
 ROC140,Roc Tredudon,,,FR
+ROH200,Rosenheim,,,DE
 ROM1,,,,RO
+ROO200,Roosendaal,,,NL
+ROS200,Rostock,,,DE
 ROT,Rotterdam,,,NL
+ROT200,Rotterdam,,,NL
 ROT_UW,Rotterdam upwind,,,NL
+ROU200,Rouen,,,FR
+RT1,,,,BE
 RUH,,,,DE
 RUH_UW,,,,DE
+RUR200,Ruhrgebiet,,,DE
+RYB200,Rybnik,,,PL
+SAA200,Saarbrucken,,,DE
 SAC015,Saclay 15m,SAC,15.0,FR
 SAC060,Saclay 60m,SAC,60.0,FR
 SAC100,Saclay 100m,SAC,100.0,FR
+SAI200,Saint-Quentin,,,FR
+SAL200,Salzburg,,,AT
+SCH200,Schwerin,,,DE
 SCHOEN,,,,DE
+SCW200,Schweinfurt,,,DE
 SET,,,,BE
+SHE200,Sheffield,,,GB
+SIE200,Siegen,,,DE
+SIT200,Sittard-Geleen,,,NL
 SKK,Selkirk,,,GB
+SLU200,Slupsk,,,PL
 SMR017,Hyytiälä 17m,SMR,16.8,FI
 SMR067,Hyytiälä 67m,SMR,67.2,FI
 SMR125,Hyytiälä 125m,SMR,125.0,FI
 SMR127,Hyytiälä 127m,,,FI
 SNZ,Sniezka,,,PL
+SOE200,Soest,,,NL
+SOL200,Solingen,,,DE
+SOP200,Sopron,,,HU
 SOT,,,,CH
+SOU200,Southampton,,,GB
 SSL,Schauinsland 12m,SSL,12.0,DE
 SSL12,,,,DE
 SSL255,Schauinsland 35m,SSL,35.0,DE
+STA200,Stargard Szczecinski,,,PL
+STB200,Strasbourg,,,FR
 STE032,Steinkimmen 32m,STE,32.0,DE
 STE082,Steinkimmen 82m,STE,82.0,DE
 STE127,Steinkimmen 127m,STE,127.0,DE
 STE187,Steinkimmen 187m,STE,187.0,DE
 STE252,Steinkimmen 252m,STE,252.0,DE
+STG200,St. Gallen,,,CH
 STH,Stockholm,,,SE
 STH_DW,Stockholm downwind,,,SE
 STI,,,,CZ
 STK200,,,,DE
 STR,Stromboli,,,IT
+STS200,Stralsund,,,DE
+STU200,Stuttgart,,,DE
+STV,,,,GB
 SVB035,Svartberget 35m,SVB,35.0,SE
 SVB085,Svartberget 85m,SVB,85.0,SE
 SVB150,Svartberget 150m,SVB,150.0,SE
+SWC200,Zwickau,,,DE
+SWI200,Swidnica,,,PL
+SZC200,Szczecin,,,PL
+SZE200,Szekesfehervar,,,HU
+SZO200,Szombathely,,,HU
 TAC191,Tacolneston 191m,,,GB
+TAT200,Tatabanya,,,HU
+TCZ200,Tczew,,,PL
 TEST,,,,NO
 THI005,Thissio 5m,,,GR
 THRB,Thornton Buoy,,,
+TIL200,Tilburg,,,NL
 TOB010,,,,DE
 TOB100,,,,DE
 TOH010,Torfhaus 10m,TOH,10.0,DE
@@ -232,23 +499,55 @@ TOH076,Torfhaus 76m,TOH,76.0,DE
 TOH110,Torfhaus 110m,TOH,110.0,DE
 TOH147,Torfhaus 147m,TOH,147.0,DE
 TOH300,,,,DE
+TOR200,Torun,,,PL
+TOU200,Tours,,,FR
+TRE200,Trencin,,,SK
+TRI200,Trier,,,DE
 TRN050,Trainou 50m,TRN,50.0,FR
 TRN100,Trainou 100m,TRN,100.0,FR
 TRN180,Trainou 180m,TRN,180.0,FR
+TRO200,Troyes,,,FR
+TRV200,Trnava,,,SK
 TST,,,,
 TTA050,Angus 50m,,,GB
 TTA222,Angus 222m,,,GB
+TUB200,Tubingen,,,DE
+TUM_I,,,,DE
+TYN200,Tyneside conurbation,,,GB
+UK-AMO,,,,GB
+UKR1,,,,UA
+ULM200,Ulm,,,DE
+UST200,Usti nad Labem,,,CZ
 UTO,Utö - Baltic sea,UTO,57.0,FI
+UTR200,Utrecht,,,NL
+VAL200,Valenciennes,,,FR
+VEE200,Veenendaal,,,NL
+VEN200,Venlo,,,NL
 VIE,Vienna,,,AT
 VIE_DW,Vienna downwind,,,AT
 VIE_UW,Vienna upwind,,,AT
+VIL200,Villingen-Schwenningen,,,DE
 VND,,,,IT
 VOI,Voeikovo,,,RU
 VSD006,Vilsandi 6m,,,EE
 VTO014,Valentia Island 14m,,,IE
+WAL200,Walbrzych,,,PL
 WAO,Weybourne,WAO,10.0,GB
+WEI200,Weimar,,,DE
 WES,Westerland,WES,14.0,DE
+WET200,Wetzlar,,,DE
+WIB200,Wiesbaden,,,DE
+WIL200,Wilhelmshaven,,,DE
+WIN200,Winterthur,,,CH
+WRO200,Wroclaw,,,PL
+WUP200,Wuppertal,,,DE
+WUR200,Wurzburg,,,DE
+ZIE200,Zielona Gora,,,PL
+ZIL200,Zilina,,,SK
+ZLI200,Zlin,,,CZ
 ZRH,Zurich,,,CH
 ZRH112,Zurich Hardau 112m,,,CH
 ZRK,,,,DE
 ZSF,Zugspitze,ZSF,3.0,DE
+ZUR200,Zurich,,,CH
+ZWO200,Zwolle,,,NL
