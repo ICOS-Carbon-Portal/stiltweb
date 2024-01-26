@@ -1,8 +1,5 @@
 package se.lu.nateko.cp.stiltweb.csv
 
-import Fuel.Fuel
-import Gas.Gas
-
 class RawRow private(val vals: Map[Variable, Double]) {
 	import RawRow._
 
@@ -11,23 +8,23 @@ class RawRow private(val vals: Map[Variable, Double]) {
 	def sum(toVar: String, fromVars: Seq[String]): Assignment =
 		toVar -> fromVars.map(v => vals(PlainVariable(v))).sum
 
-	def byFuelReport(subFuel: Option[String]): Map[Gas, Map[Fuel, Double]] = vals.keys
+	def byFuelReport(subFuel: Option[String]): Map[Tracer, Map[Fuel, Double]] = vals.keys
 		.collect{
-			case fi: FuelInfoVariable if fi.tracer != Gas.OtherGas && subFuel.fold(true)(_ == fi.fuelSubtype) => fi
+			case fi: FuelInfoVariable if fi.tracer != Tracer.othergas && subFuel.fold(true)(_ == fi.fuelSubtype) => fi
 		}
 		.groupBy(_.tracer).view.mapValues(
 			_.groupMapReduce(_.fuel)(vals.apply)(_ + _)
 		).toMap
 
-	val cementReport: Map[Gas, Double] = vals.keys
+	val cementReport: Map[Tracer, Double] = vals.keys
 		.collect{
-			case pcv: PlainCategoryVariable if pcv.isCement && pcv.tracer != Gas.OtherGas => pcv
+			case pcv: PlainCategoryVariable if pcv.isCement && pcv.tracer != Tracer.othergas => pcv
 		}
 		.groupMapReduce(_.tracer)(vals.apply)(_ + _)
 
-	def byCategoryReport(filter: Category => Boolean): Map[Gas, Double] = vals.keys
+	def byCategoryReport(filter: Category => Boolean): Map[Tracer, Double] = vals.keys
 		.collect{
-			case cv: CategoryVariable if cv.tracer != Gas.OtherGas => cv
+			case cv: CategoryVariable if cv.tracer != Tracer.othergas => cv
 		}
 		.filter(fiv => filter(fiv.category))
 		.groupMapReduce(_.tracer)(vals.apply)(_ + _)
