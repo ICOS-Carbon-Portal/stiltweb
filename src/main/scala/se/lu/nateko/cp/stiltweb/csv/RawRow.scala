@@ -1,6 +1,6 @@
 package se.lu.nateko.cp.stiltweb.csv
 
-class RawRow private(val vals: Map[Variable, Double]) {
+class RawRow private(val vals: Map[Variable, Double]):
 	import RawRow._
 
 	def copy(toVar: String, fromVar: String): Assignment = toVar -> vals(PlainVariable(fromVar))
@@ -22,14 +22,12 @@ class RawRow private(val vals: Map[Variable, Double]) {
 		}
 		.groupMapReduce(_.tracer)(vals.apply)(_ + _)
 
-	def byCategoryReport(filter: Category => Boolean): Map[Tracer, Double] = vals.keys
-		.collect{
-			case cv: CategoryVariable if cv.tracer != Tracer.othergas => cv
-		}
-		.filter(fiv => filter(fiv.category))
-		.groupMapReduce(_.tracer)(vals.apply)(_ + _)
+	def byCategoryReport(gas: Tracer, filter: Category => Boolean): Double = vals.keys
+		.collect:
+			case cv: CategoryVariable if cv.tracer == gas && filter(cv.category) => vals(cv)
+		.sum
 
-}
+end RawRow
 
 object RawRow{
 	val BlacklistedFragment = "ffm"

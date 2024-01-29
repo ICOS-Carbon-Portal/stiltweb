@@ -72,17 +72,15 @@ object CategoryNames:
 	val ch4_wastes = Set("6a", "6b")
 	val cox_others = Set("1b2abc", "7a", "4f")
 	val ch4_others = Set("1a3b", "1a3ce", "1a3a+1c1", "1a3d+1c2", "1a2+6cd", "2befg+3", "2c", "1a4", "1b2ac", "7a")
-	//val ch4_other_naturals = Set("ch4soil","ch4lakes","ch4ocean")
-	//val ch4_wetlands = Set("ch4wet", "ch4peat")
-	//val ch4_wildfires = Set("ch4fire")
-	//val ch4_soil_uptakes = Set("ch4uptake")
 
 case class Category(name: String):
 	import CategoryNames._
+	def isCh4Agriculture = ch4_agricultures.contains(name)
 	def isCoxEnergy = cox_energies.contains(name)
 	def isCh4Energy = ch4_energies.contains(name)
 	def isCoxTransport = cox_transports.contains(name)
 	def isCoxIndustry = cox_industries.contains(name)
 	def isCoxResidential = cox_residentials.contains(name)
+	def isCh4Waste = ch4_wastes.contains(name)
 	def isCoxOther = cox_others.contains(name)
 	def isCh4Other = ch4_others.contains(name)
