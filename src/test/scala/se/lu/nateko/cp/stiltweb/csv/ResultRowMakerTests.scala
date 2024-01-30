@@ -4,6 +4,7 @@ import java.nio.file.Paths
 import java.nio.file.Files
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.funsuite.AnyFunSuite
+import spray.json.JsNumber
 
 class ResultRowMakerTests extends AnyFunSuite{
 
@@ -34,7 +35,10 @@ class ResultRowMakerTests extends AnyFunSuite{
 
 		val maybeErrors: Seq[Option[String]] = for(vname <- vnames) yield{
 			val expValue = expRow.get(vname).getOrElse(Double.NaN)
-			val actValue = row.get(vname).getOrElse(Double.NaN)
+			val actValue = row.fields.get(vname) match
+				case Some(JsNumber(n)) => n.toDouble
+				case _ => Double.NaN
+
 			if(!(actValue === (expValue +- 1e-8)) && !disregardedVals.contains(vname))
 				Some(s"$vname: expected $expValue -- got $actValue")
 			else None

@@ -19,6 +19,7 @@ import spray.json.JsArray
 import spray.json.JsNull
 import spray.json.JsNumber
 import spray.json.JsObject
+import spray.json.JsString
 import spray.json.JsValue
 
 import java.io.File
@@ -27,12 +28,14 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.MonthDay
 import java.time.Year
 import java.time.ZoneOffset
+import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import scala.concurrent.ExecutionContext
@@ -95,36 +98,38 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 
 	private def getCsvRows(batch: ResultBatch): Iterator[String] =
 		import batch.{stationId, fromDate, toDate}
-		val slotRows = reduceToSingleYearOp(listSlotRows(stationId, _, _, _))(fromDate, toDate)
+		val slotRows = reduceToSingleYearOp(listSlotRows(stationId, _, _, _).iterator)(fromDate, toDate)
 
 		import Variable.{varNamesForPackaging => cols}
 
-		val dataRows = slotRows.map:
-			(dt, row) => dt.toString +: cols.map(row.getOrElse(_, ""))
+		val dataRows = slotRows.map: (dt, row) =>
+			dt.toString +: cols.map: col =>
+				row.fields.get(col) match
+					case Some(JsNumber(n)) => dbl2str(n.toDouble)
+					case Some(JsString(s)) => s
+					case _ => ""
 
 		val headerCols = DateColName +: cols
 
 		(Iterator(headerCols) ++ dataRows).map(_.mkString(","))
 	end getCsvRows
 
-	def getStiltResults(req: StiltResultsRequest): Iterator[JsValue] = fetchStiltResults(listSlotRows, req)
+	def getStiltResults(req: StiltResultsRequest): Iterator[JsValue] = fetchStiltResults(listSlotRows(_, _, _, _).iterator, req)
 	def getStiltRawResults(req: StiltResultsRequest): Iterator[JsValue] = fetchStiltResults(listRawSlotRows, req)
 
 	private def fetchStiltResults(fetcher: SlotCsvRowFetcher, req: StiltResultsRequest): Iterator[JsValue] =
 		reduceToSingleYearOp(fetcher(req.stationId, _, _, _))(req.fromDate, req.toDate)
-			.map{ case (dt, row) =>
-				def jsFromCol(col: String): JsValue = col match {
-					case DateColName =>
-						JsNumber(dt.toEpochSecond(ZoneOffset.UTC))
-					case col =>
-						row.get(col).fold[JsValue](JsNull)(n => JsNumber(n))
-				}
-				req.columns.fold{
-					JsObject(row.keys.map(col => col -> jsFromCol(col)).toMap)
-				}{columns =>
+			.map: (dt, row) =>
+				val timestamp = JsNumber(dt.toEpochSecond(ZoneOffset.UTC))
+
+				def jsFromCol(col: String): JsValue = col match
+					case DateColName => timestamp
+					case col =>         row.fields.getOrElse(col, JsNull)
+
+				req.columns.fold(
+					JsObject(row.fields + (DateColName -> timestamp))
+				): columns =>
 					JsArray(columns.map(jsFromCol).toVector)
-				}
-			}
 
 	def listFootprints(batch: ResultBatch): Iterator[LocalDateTime] =
 		listSlotsWithFootprints(batch).map(_._2)
@@ -170,7 +175,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 
 	private def yearPath(stationId: String, year: Year) = archiver.getYearDir(stationId, year.getValue)
 
-	private def listSlotRows(stationId: String, year: Year, from: Option[MonthDay], to: Option[MonthDay]): Iterator[SlotCsvRow] = {
+	private def listSlotRows(stationId: String, year: Year, from: Option[MonthDay], to: Option[MonthDay]): IndexedSeq[SlotCsvRow] =
 		val rowFactory = () => listSlots(stationId, year, None, None).flatMap{ case slot @ (_, dt) =>
 			readRawRow(slot).map{rawRow =>
 				LocalDayTime(dt) -> ResultRowMaker.makeRow(rawRow)
@@ -178,13 +183,13 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		}
 		val cache = new RowCache(rowFactory, yearPath(stationId, year), year.getValue, config.slotStepInMinutes)
 		cache.getRows(from.map(new LocalDayTime(_, LocalTime.MIN)), to.map(new LocalDayTime(_, LocalTime.MAX)))
-	}
+
 
 	private def listRawSlotRows(stationId: String, year: Year, from: Option[MonthDay], to: Option[MonthDay]): Iterator[SlotCsvRow] =
 		listSlots(stationId, year, from, to).flatMap{ case slot @ (_, dt) =>
 			readRawRow(slot).map{rawRow =>
-				dt -> rawRow.vals.map{case (v, n) => v.name -> n}
-			}.toOption.iterator
+				dt -> rawRow.toJson
+			}.toOption
 		}
 
 	private def readRawRow(slot: Slot): Try[RawRow] = Try{
@@ -275,8 +280,7 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 
 object StiltResultsPresenter:
 	type Slot = (Path, LocalDateTime)
-	type CsvRow = Map[String, Double]
-	type SlotCsvRow = (LocalDateTime, CsvRow)
+	type SlotCsvRow = (LocalDateTime, JsObject)
 	type SlotCsvRowFetcher = (String, Year, Option[MonthDay], Option[MonthDay]) => Iterator[SlotCsvRow]
 	opaque type ResultRelPath <: String = String
 
@@ -344,5 +348,8 @@ object StiltResultsPresenter:
 
 	private def toRelResPath(path: Path, relTo: Path): ResultRelPath = relTo.relativize(path).toString
 	val StiltResRelPath: PathMatcher1[ResultRelPath] = RemainingPath.map(_.toString)
+
+	val numFormat = NumberFormat.getNumberInstance(Locale.ROOT)
+	def dbl2str(d: Double): String = numFormat.format(d)
 
 end StiltResultsPresenter

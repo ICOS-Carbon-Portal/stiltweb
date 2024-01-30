@@ -1,6 +1,10 @@
 package se.lu.nateko.cp.stiltweb.csv
 
 import se.lu.nateko.cp.stiltweb.csv.RawRow.Assignment
+import spray.json.JsObject
+import spray.json.JsNumber
+import spray.json.JsString
+
 
 object ResultRowMaker:
 
@@ -25,7 +29,7 @@ object ResultRowMaker:
 		Seq("ch4.background", "ch4.anthropogenic", "ch4.natural") -> "ch4.stilt"
 	)
 
-	def makeRow(in: RawRow): Map[String, Double] =
+	def makeRow(in: RawRow): JsObject =
 
 		def fuelAssignments(gas: Tracer): Vector[Assignment] =
 			for((fuel, sum) <- in.byFuelReport(None)(gas).toVector) yield s"$gas.fuel.$fuel" -> sum
@@ -80,10 +84,12 @@ object ResultRowMaker:
 			in.sum("rn.noah", Seq("rn_noahini", "rn_noah")) :+
 			in.sum("rn.era", Seq("rn_eraini", "rn_era"))
 
-		rowPostProcessingSummations.foldLeft(initialAssignments.toMap):
+		val numVals = rowPostProcessingSummations.foldLeft(initialAssignments.toMap):
 			case (map, (summedVars, targetVar)) =>
 				val sum = summedVars.map(map.apply).sum
 				map + (targetVar -> sum)
+
+		JsObject(numVals.map(_ -> JsNumber(_)) + (RawRow.stiltMetaColName -> JsString(in.stiltMeta)))
 
 	end makeRow
 
