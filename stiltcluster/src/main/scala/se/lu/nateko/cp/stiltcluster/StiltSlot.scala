@@ -20,22 +20,26 @@ package se.lu.nateko.cp.stiltcluster
 
 import java.time.LocalDateTime
 
-case class StiltPosition(lat: Double, lon: Double, alt: Int) {
-
+case class StiltPosition(lat: Double, lon: Double, alt: Int):
+	import StiltPosition.{latFmt, lonFmt}
 	// This is the format used by the (output files) original stilt software
-	override def toString(): String = {
-		val s_lat = f"${lat.abs}%05.2f" + (if (lat < 0) "S" else "N")
-		val s_lon = f"${lon.abs}%06.2f" + (if (lon < 0) "W" else "E")
+	override def toString(): String =
+		val s_lat = lat.abs.latFmt + (if (lat < 0) "S" else "N")
+		val s_lon = lon.abs.lonFmt + (if (lon < 0) "W" else "E")
 		val s_alt = f"${alt}%05d"
 		s_lat + "x" + s_lon + "x" + s_alt // 2012x12x01x00x56.10Nx013.42Ex00150
-	}
-}
 
-object StiltPosition {
+
+object StiltPosition:
+
+	extension (d: Double)
+		def rootFormat(fmt: String): String = String.format(java.util.Locale.ROOT, fmt, d)
+		def latFmt = d.abs.rootFormat("%05.2f")
+		def lonFmt = d.abs.rootFormat("%06.2f")
 
 	val re = """(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+)""".r
 
-	def unapply(s: String): Option[StiltPosition] = s match {
+	def unapply(s: String): Option[StiltPosition] = s match
 		case re(latS, latC, lonS, lonC, alt) =>
 
 			val lat = latS.toDouble * (if (latC == "N") 1 else -1)
@@ -43,8 +47,8 @@ object StiltPosition {
 
 			Some(StiltPosition(lat, lon, alt.toInt))
 		case _ => None
-	}
-}
+
+end StiltPosition
 
 
 case class StiltTime(year: Int, month: Int, day: Int, hour: Int) {
