@@ -89,7 +89,7 @@ object ResultRowMaker:
 				val sum = summedVars.map(map.apply).sum
 				map + (targetVar -> sum)
 
-		JsObject(numVals.map(_ -> JsNumber(_)) + (RawRow.stiltMetaColName -> JsString(in.stiltMeta)))
+		JsObject(numVals.map(_ -> JsNumber(_)) + (RawRow.StiltMetaColName -> JsString(in.stiltMeta)))
 
 	end makeRow
 

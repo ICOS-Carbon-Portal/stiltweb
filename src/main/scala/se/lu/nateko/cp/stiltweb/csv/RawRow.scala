@@ -32,14 +32,14 @@ class RawRow private(val vals: Map[Variable, Double], val stiltMeta: String):
 		.sum
 
 	def toJson = JsObject:
-		vals.map((k, v) => k.name -> JsNumber(v)) + (stiltMetaColName -> JsString(stiltMeta))
+		vals.map((k, v) => k.name -> JsNumber(v)) + (StiltMetaColName -> JsString(stiltMeta))
 
 
 end RawRow
 
 object RawRow:
 	val BlacklistedFragment = "ffm"
-	val stiltMetaColName = "metadata"
+	val StiltMetaColName = "metadata"
 
 	type Assignment = (String, Double)
 
@@ -52,11 +52,12 @@ object RawRow:
 		val numVals = Buffer.empty[(Variable, Double)]
 		var stiltMeta: String = ""
 
-		colNames.iterator.zip(rowValues.iterator).foreach: (colName, valStr)  =>
-			if colName == stiltMetaColName then stiltMeta = valStr.trim
+		colNames.iterator.zip(rowValues.iterator).foreach: (colName, valStr) =>
+			val col = trimQuotes(colName)
+			if col == StiltMetaColName then
+				stiltMeta = trimQuotes(valStr)
 
-			else if !colName.contains(BlacklistedFragment) then
-				val col = colName.stripPrefix("\"").stripSuffix("\"")
+			else if !col.contains(BlacklistedFragment) then
 				val valTrimmed = valStr.trim
 				val numVal = if(valTrimmed.isEmpty) Double.NaN else valTrimmed.toDouble
 				numVals.append(Variable(col) -> numVal)
@@ -64,4 +65,5 @@ object RawRow:
 		RawRow(numVals.toMap, stiltMeta)
 	end parse
 
+	def trimQuotes(s: String): String = s.trim.stripPrefix("\"").stripSuffix("\"")
 end RawRow
