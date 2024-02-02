@@ -7,8 +7,8 @@ import {feature} from 'topojson';
 import config from './config';
 
 export function getInitialData(){
-	return Promise.all([
-		tableFormatForSpecies(config.icosCo2Spec, config, true),
+	return Promise.all([ // binary cpb formats for co2 and ch4 are the same
+		tableFormatForSpecies(config.byTracer.co2.observationDataSpec, config, true),
 		getStationInfo(),
 		getCountriesGeoJson()
 	]).then(([icosFormat, stations, countriesTopo]) => {return {icosFormat, stations, countriesTopo};});
@@ -20,37 +20,43 @@ function getCountriesGeoJson(){
 }
 
 function getStationInfo(){
+	const specs = Object.values(config.byTracer)
+		.map(tracerConf => tracerConf.observationDataSpec);
 
 	return Promise.all([
 		getJson('stationinfo'),
-		sparql(icosAtmoReleaseQuery(config.icosCo2Spec), config.sparqlEndpoint, true)
+		sparql(icosAtmoReleaseQuery(specs), config.sparqlEndpoint, true)
 	])
 	.then(([stInfos, sparqlResult]) => {
-
-		const tsLookup = sparqlResult.results.bindings.reduce((acc, binding) => {
+		const tsLookup = {}
+		for(binding in sparqlResult.results.bindings) {
 			const stationId = binding.stationId.value.trim();
 			const dobjInfo = {
 				start: new Date(binding.acqStartTime.value),
 				stop: new Date(binding.acqEndTime.value),
 				nRows: parseInt(binding.nRows.value),
 				samplingHeight: parseFloat(binding.samplingHeight.value),
+				spec: binding.spec.value,
 				id: binding.dobj.value
 			};
-			if(!acc.hasOwnProperty(stationId)) acc[stationId] = [];
-			acc[stationId].push(dobjInfo);
-			return acc;
-		}, {});
+			if(!tsLookup.hasOwnProperty(stationId)) tsLookup[stationId] = [];
+			tsLookup[stationId].push(dobjInfo);
+		}
 
 		function dobjByStation(stInfo, year){
-			const cands = tsLookup[stInfo.icosId];
-			if(!cands) return undefined;
-			function altDiff(dInfo){
-				return Math.abs(dInfo.samplingHeight - stInfo.alt);
+			const cands = tsLookup[stInfo.icosId]
+			const altDiff = dInfo => Math.abs(dInfo.samplingHeight - stInfo.alt)
+			const byTracer = {}
+			for(gas in config.byTracer){
+				if(cands) {
+					let spec = config.byTracer[gas].observationDataSpec
+					let available = cands
+						.filter(dobj => spec === dobj.spec && dobj.start.getUTCFullYear() <= year && dobj.stop.getUTCFullYear() >= year)
+						.sort((do1, do2) => altDiff(do1) - altDiff(do2)); //by proximity of sampling height and stilt altitude
+					byTracer[gas] = available[0]
+				}
 			}
-			const available = cands
-				.filter(dobj => dobj.start.getUTCFullYear() <= year && dobj.stop.getUTCFullYear() >= year)
-				.sort((do1, do2) => altDiff(do1) - altDiff(do2)); //by proximity of sampling height and stilt altitude
-			return available[0];
+			return byTracer
 		}
 
 		return stInfos.map(stInfo => {
@@ -71,9 +77,17 @@ export function getRaster(stationId, filename){
 }
 
 export function getStationData(stationId, scope, icosFormat){
-	//stationId: String
-	//scope: {fromDate: LocalDate(ISO), toDate: LocalDate(ISO), dataObject: {id: String, nRows: Int, start: Data(UTC), stop: Date(UTC)}}
-	//icosFormat: TableFormat
+	/**
+	 * stationId: String
+	 * scope: {
+	 *    fromDate: LocalDate(ISO),
+	 *    toDate: LocalDate(ISO),
+	 *    dataObject: {
+	 *       co2: undefined | {id: String, nRows: Int, start: Data(UTC), stop: Date(UTC)}}
+	 *       ch4: undefined | {id: String, nRows: Int, start: Data(UTC), stop: Date(UTC)}}
+	 *    }
+	 * icosFormat: TableFormat
+	 */
 	const resultBatch = Object.assign({stationId}, _.pick(scope, ['fromDate', 'toDate']))
 	const footprintsListPromise = getFootprintsList(resultBatch);
 	const observationsPromise = getIcosBinaryTable(scope.dataObject, icosFormat);
