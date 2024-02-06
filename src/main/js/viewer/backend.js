@@ -29,7 +29,7 @@ function getStationInfo(){
 	])
 	.then(([stInfos, sparqlResult]) => {
 		const tsLookup = {}
-		for(binding in sparqlResult.results.bindings) {
+		sparqlResult.results.bindings.forEach(binding => {
 			const stationId = binding.stationId.value.trim();
 			const dobjInfo = {
 				start: new Date(binding.acqStartTime.value),
@@ -41,13 +41,13 @@ function getStationInfo(){
 			};
 			if(!tsLookup.hasOwnProperty(stationId)) tsLookup[stationId] = [];
 			tsLookup[stationId].push(dobjInfo);
-		}
+		})
 
 		function dobjByStation(stInfo, year){
 			const cands = tsLookup[stInfo.icosId]
 			const altDiff = dInfo => Math.abs(dInfo.samplingHeight - stInfo.alt)
 			const byTracer = {}
-			for(gas in config.byTracer){
+			for(let gas in config.byTracer){
 				if(cands) {
 					let spec = config.byTracer[gas].observationDataSpec
 					let available = cands
@@ -76,24 +76,24 @@ export function getRaster(stationId, filename){
 	return getBinRaster(id, 'footprint', ['stationId', stationId], ['footprint', filename]);
 }
 
-export function getStationData(stationId, scope, icosFormat){
+export function getStationData(stationId, scope, icosFormat, gas){
 	/**
 	 * stationId: String
 	 * scope: {
 	 *    fromDate: LocalDate(ISO),
 	 *    toDate: LocalDate(ISO),
-	 *    dataObject: {
-	 *       co2: undefined | {id: String, nRows: Int, start: Data(UTC), stop: Date(UTC)}}
-	 *       ch4: undefined | {id: String, nRows: Int, start: Data(UTC), stop: Date(UTC)}}
-	 *    }
+	 *    dataObject: undefined | {id: String, nRows: Int, start: Data(UTC), stop: Date(UTC)}}
+	 * }
 	 * icosFormat: TableFormat
 	 */
+	//console.log({stationId, scope, icosFormat, gas})
 	const resultBatch = Object.assign({stationId}, _.pick(scope, ['fromDate', 'toDate']))
 	const footprintsListPromise = getFootprintsList(resultBatch);
 	const observationsPromise = getIcosBinaryTable(scope.dataObject, icosFormat);
+	const gasConf = config.byTracer[gas]
 	const modelResultsPromise = getStiltResults(
 		Object.assign({}, resultBatch, {
-			columns: config.stiltResultColumns.map(series => series.label)
+			columns: gasConf.stiltResultColumns.map(series => series.label)
 		})
 	)
 
@@ -111,10 +111,10 @@ export function packageResults(resultBatch){
 }
 
 function getIcosBinaryTable(dataObject, icosFormat){
-	if(!dataObject) return Promise.resolve(null);
-	const axisIndices = ['TIMESTAMP', config.observationVarName].map(idx => icosFormat.getColumnIndex(idx));
+	if(!dataObject || !dataObject.id) return Promise.resolve(null);
+	const axisIndices = [config.observationTsName, config.observationVarName].map(idx => icosFormat.getColumnIndex(idx));
 	const tblRequest = icosFormat.getRequest(dataObject.id, dataObject.nRows, axisIndices);
-	return getBinaryTable(tblRequest);
+	return getBinaryTable(tblRequest)
 }
 
 function getStiltResults(resultsRequest){

@@ -172,14 +172,20 @@ const tracerConf = {
 		stiltResultColumns: stiltCo2ResultColumns,
 		stiltResultColumnGrouping: stiltCo2ResultColumnGrouping,
 		icosColumns: icosCo2Columns,
-		secondaryComponents: secondaryComponents(stiltCo2ResultColumnGrouping, stiltCo2ResultColumns)
+		secondaryComponents: secondaryComponents(stiltCo2ResultColumnGrouping, stiltCo2ResultColumns),
+		ylabel: 'total CO2 [ppm]',
+		y2label: 'CO2 components [ppm]',
+		dataScalingFactor: 1e6
 	},
 	ch4: {
 		observationDataSpec: 'http://meta.icos-cp.eu/resources/cpmeta/ObspackCH4TimeSeriesResult',
 		stiltResultColumns: ch4ResultColumns,
 		stiltResultColumnGrouping: ch4ResultGrouping,
 		icosColumns: icosCh4Columns,
-		secondaryComponents: secondaryComponents(ch4ResultGrouping, ch4ResultColumns)
+		secondaryComponents: secondaryComponents(ch4ResultGrouping, ch4ResultColumns),
+		ylabel: 'total CH4 [ppb]',
+		y2label: 'CH4 components [ppb]',
+		dataScalingFactor: 1e9
 	}
 }
 
@@ -188,18 +194,8 @@ export default {
 	cpmetaOntoUri: 'http://meta.icos-cp.eu/ontologies/cpmeta/',
 	cpmetaResUri: 'http://meta.icos-cp.eu/resources/cpmeta/',
 	byTracer: tracerConf,
-	//icosCo2Spec: 'http://meta.icos-cp.eu/resources/cpmeta/atcCo2L2DataObject',
 	observationVarName: 'value',
-	//stiltResultColumns,
-	//stiltResultColumnGrouping,
-	//icosColumns,
-	// primaryComponents(selectedScope){
-	// 	const obsColumns = !selectedScope || selectedScope.dataObject
-	// 		? icosColumns.slice(1)
-	// 		: [Object.assign({}, icosColumns[1], {disabled: true})];
-	// 	return obsColumns.concat(stiltResultColumns.slice(1,3));
-	// },
-	//secondaryComponents,
+	observationTsName: 'time',
 	defaultDelay: 100, //ms
 	viewerScope: ["stationId", "fromDate", "toDate"].every(qpar => urlQuery.hasOwnProperty(qpar)) ? urlQuery : null
 }

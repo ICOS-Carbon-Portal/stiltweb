@@ -4,20 +4,21 @@ import {copyprops} from 'icos-cp-utils';
 import {setDateRange, jumpToFootprint} from '../actions.js';
 import {formatDate} from '../models/formatting';
 import Dygraphs from '../components/Dygraphs.jsx';
+import config from '../config.js';
 
 const GraphsContainer = props => props.timeSeriesData
 	? <Dygraphs data={props.timeSeriesData} {...props}/>
 	: <div />;
 
 function stateToProps(state){
-
+	const gasConf = config.byTracer[state.selectedGas]
 	return Object.assign(
 		{
 			dateFormatter: formatDate,
 			visibility: state.options.modelComponentsVisibility,
 			graphOptions: {
-				ylabel: 'total CO2 [ppm]',
-				y2label: 'CO2 components [ppm]',
+				ylabel: gasConf.ylabel,
+				y2label: gasConf.y2label,
 				xlabel: 'timestamp (UTC)',
 				axes: {
 					y2: {
