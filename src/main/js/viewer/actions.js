@@ -8,6 +8,7 @@ export const FETCHED_RESULT_PACKS_LIST = 'FETCHED_RESULT_PACKS_LIST';
 export const FETCHED_RASTER = 'FETCHED_RASTER';
 export const SET_SELECTED_STATION = 'SET_SELECTED_STATION';
 export const SET_SELECTED_SCOPE = 'SET_SELECTED_SCOPE';
+export const SET_SELECTED_GAS = 'SET_SELECTED_GAS';
 export const SET_DATE_RANGE = 'SET_DATE_RANGE';
 export const SET_VISIBILITY = 'SET_VISIBILITY';
 export const INCREMENT_FOOTPRINT = 'INCREMENT_FOOTPRINT';
@@ -70,13 +71,12 @@ function gotStationData(stationData, stationId, fromDate, toDate){
 export const fetchStationData = (dispatch, getState) => {
 	const state = getState();
 	const scope = state.selectedScope;
-	if (!scope || state.selectedStation === null) return;
+	if (!scope || !state.selectedStation || !state.icosFormat) return;
 
 	const stationId = state.selectedStation.id;
 
 	dispatch({type: SHOW_SPINNER});
-
-	getStationData(stationId, scope, state.icosFormat).then(
+	getStationData(stationId, scope, state.icosFormat, state.selectedGas).then(
 		stationData => {
 			dispatch(gotStationData(stationData, stationId, scope.fromDate, scope.toDate));
 			dispatch({type: HIDE_SPINNER});
@@ -93,6 +93,15 @@ export const setSelectedStation = selectedStation => dispatch => {
 	dispatch(fetchStationData); //date scope might have been selected automatically
 };
 
+export const setSelectedGas = selectedGas => (dispatch, getState) => {
+	dispatch({
+		type: SET_SELECTED_GAS,
+		selectedGas
+	});
+	const station = getState().selectedStation
+	if(station) dispatch(setSelectedStation(station))
+}
+
 const setSelectedStationById = stationId => (dispatch, getState) => {
 	const station = getState().stations.find(s => s.id === stationId);
 	if(station) dispatch(setSelectedStation(station));
@@ -105,6 +114,12 @@ export const setSelectedScope = selectedScope => dispatch => {
 	});
 	dispatch(fetchStationData);
 };
+
+export const setSelectedYear = year => (dispatch, getState) => {
+	const gas = getState().selectedGas
+	const scope = Object.assign({}, year, {dataObject: year.dataObject[gas]})
+	dispatch(setSelectedScope(scope))
+}
 
 export const setDateRange = dateRange => (dispatch, getState) => {
 	const currRange = getState().dateRange;

@@ -17,7 +17,7 @@ import spray.json.DefaultJsonProtocol._
 
 object RowCache{
 	val BytesPerRow = 4096
-	type CachedRow = (LocalDayTime, CsvRow)
+	type CachedRow = (LocalDayTime, JsObject)
 }
 
 class LocalDayTime(val day: MonthDay, val time: LocalTime)
@@ -37,14 +37,14 @@ class RowCache(rowFactory: () => Iterator[RowCache.CachedRow], parentFolder: Pat
 		(Duration.between(yearStart, stop).toMinutes / slotStepInMinutes).toInt
 	}
 
-	def getRows(from: Option[LocalDayTime], to: Option[LocalDayTime]): Iterator[SlotCsvRow] = {
+	def getRows(from: Option[LocalDayTime], to: Option[LocalDayTime]): IndexedSeq[SlotCsvRow] =
 		ensureCacheInitialized()
 		fetchFromCache(from, to)
-	}
 
-	def writeRow(dt: LocalDayTime, row: CsvRow): Unit = {
+
+	def writeRow(dt: LocalDayTime, row: JsObject): Unit = {
 		ensureCacheInitialized()
-		val js = ByteBuffer.wrap(row.toJson.compactPrint.getBytes)
+		val js = ByteBuffer.wrap(row.compactPrint.getBytes)
 		val fc = FileChannel.open(cachePath, StandardOpenOption.WRITE)
 		try{
 			fc.write(js, slotByteOffset(dt))
@@ -61,33 +61,33 @@ class RowCache(rowFactory: () => Iterator[RowCache.CachedRow], parentFolder: Pat
 
 	private def slotByteOffset(dt: LocalDayTime): Long = rowNumber(dt) * BytesPerRow
 
-	private def fetchFromCache(from: Option[LocalDayTime], to: Option[LocalDayTime]): Iterator[SlotCsvRow] = {
+	private def fetchFromCache(from: Option[LocalDayTime], to: Option[LocalDayTime]): IndexedSeq[SlotCsvRow] =
 
 		val fromMinute = from.map(toYearMinute).getOrElse(0)
 		val toMinute = to.map(toYearMinute).getOrElse((maxNRows - 1) * slotStepInMinutes)
 
 		val fc = FileChannel.open(cachePath, StandardOpenOption.READ)
-		try{
+		try
 			val buff = ByteBuffer.allocate(BytesPerRow)
 			val iter: Iterator[SlotCsvRow] = (0 until maxNRows).map(_ * slotStepInMinutes)
 				.filter(minute => minute >= fromMinute && minute <= toMinute)
 				.iterator
-				.map{minute =>
+				.map: minute =>
 					buff.rewind()
 					fc.read(buff, (minute / slotStepInMinutes) * BytesPerRow.toLong)
-					yearStart.plusMinutes(minute.toLong) -> {
-						try{
-							new String(buff.array()).parseJson.convertTo[CsvRow]
-						}catch{
-							case err: Throwable => Map("errorReadingSlotCache" -> Double.NaN, err.getMessage -> Double.NaN)
-						}
-					}
-				}
-			iter.toIndexedSeq.iterator
-		}finally{
+					yearStart.plusMinutes(minute.toLong) -> (
+						try
+							new String(buff.array()).parseJson.asJsObject("Expected a JSON object")
+						catch
+							case err: Throwable => JsObject:
+								"errorReadingSlotCache" -> JsString(err.getMessage)
+					)
+			iter.toIndexedSeq
+		finally
 			fc.close()
-		}
-	}
+
+	end fetchFromCache
+
 
 	private def ensureCacheInitialized(): Unit = {
 		import java.nio.file.StandardOpenOption._

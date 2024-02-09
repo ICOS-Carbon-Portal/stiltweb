@@ -3,13 +3,22 @@ import thunkMiddleware from 'redux-thunk'
 import reducer from './reducer'
 import {fetchInitData} from './actions'
 import Axes from "./models/Axes";
+import config from './config';
 
+const defaultGas = "co2"
+
+const defaultVisibility = {}
+for(let gas in config.byTracer){
+	defaultVisibility[gas + ".stilt"] = true
+	defaultVisibility[gas + ".observed"] = true
+}
 
 const initState = {
-	axes: new Axes(),
+	axes: new Axes(defaultGas),
 	showSpinner: false,
 	icosFormat: null,
 	stations: [],
+	selectedGas: defaultGas,
 	selectedStation: null,
 	selectedYear: null,
 	footprints: null,
@@ -18,7 +27,7 @@ const initState = {
 	desiredFootprint: null,
 	playingMovie: false,
 	options: {
-		modelComponentsVisibility: {"co2.stilt": true, "co2.observed": true}
+		modelComponentsVisibility: defaultVisibility
 	},
 	error: null
 };

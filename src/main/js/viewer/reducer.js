@@ -1,7 +1,7 @@
 import {
 	FETCHED_INITDATA, FETCHED_STATIONDATA, FETCHED_RASTER, SET_SELECTED_STATION, SET_SELECTED_SCOPE,
 	SET_DATE_RANGE, SET_VISIBILITY, INCREMENT_FOOTPRINT, PUSH_PLAY, SET_DELAY, ERROR,
-	SHOW_SPINNER, HIDE_SPINNER, SET_FOOTPRINT, FETCHED_RESULT_PACKS_LIST
+	SHOW_SPINNER, HIDE_SPINNER, SET_FOOTPRINT, FETCHED_RESULT_PACKS_LIST, SET_SELECTED_GAS
 } from './actions';
 import {makeTimeSeriesGraphData} from './models/timeSeriesHelpers';
 import FootprintsRegistry from './models/FootprintsRegistry';
@@ -9,6 +9,7 @@ import FootprintsFetcher from './models/FootprintsFetcher';
 import {copyprops, deepUpdate} from 'icos-cp-utils';
 import * as Toaster from 'icos-cp-toaster';
 import config from './config';
+import Axes from './models/Axes';
 
 export default function(state, action){
 
@@ -39,15 +40,22 @@ export default function(state, action){
 
 		case SET_SELECTED_STATION:
 			const station = action.selectedStation;
-			const selectedScope = config.viewerScope ? null : station.years.length === 1
+			const selectedYear = config.viewerScope ? null : station.years.length === 1
 			? station.years[0]
 			: station.years.find(({year}) => state.selectedScope && state.selectedScope.year === year);
 
-			return keep(['icosFormat', 'stations', 'countriesTopo', 'options'], {
+			const selectedScope = selectedYear
+				? Object.assign({}, selectedYear, {dataObject: selectedYear.dataObject[state.selectedGas]})
+				: selectedYear
+
+			return keep(['icosFormat', 'stations', 'countriesTopo', 'options', 'selectedGas'], {
 				selectedStation: station,
 				selectedScope,
 				axes: state.axes.withSelectedScope(selectedScope)
 			});
+
+		case SET_SELECTED_GAS:
+			return update({selectedGas: action.selectedGas, axes: new Axes(action.selectedGas)});
 
 		case SET_SELECTED_SCOPE:
 			return updateWith(['selectedScope']);
@@ -63,7 +71,7 @@ export default function(state, action){
 					: state.footprintsFetcher;
 				const seriesId = action.stationId + '_' + action.fromDate + '_' + action.toDate;
 				const timeSeriesData = action.footprints
-					? makeTimeSeriesGraphData(action, seriesId)
+					? makeTimeSeriesGraphData(action, seriesId, state.selectedGas)
 					: state.timeSeriesData;
 
 				return update({timeSeriesData, footprints, footprintsFetcher, resultPacks: action.packs});

@@ -46,7 +46,7 @@ class StiltResultTest extends AnyFunSuite {
 		assert(rdatafoot.slot == r.slot)
 
 		val csv = r.files.find(rf => rf.typ == StiltResultFileType.CSV).get
-		assert(csv.data.length == 18530)
+		assert(csv.data.length == 33206)
 		assert(csv.slot == r.slot)
 
 	}

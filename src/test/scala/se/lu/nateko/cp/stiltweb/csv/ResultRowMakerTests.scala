@@ -4,22 +4,25 @@ import java.nio.file.Paths
 import java.nio.file.Files
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.funsuite.AnyFunSuite
+import spray.json.JsNumber
+import spray.json.JsObject
+import spray.json.JsString
+import spray.json.enrichString
 
-class ResultRowMakerTests extends AnyFunSuite{
+class ResultRowMakerTests extends AnyFunSuite:
 
 	def resourcePath(path: String) = Paths.get(getClass.getResource(path).toURI)
 
 	def rawRow: RawRow = {
-		val inPath = resourcePath("/stiltresult2016x49.42Nx008.67Ex00030_1.csv")
+		val inPath = resourcePath("/stiltresult2009x51.97Nx004.93Ex00020_raw.csv")
 		val inLines = Files.readAllLines(inPath)
 		RawRow.parse(inLines.get(0), inLines.get(1))
 	}
 
-	def expectedRow: Map[String, Double] = {
-		val inPath = resourcePath("/stiltresult2016x49.42Nx008.67Ex00030.csv")
-		val inLines = Files.readAllLines(inPath)
-		inLines.get(0).split(' ').zip(inLines.get(1).split(' ').map(toDouble)).toMap
-	}
+	def expectedRow: JsObject =
+		val inPath = resourcePath("/stiltresult2009x51.97Nx004.93Ex00020.json")
+		Files.readString(inPath).parseJson.asJsObject
+
 
 	def toDouble(s: String): Double = try{s.toDouble}catch {
 		case _: NumberFormatException => Double.NaN
@@ -27,18 +30,21 @@ class ResultRowMakerTests extends AnyFunSuite{
 
 	val disregardedVals = Set("date", "day", "isodate", "month", "year", "hour")
 
-	test("makeRow works as expected"){
+	test("makeRow works as expected"):
 		val row = ResultRowMaker.makeRow(rawRow)
 		val expRow = expectedRow
-		val vnames = expRow.keySet.toSeq.sorted
+		assert(row.fields.keySet === expRow.fields.keySet)
 
-		val maybeErrors: Seq[Option[String]] = for(vname <- vnames) yield{
-			val expValue = expRow.get(vname).getOrElse(Double.NaN)
-			val actValue = row.get(vname).getOrElse(Double.NaN)
-			if(!(actValue === (expValue +- 1e-8)) && !disregardedVals.contains(vname))
-				Some(s"$vname: expected $expValue -- got $actValue")
-			else None
-		}
-		assert(maybeErrors.flatten === Nil)
-	}
-}
+		for (col, v) <- row.fields do
+			(v, expRow.fields(col)) match
+				case (JsNumber(n), JsNumber(expNum)) =>
+					val d = n.toDouble
+					val expD = expNum.toDouble
+					assert(d === expD +- 1e-10)
+
+				case (JsString(s), JsString(expS)) =>
+					assert(s === expS)
+
+				case bad => fail(s"Unexpected combination of actual/expected CSV row values: $bad")
+
+end ResultRowMakerTests

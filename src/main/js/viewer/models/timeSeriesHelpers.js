@@ -1,19 +1,19 @@
 import config from '../config';
 import DygraphData, {icosBinTableToDygraphData} from './DygraphData';
 
-export function makeTimeSeriesGraphData(stationDataAction, id){
+export function makeTimeSeriesGraphData(stationDataAction, id, gas){
 
 	const {obsBinTable, modelResults, fromDate, toDate} = stationDataAction;
 
-	const modelComponents = makeModelComponentsData(modelResults);
+	const modelComponents = makeModelComponentsData(modelResults, gas);
 	if(!obsBinTable) return modelComponents.withId(id);
 
-	const obsDyData = icosBinTableToDygraphData(obsBinTable, fromDate, toDate, config.icosColumns);
+	const obsDyData = icosBinTableToDygraphData(obsBinTable, fromDate, toDate, config.byTracer[gas]);
 
 	return DygraphData.merge(obsDyData, modelComponents).withId(id);
 }
 
-function makeModelComponentsData(rawArray){
+function makeModelComponentsData(rawArray, gas){
 
 	function rowGetter(i){
 		const row = rawArray[i].slice(0);
@@ -21,6 +21,6 @@ function makeModelComponentsData(rawArray){
 		return row;
 	}
 
-	return new DygraphData(rowGetter, rawArray.length, config.stiltResultColumns);
+	return new DygraphData(rowGetter, rawArray.length, config.byTracer[gas].stiltResultColumns);
 }
 

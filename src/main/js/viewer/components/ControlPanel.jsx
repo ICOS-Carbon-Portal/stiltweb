@@ -6,6 +6,7 @@ import {formatDate} from '../models/formatting';
 import Select from '../../common/components/Select.jsx';
 import StationsMap from '../../common/components/LMap.jsx';
 import Dropdown from "./Dropdown.jsx";
+import { getPrimaryComponents } from '../models/Axes.js';
 
 
 export default props =>
@@ -21,21 +22,15 @@ export default props =>
 						: <StationAndYearSelector {...props} />
 					}</li>
 					<li className="list-group-item"><FootprintState {...props} /></li>
-					<li className="list-group-item" title="CH4 support is being developed">
-						<div className="form-check form-check-inline">
-							<input className="form-check-input" type="radio" id="co2radio" value="co2" disabled checked/>
-							<label className="form-check-label" htmlFor="co2radio">CO2</label>
-						</div>
-						<div className="form-check form-check-inline">
-							<input className="form-check-input" type="radio" id="ch4radio" value="ch4" disabled/>
-							<label className="form-check-label" htmlFor="ch4radio">CH4</label>
-						</div>
+					<li className="list-group-item">
+						<GasSelector selectGas={props.selectGas} gas="CO2" selectedGas={props.selectedGas} />
+						<GasSelector selectGas={props.selectGas} gas="CH4" selectedGas={props.selectedGas} />
 					</li>
 					<li className="list-group-item">
-						<AxisControlPrimary title="Primary Y-axis" components={config.primaryComponents(props.selectedScope)} {...props} />
+						<AxisControlPrimary title="Primary Y-axis" components={getPrimaryComponents(props.selectedScope, props.selectedGas)} {...props} />
 					</li>
 					<li className="list-group-item">
-						<AxisControlSecondary title="Secondary Y-axis" components={config.secondaryComponents} {...props} />
+						<AxisControlSecondary title="Secondary Y-axis" components={config.byTracer[props.selectedGas].secondaryComponents} {...props} />
 					</li>
 					<li className="list-group-item"><MovieControl {...props} /></li>
 				</ul>
@@ -43,6 +38,20 @@ export default props =>
 		</div>
 	</div>
 
+const GasSelector = ({selectGas, gas, selectedGas}) => {
+	const gasVar = gas.toLowerCase();
+	return <div className="form-check form-check-inline">
+		<input
+			className="form-check-input"
+			type="radio"
+			id={gasVar + "radio"}
+			value={gasVar}
+			onChange={() => selectGas(gasVar)}
+			checked={selectedGas === gasVar}
+		/>
+		<label className="form-check-label" htmlFor={gasVar + "radio"}>{gas}</label>
+	</div>
+}
 
 const StationSelectingMap = ({stations, selectedStation, selectStation}) => {
 	return <div style={{height: 490}}>
@@ -66,13 +75,15 @@ const ViewerScopeDisplay = props => <div className="row">
 	</div>
 </div>;
 
-function yearInfoToLabel(info){
+function yearInfoToLabel(info, gas){
 	if(!info) return info;
-	return info.year + (info.dataObject ? ` (+ICOS ${info.dataObject.samplingHeight} m)` : '');
+	if(!info.dataObject || !info.dataObject[gas]) return info.year
+	return info.year + ` (+ObsPack ${info.dataObject[gas].samplingHeight} m)`;
 }
 
-const StationAndYearSelector = ({selectYear, selectStation, selectedScope, selectedStation, stations}) => {
-	const yearInfos = selectedStation ? selectedStation.years : [];
+const StationAndYearSelector = ({selectYear, selectStation, selectedGas, selectedScope, selectedStation, stations}) => {
+	const yearInfos = selectedStation ? selectedStation.years : []
+	const yearLookup = year => yearInfos.find(info => info.year === year)
 	const yearsDisabled = !yearInfos.length;
 
 	return <div className="row">
@@ -88,11 +99,11 @@ const StationAndYearSelector = ({selectYear, selectStation, selectedScope, selec
 		</div>
 		<div className="col">
 			<Select
-				selectValue={selectYear}
+				selectValue={year => selectYear(yearLookup(year))}
 				infoTxt={yearsDisabled ? "Select station first" : "Select year"}
-				availableValues={yearInfos}
-				value={selectedScope}
-				presenter={yearInfoToLabel}
+				availableValues={yearInfos.map(info => info.year)}
+				value={selectedScope && selectedScope.year}
+				presenter={year => yearInfoToLabel(yearLookup(year), selectedGas)}
 				options={{disabled: yearsDisabled}}
 			/>
 		</div>

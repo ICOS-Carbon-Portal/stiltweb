@@ -1,5 +1,5 @@
 
-export function icosBinTableToDygraphData(binTable, fromDate, toDate, series){
+export function icosBinTableToDygraphData(binTable, fromDate, toDate, gasConfig){
 
 	const scopeFrom = new Date(fromDate + 'T00:00:00.000Z').valueOf();
 	const scopeTo = new Date(toDate + 'T23:59:59.999Z').valueOf();
@@ -21,11 +21,11 @@ export function icosBinTableToDygraphData(binTable, fromDate, toDate, series){
 		const brow = binTable.row(i + offset);
 		return [
 			new Date(brow[0]),
-			brow[1]
+			brow[1] * gasConfig.dataScalingFactor
 		];
 	}
 	const dataSize = binSearch(scopeTo) - offset;
-	return new DygraphData(rowGetter, dataSize, series);
+	return new DygraphData(rowGetter, dataSize, gasConfig.icosColumns);
 }
 
 const NAN = {};//local tailor-made not-a-number

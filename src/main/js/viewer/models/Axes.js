@@ -1,34 +1,35 @@
 import config from '../config';
 
-const defaultVisible = ["co2.stilt", "co2.observed"];
-
 export default class Axes{
-	constructor(selectedScope, primary, secondary){
+	constructor(gas, selectedScope, primary, secondary){
+		this._gas = gas;
+		this._defaultVisible = [".stilt", ".observed"].map(vsuff => this._gas + vsuff)
 		this._ts = Date.now();
 		this._selectedScope = selectedScope;
 		this._primary = primary || this.getPrimary(selectedScope);
 		this._secondary = secondary || this.getSecondary();
-
 	}
 
 	getPrimary(){
-		const components = config.primaryComponents(this._selectedScope);
-		return components.map(c => Object.assign(c, {visible: defaultVisible.includes(c.label)}));
+		const defVisible = this._defaultVisible
+		const components = getPrimaryComponents(this._selectedScope, this._gas);
+		return components.map(c => Object.assign(c, {visible: defVisible.includes(c.label)}));
 	}
 
 	getSecondary(){
-		const columns = config.stiltResultColumns;
-		const grouping = config.stiltResultColumnGrouping;
+		const columns = config.byTracer[this._gas].stiltResultColumns;
+		const grouping = config.byTracer[this._gas].stiltResultColumnGrouping;
+		const defVisible = this._defaultVisible
 
 		return Object.keys(grouping).reduce((acc, key) => {
 			const colList = grouping[key].map(label => columns.find(src => src.label === label));
-			acc[key] = colList.map(c => Object.assign(c, {visible: defaultVisible.includes(c.label)}));
+			acc[key] = colList.map(c => Object.assign(c, {visible: defVisible.includes(c.label)}));
 			return acc;
 		}, {});
 	}
 
 	withSelectedScope(selectedScope){
-		return new Axes(selectedScope, this._primary, this._secondary);
+		return new Axes(this._gas, selectedScope, this._primary, this._secondary);
 	}
 
 	updateVisibility(label, isChecked){
@@ -43,7 +44,7 @@ export default class Axes{
 			return acc;
 		}, {});
 
-		return new Axes(this._selectedScope, primary, secondary);
+		return new Axes(this._gas, this._selectedScope, primary, secondary);
 	}
 
 	isLabelOnPrimary(label){
@@ -65,4 +66,12 @@ export default class Axes{
 	get secondary(){
 		return this._secondary;
 	}
+}
+
+export function getPrimaryComponents(selectedScope, gas){
+	const {stiltResultColumns, icosColumns} = config.byTracer[gas]
+	const obsColumns = !selectedScope || selectedScope.dataObject
+			? icosColumns.slice(1)
+			: [Object.assign({}, icosColumns[1], {disabled: true})];
+	return obsColumns.concat(stiltResultColumns.slice(1,3))
 }

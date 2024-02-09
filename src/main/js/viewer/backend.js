@@ -7,8 +7,8 @@ import {feature} from 'topojson';
 import config from './config';
 
 export function getInitialData(){
-	return Promise.all([
-		tableFormatForSpecies(config.icosCo2Spec, config, true),
+	return Promise.all([ // binary cpb formats for co2 and ch4 are the same
+		tableFormatForSpecies(config.byTracer.co2.observationDataSpec, config, true),
 		getStationInfo(),
 		getCountriesGeoJson()
 	]).then(([icosFormat, stations, countriesTopo]) => {return {icosFormat, stations, countriesTopo};});
@@ -20,37 +20,43 @@ function getCountriesGeoJson(){
 }
 
 function getStationInfo(){
+	const specs = Object.values(config.byTracer)
+		.map(tracerConf => tracerConf.observationDataSpec);
 
 	return Promise.all([
 		getJson('stationinfo'),
-		sparql(icosAtmoReleaseQuery(config.icosCo2Spec), config.sparqlEndpoint, true)
+		sparql(icosAtmoReleaseQuery(specs), config.sparqlEndpoint, true)
 	])
 	.then(([stInfos, sparqlResult]) => {
-
-		const tsLookup = sparqlResult.results.bindings.reduce((acc, binding) => {
+		const tsLookup = {}
+		sparqlResult.results.bindings.forEach(binding => {
 			const stationId = binding.stationId.value.trim();
 			const dobjInfo = {
 				start: new Date(binding.acqStartTime.value),
 				stop: new Date(binding.acqEndTime.value),
 				nRows: parseInt(binding.nRows.value),
 				samplingHeight: parseFloat(binding.samplingHeight.value),
+				spec: binding.spec.value,
 				id: binding.dobj.value
 			};
-			if(!acc.hasOwnProperty(stationId)) acc[stationId] = [];
-			acc[stationId].push(dobjInfo);
-			return acc;
-		}, {});
+			if(!tsLookup.hasOwnProperty(stationId)) tsLookup[stationId] = [];
+			tsLookup[stationId].push(dobjInfo);
+		})
 
 		function dobjByStation(stInfo, year){
-			const cands = tsLookup[stInfo.icosId];
-			if(!cands) return undefined;
-			function altDiff(dInfo){
-				return Math.abs(dInfo.samplingHeight - stInfo.alt);
+			const cands = tsLookup[stInfo.icosId]
+			const altDiff = dInfo => Math.abs(dInfo.samplingHeight - stInfo.alt)
+			const byTracer = {}
+			for(let gas in config.byTracer){
+				if(cands) {
+					let spec = config.byTracer[gas].observationDataSpec
+					let available = cands
+						.filter(dobj => spec === dobj.spec && dobj.start.getUTCFullYear() <= year && dobj.stop.getUTCFullYear() >= year)
+						.sort((do1, do2) => altDiff(do1) - altDiff(do2)); //by proximity of sampling height and stilt altitude
+					byTracer[gas] = available[0]
+				}
 			}
-			const available = cands
-				.filter(dobj => dobj.start.getUTCFullYear() <= year && dobj.stop.getUTCFullYear() >= year)
-				.sort((do1, do2) => altDiff(do1) - altDiff(do2)); //by proximity of sampling height and stilt altitude
-			return available[0];
+			return byTracer
 		}
 
 		return stInfos.map(stInfo => {
@@ -70,16 +76,24 @@ export function getRaster(stationId, filename){
 	return getBinRaster(id, 'footprint', ['stationId', stationId], ['footprint', filename]);
 }
 
-export function getStationData(stationId, scope, icosFormat){
-	//stationId: String
-	//scope: {fromDate: LocalDate(ISO), toDate: LocalDate(ISO), dataObject: {id: String, nRows: Int, start: Data(UTC), stop: Date(UTC)}}
-	//icosFormat: TableFormat
+export function getStationData(stationId, scope, icosFormat, gas){
+	/**
+	 * stationId: String
+	 * scope: {
+	 *    fromDate: LocalDate(ISO),
+	 *    toDate: LocalDate(ISO),
+	 *    dataObject: undefined | {id: String, nRows: Int, start: Data(UTC), stop: Date(UTC)}}
+	 * }
+	 * icosFormat: TableFormat
+	 */
+	//console.log({stationId, scope, icosFormat, gas})
 	const resultBatch = Object.assign({stationId}, _.pick(scope, ['fromDate', 'toDate']))
 	const footprintsListPromise = getFootprintsList(resultBatch);
 	const observationsPromise = getIcosBinaryTable(scope.dataObject, icosFormat);
+	const gasConf = config.byTracer[gas]
 	const modelResultsPromise = getStiltResults(
 		Object.assign({}, resultBatch, {
-			columns: config.stiltResultColumns.map(series => series.label)
+			columns: gasConf.stiltResultColumns.map(series => series.label)
 		})
 	)
 
@@ -97,10 +111,10 @@ export function packageResults(resultBatch){
 }
 
 function getIcosBinaryTable(dataObject, icosFormat){
-	if(!dataObject) return Promise.resolve(null);
-	const axisIndices = ['TIMESTAMP', config.observationVarName].map(idx => icosFormat.getColumnIndex(idx));
+	if(!dataObject || !dataObject.id) return Promise.resolve(null);
+	const axisIndices = [config.observationTsName, config.observationVarName].map(idx => icosFormat.getColumnIndex(idx));
 	const tblRequest = icosFormat.getRequest(dataObject.id, dataObject.nRows, axisIndices);
-	return getBinaryTable(tblRequest);
+	return getBinaryTable(tblRequest)
 }
 
 function getStiltResults(resultsRequest){
