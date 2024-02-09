@@ -93,14 +93,14 @@ export const setSelectedStation = selectedStation => dispatch => {
 	dispatch(fetchStationData); //date scope might have been selected automatically
 };
 
-export const setSelectedGas = selectedGas => dispatch => {
+export const setSelectedGas = selectedGas => (dispatch, getState) => {
 	dispatch({
 		type: SET_SELECTED_GAS,
 		selectedGas
 	});
-	dispatch(fetchStationData);
-};
-
+	const station = getState().selectedStation
+	if(station) dispatch(setSelectedStation(station))
+}
 
 const setSelectedStationById = stationId => (dispatch, getState) => {
 	const station = getState().stations.find(s => s.id === stationId);
