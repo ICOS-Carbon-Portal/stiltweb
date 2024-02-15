@@ -1,6 +1,6 @@
 {"model": {
     "name": "STILT",
-    "version": "Revision 721",
+    "version": "Revision 749",
     "description": "STILT, the Stochastic Time-Inverted Lagrangian Transport model, is a Lagrangian particle dispersion model (LPDM) for atmospheric transport. It is used to derive the upstream influence region on atmospheric measurement locations, the so-called footprint. These footprints are combined with surface maps of natural and anthropogenic tracer fluxes, to simulate atmospheric tracer concentrations at stations. Particles are followed 10 days backward in time.",
     "references" : [
 	"Lin et al., 2003, https://doi.org/10.1029/2002JD003161",
@@ -31,7 +31,7 @@
 	    "resolution": "3-hourly"
 	}
     },
-    "biosphere fluxes": {
+    "biosphere co2 fluxes": {
 	"name": "VPRM",
 	"description": "Biosphere-atmosphere exchange fluxes for CO2 simulated with the Vegetation Photosynthesis and Respiration Model VPRM (Mahadevan et al., 2008, https://doi.org/10.1029/2006GB002735) for the European domain. Simulations were performed using the following datasets: - Vegetation Photosynthesis and Respiration Model (VPRM) parameters optimized for the year 2007 using 46 sites within Europe (available from www.europe-fluxdata.eu) - VPRM preprocessor code version Rev.116 - VPRM optimization code version Rev.7 - VPRM offline code version Rev. 13 - MODIS Terra MOD09A1 surface reflectances version 6 - Downward shortwave radiation and 2m Temperature extracted from analysis and short-term forecast fields from the ECMWF IFS model - Landcover classification based on SYNMAP (Jung et al., 2006, https://doi.org/10.1016/j.rse.2006.01.020)",
 	"uri": "https://doi.org/10.18160/VX78-HVA1",
@@ -43,9 +43,9 @@
 	    "resolution": "1-hourly"
 	}
     },
-    "anthropogenic emissions": {
+    "anthropogenic co2 emissions": {
 	"name": "EDGAR BP",
-	"description" : "Anthropogenic CO2 emissions for Europe based on EDGARv4.3 (Janssens-Maenhout et al., 2019, https://doi.org/10.5194/essd-11-959-2019, fuel type and category specific emissions were provided by Greet Janssens-Maenhout, EU-JRC), BP statistics 2021 (https://www.bp.com/content/dam/bp/business-sites/en/global/corporate/xlsx/energy-economics/statistical-review/bp-stats-review-2021-all-data.xlsx), temporal variations based on MACC-TNO (Denier van der Gon et al., 2011, https://atmosphere.copernicus.eu/sites/default/files/2019-07/MACC_TNO_del_1_3_v2.pdf), temporal extrapolation and disaggregation described in COFFEE (Steinbach et al. 2011, https://doi.org/10.5194/acp-11-6855-2011)",
+	"description" : "Anthropogenic CO2 emissions for Europe based on EDGARv4.3 (Janssens-Maenhout et al., 2019, https://doi.org/10.5194/essd-11-959-2019, fuel type and category specific emissions were provided by Greet Janssens-Maenhout, EU-JRC), BP statistics 2023 (https://www.energyinst.org/__data/assets/excel_doc/0007/1055545/EI-stats-review-all-data.xlsx), temporal variations based on MACC-TNO (Denier van der Gon et al., 2011, https://atmosphere.copernicus.eu/sites/default/files/2019-07/MACC_TNO_del_1_3_v2.pdf), temporal extrapolation and disaggregation described in COFFEE (Steinbach et al. 2011, https://doi.org/10.5194/acp-11-6855-2011)",
 	"uri": "https://doi.org/10.18160/2M77-62E6",
 	"spatial": {
 	    "geolocation": "Europe",
@@ -55,17 +55,90 @@
 	    "resolution": "1-hourly"
 	}
     },
-    "lateral boundary conditions": {
+    "lateral boundary conditions co2": {
 	"name": "Jena CarboScope",
 	"description": "Atmospheric CO2 inversion results, global atmospheric fields of CO2 mixing ratios",
-	"version": "s10oc_v2021",
-	"uri": "https://doi.org/10.17871/CarboScope-s10oc_v2021",
+	"version": "s10oc_v2023",
+	"uri": "https://doi.org/10.17871/CarboScope-s10oc_v2023",
 	"spatial": {
 	    "geolocation": "Global",
 	    "resolution": "5 degree longitude x 4 degree latitude"
 	},
 	"temporal": {
 	    "resolution": "3-hourly"
+	}
+    },
+    "anthropogenic ch4 emissions": {
+	"name": "EDGAR BP",
+	"description" : "Anthropogenic CH4 emissions for Europe based on EDGARv4.3 (Janssens-Maenhout et al., 2019, https://doi.org/10.5194/essd-11-959-2019, fuel type and category specific emissions were provided by Greet Janssens-Maenhout, EU-JRC), BP statistics 2023 (https://www.energyinst.org/__data/assets/excel_doc/0007/1055545/EI-stats-review-all-data.xlsx, temporal variations based on MACC-TNO (Denier van der Gon et al., 2011, https://atmosphere.copernicus.eu/sites/default/files/2019-07/MACC_TNO_del_1_3_v2.pdf), temporal extrapolation and disaggregation described in COFFEE (Steinbach et al. 2011, https://doi.org/10.5194/acp-11-6855-2011)",
+	"uri": "https://doi.org/10.18160/2M77-62E6",
+	"spatial": {
+	    "geolocation": "Europe",
+	    "resolution": "1/8 degree longitude x 1/12 degree latitude"
+	},
+	"temporal": {
+	    "resolution": "1-hourly"
+	}
+     },
+    "natural ch4 land fluxes": {
+	"name": "JSBACH-HIMMELI",
+	"description": "Methane fluxes were calculated separately for several components: (1) Emissions from inundated soils were calculated following the procedure by Spahni et al. (2011, https://doi.org/10.5194/bg-8-1643-2011) using soil respiration data produced by JSBACH land ecosystem model; (2) Emissions from peatlands were simulated  with a HIMMELI methane production and transport model that is implemented to JSBACH land ecosystem model; (3) Exchange fluxes from mineral soils, emission from wet mineral soils and uptake separately, were calculated following the procedure by Spahni et al. (2011, https://doi.org/10.5194/bg-8-1643-2011) based on soil moisture, soil temperature and soil respiration data produced by JSBACH land ecosystem model. Land vegetation cover as well as soil properties were based on CLC2012 100m resolution land cover data. Inundated land area according to Zhang et al. (2021, https://doi.org/10.5194/essd-13-2001-2021) exceeding peatland area (pristine bogs and mires from CLC) was substracted from the total land area and the remaining land was considered as mineral soil. Climate forcing for JSBACH was CRUERA.",
+	"uri": "",
+	"spatial": {
+	    "geolocation": "Europe",
+	    "resolution": "0.1 degrees longitude x 0.1 degrees latitude"
+	},
+	"temporal": {
+	    "resolution": "monthly"
+	}
+    },
+    "fire ch4 emissions": {
+	"name": "GFAS",
+	"description": "CAMS global biomass burning emissions based on fire radiative power GFAS v1.2. The CAMS Global Fire Assimilation System (GFAS) utilises satellite observations of fire radiative power (FRP) to provide near-real-time information on the location, relative intensity and estimated emissions from biomass burning and vegetation fires. Emissions are estimated by (i) conversion of FRP observations to the dry matter (DM) consumed by the fire, and (ii) application of emission factors to DM for different biomes, based on field and laboratory studies in the scientific literature, to estimate the emissions.",
+	"uri": "https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-global-fire-emissions-gfas",
+	"spatial": {
+	    "geolocation": "Global",
+	    "resolution": "0.1 degrees longitude x 0.1 degrees latitude"
+	},
+	"temporal": {
+	    "resolution": "daily"
+	}
+    }, 
+    "ocean ch4 emissions": {
+	"name": "Ocean Methane",
+	"description": "Monthly climatology of ocean CH4 fluxes prepared using a machine learning algorithm to map the surface-ocean - atmosphere CH4 disequilibrium as described in Weber et al. (2019, https://doi.org/10.1038/s41467-019-12541-7)",
+	"uri": "https://figshare.com/articles/dataset/ocean_ch4_nc/9034451",
+	"spatial": {
+	    "geolocation": "Global",
+	    "resolution": "0.25 degrees longitude x 0.25 degrees latitude"
+	},
+	"temporal": {
+	    "resolution": "monthly"
+	}
+    }, 
+    "lakes ch4 emissions": {
+	"name": "ULB Lakes",
+	"description": "Monthly climatology of CH4 emissions from lakes (diffusion and ebullition), prepared by Pierre Regnier, ULB, in the VERIFY project",
+	"uri": "https://verifydb.lsce.ipsl.fr/thredds/verify/VERIFY_OUTPUT/FCH4/catalog.html?dataset=verify/VERIFY_OUTPUT/FCH4/CH4_Tier3BUDD_LakeFluxes_XXXX-SX_ULB_LAKE_EUR-475x1025_1M_V2021_20210712_REGNIER_2D.nc",
+	"spatial": {
+	    "geolocation": "Europe",
+	    "resolution": "0.1 degrees longitude x 0.1 degrees latitude"
+	},
+	"temporal": {
+	    "resolution": "monthly"
+	}
+    }, 
+    "lateral boundary conditions ch4": {
+	"name": "CAMS, TM5-MP 4D-Var",
+	"description": "CAMS global inversion-optimised greenhouse gas fluxes and concentrations, global atmospheric CH4 concentrations from inversion of surface observations",
+	"version": ["v21r1","v22r1"],
+	"uri": "https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-global-greenhouse-gas-inversion",
+	"spatial": {
+	    "geolocation": "Global",
+	    "resolution": "3 degree longitude x 2 degree latitude"
+	},
+	"temporal": {
+	    "resolution": "6-hourly"
 	}
     }
 }
