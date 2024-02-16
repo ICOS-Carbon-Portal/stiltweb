@@ -28,9 +28,17 @@ class VariablesTests extends AnyFunSuite:
 		testFuelVar("ch4.1a2+6cd.coal_brown", Tracer.ch4, "1a2+6cd", Fuel.coal, "brown"): cat =>
 			assert(cat.isCh4Other)
 
+		testFuelVar("co2.1a1a.solid_waste", Tracer.co2, "1a1a", Fuel.otherfuel, "solid_waste"): cat =>
+			assert(cat.isCoxEnergy)
+
 
 	test("plain category variable parsing"):
-		val othersCo2 = Variable("co2.2befg+3.others")
-		
+		val othersCo2 = Variable("co2.2befg+3.others")match
+			case good: PlainCategoryVariable => good
+			case bad => fail(s"expected PlainCategoryVariable, got $bad")
+		assert(othersCo2.category.name == "2befg+3")
+		assert(othersCo2.tracer == Tracer.co2)
+		assert(othersCo2.specifier == "others")
+
 
 end VariablesTests
