@@ -22,8 +22,8 @@ object ResultRowMaker:
 
 	val rowPostProcessingSummations: Vector[(Seq[String], String)] = Vector(
 		Seq("co2.bio.resp", "co2.bio.gee") -> "co2.bio",
-		Seq("co2.background", "co2.bio", "co2.fuel", "co2.cement") -> "co2.stilt",
-		Seq("co.background", "co.fuel", "co.cement") -> "co.stilt",
+		Seq("co2.background", "co2.bio", "co2.fuel", "co2.cement", "co2.non_fuel") -> "co2.stilt",
+		Seq("co.background", "co.fuel", "co.cement", "co.non_fuel") -> "co.stilt",
 		Seq("ch4.agriculture", "ch4.waste", "ch4.energy", "ch4.other_categories") -> "ch4.anthropogenic",
 		Seq("ch4.wetlands", "ch4.soil_uptake", "ch4.wildfire", "ch4.other_natural") -> "ch4.natural",
 		Seq("ch4.background", "ch4.anthropogenic", "ch4.natural") -> "ch4.stilt"
@@ -32,15 +32,19 @@ object ResultRowMaker:
 	def makeRow(in: RawRow): JsObject =
 
 		def fuelAssignments(gas: Tracer): Vector[Assignment] =
-			for((fuel, sum) <- in.byFuelReport(None)(gas).toVector) yield s"$gas.fuel.$fuel" -> sum
+			for (fuel, sum) <- in.byFuelReport(gas, None).toVector yield s"$gas.fuel.$fuel" -> sum
 
 		def otherFuelAssignment(gas: Tracer, specifier: String, label: String): Option[Assignment] =
-			in.byFuelReport(Some(specifier))(gas).get(Fuel.otherfuel).map(s"$gas.fuel.$label" -> _)
+			in.byFuelReport(gas, Some(specifier)).get(Fuel.otherfuel).map(s"$gas.fuel.$label" -> _)
 
 		def categoryAssignment(gas: Tracer, categName: String, filter: Category => Boolean): Assignment =
 			s"$gas.$categName" -> in.byCategoryReport(gas, filter)
 
-		val cementAssignments = for((gas, sum) <- in.cementReport) yield s"$gas.cement" -> sum
+		val cementAssignments = Seq(Tracer.co, Tracer.co2).map: gas =>
+			s"$gas.cement" -> in.byPlainCategoryReport(gas, _.isCement)
+
+		val nonFuelAssignments = Seq(Tracer.co, Tracer.co2).map: gas =>
+			s"$gas.non_fuel" -> in.byPlainCategoryReport(gas, _.isNonFuel)
 
 		val co2FuelAssignments = fuelAssignments(Tracer.co2)
 		val coFuelAssignments = fuelAssignments(Tracer.co)
@@ -60,6 +64,7 @@ object ResultRowMaker:
 				)
 			} ++
 			cementAssignments ++
+			nonFuelAssignments ++
 			Seq(Tracer.co2, Tracer.co).flatMap(otherFuelAssignment(_, "solid_waste", "waste")) ++
 			co2FuelAssignments ++
 			coFuelAssignments ++

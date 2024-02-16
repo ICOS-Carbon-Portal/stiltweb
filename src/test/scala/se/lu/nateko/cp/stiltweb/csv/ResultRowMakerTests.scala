@@ -14,13 +14,13 @@ class ResultRowMakerTests extends AnyFunSuite:
 	def resourcePath(path: String) = Paths.get(getClass.getResource(path).toURI)
 
 	def rawRow: RawRow = {
-		val inPath = resourcePath("/stiltresult2009x51.97Nx004.93Ex00020_raw.csv")
+		val inPath = resourcePath("/stiltresult2009x01x01x00x51.97Nx004.93Ex00020_raw.csv")
 		val inLines = Files.readAllLines(inPath)
 		RawRow.parse(inLines.get(0), inLines.get(1))
 	}
 
 	def expectedRow: JsObject =
-		val inPath = resourcePath("/stiltresult2009x51.97Nx004.93Ex00020.json")
+		val inPath = resourcePath("/stiltresult2009x01x01x00x51.97Nx004.93Ex00020.json")
 		Files.readString(inPath).parseJson.asJsObject
 
 
@@ -32,6 +32,7 @@ class ResultRowMakerTests extends AnyFunSuite:
 
 	test("makeRow works as expected"):
 		val row = ResultRowMaker.makeRow(rawRow)
+		//println(row.prettyPrint)
 		val expRow = expectedRow
 		assert(row.fields.keySet === expRow.fields.keySet)
 

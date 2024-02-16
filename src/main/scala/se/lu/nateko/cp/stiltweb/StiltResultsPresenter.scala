@@ -349,7 +349,10 @@ object StiltResultsPresenter:
 	private def toRelResPath(path: Path, relTo: Path): ResultRelPath = relTo.relativize(path).toString
 	val StiltResRelPath: PathMatcher1[ResultRelPath] = RemainingPath.map(_.toString)
 
-	private val numFormat = NumberFormat.getNumberInstance(Locale.ROOT)
+	private[this] val numFormat =
+		val nf = NumberFormat.getNumberInstance(Locale.ROOT)
+		nf.setGroupingUsed(false)
+		nf
 	def dbl2str(d: Double): String = numFormat.format(d)
 
 end StiltResultsPresenter

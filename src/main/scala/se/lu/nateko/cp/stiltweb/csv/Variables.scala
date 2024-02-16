@@ -12,6 +12,7 @@ sealed trait CategoryVariable extends Variable{
 case class PlainVariable(name: String) extends Variable
 case class PlainCategoryVariable(name: String, tracer: Tracer, category: Category, specifier: String) extends CategoryVariable{
 	def isCement: Boolean = specifier == Variable.cementName
+	def isNonFuel: Boolean = specifier == Variable.nonFuelName
 }
 case class FuelInfoVariable(name: String, tracer: Tracer, category: Category, fuel: Fuel, fuelSubtype: String) extends CategoryVariable
 
@@ -19,6 +20,8 @@ case class FuelInfoVariable(name: String, tracer: Tracer, category: Category, fu
 object Variable{
 
 	val cementName = "cement"
+	val nonFuelName = "others"
+
 	val fuelVarPattern = """^([^.]+)\.([^.]+)\.([^_]+)_(.+)$""".r
 	val categoryVarPattern = """^([^.]+)\.([^.]+)\.(.+)$""".r
 
@@ -39,7 +42,7 @@ object Variable{
 	val varNamesForPackaging = IndexedSeq(
 		"co2.stilt",  "co2.background", "co2.bio", "co2.bio.gee", "co2.bio.resp",
 		"co2.fuel", "co2.fuel.oil", "co2.fuel.coal", "co2.fuel.gas", "co2.fuel.bio", "co2.fuel.waste",
-		"co2.energy", "co2.transport",  "co2.industry", "co2.residential", "co2.cement", "co2.other_categories",
+		"co2.energy", "co2.transport",  "co2.industry", "co2.residential", "co2.cement", "co2.non_fuel", "co2.other_categories",
 		"ch4.stilt", "ch4.background", "ch4.anthropogenic", "ch4.agriculture", "ch4.waste", "ch4.energy", "ch4.other_categories",
 		"ch4.natural", "ch4.wetlands", "ch4.soil_uptake", "ch4.wildfire", "ch4.other_natural"
 	)

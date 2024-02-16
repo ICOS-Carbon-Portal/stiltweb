@@ -72,6 +72,10 @@ const stiltCo2ResultColumns = [dateSeries, {
 	comment: 'CO2 from cement production',
 	options: {axis: 'y2', color: 'rgb(128,128,128)', strokePattern: Dygraph.DASHED_LINE}
 }, {
+	label: 'co2.non_fuel',
+	comment: 'CO2 from non-fuel emissions (except cement)',
+	options: {axis: 'y2', color: 'rgb(192,64,192)', strokePattern: Dygraph.DASHED_LINE}
+}, {
 	label: 'co2.other_categories',
 	comment: 'CO2 from other categories',
 	options: {axis: 'y2', color: 'rgb(216,131,255)', strokePattern: Dygraph.DASHED_LINE}
@@ -130,7 +134,7 @@ const ch4ResultColumns = [dateSeries, {
 const stiltCo2ResultColumnGrouping = {
 	'Biospheric CO2': ['co2.bio'],
 	'Biospheric CO2 split into Photosynthetic uptake and respiration': ['co2.bio.gee', 'co2.bio.resp'],
-	'Anthropogenic CO2': ['co2.fuel', 'co2.cement'],
+	'Anthropogenic CO2': ['co2.fuel', 'co2.cement', 'co2.non_fuel'],
 	'Anthropogenic CO2 from fuel use': ['co2.fuel.coal', 'co2.fuel.oil', 'co2.fuel.gas', 'co2.fuel.bio', 'co2.fuel.waste'],
 	'Anthropogenic CO2 split into Source categories': ['co2.energy', 'co2.transport', 'co2.industry', 'co2.residential', 'co2.other_categories']
 };

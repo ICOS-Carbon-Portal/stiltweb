@@ -14,21 +14,19 @@ class RawRow private(val vals: Map[Variable, Double], val stiltMeta: String):
 	def sum(toVar: String, fromVars: Seq[String]): Assignment =
 		toVar -> fromVars.map(v => vals(PlainVariable(v))).sum
 
-	def byFuelReport(subFuel: Option[String]): Map[Tracer, Map[Fuel, Double]] = vals.keys
+	def byFuelReport(gas: Tracer, subFuel: Option[String]): Map[Fuel, Double] = vals.keys
 		.collect:
-			case fi: FuelInfoVariable if fi.tracer != Tracer.othergas && subFuel.fold(true)(_ == fi.fuelSubtype) => fi
-		.groupBy(_.tracer).view.mapValues(
-			_.groupMapReduce(_.fuel)(vals.apply)(_ + _)
-		).toMap
+			case fi: FuelInfoVariable if fi.tracer == gas && subFuel.fold(true)(_ == fi.fuelSubtype) => fi
+		.groupMapReduce(_.fuel)(vals.apply)(_ + _)
 
-	val cementReport: Map[Tracer, Double] = vals.keys
+	def byPlainCategoryReport(gas: Tracer, filter: PlainCategoryVariable => Boolean): Double = vals
 		.collect:
-			case pcv: PlainCategoryVariable if pcv.isCement && pcv.tracer != Tracer.othergas => pcv
-		.groupMapReduce(_.tracer)(vals.apply)(_ + _)
+			case (pcv: PlainCategoryVariable, v) if filter(pcv) && pcv.tracer == gas => v
+		.sum
 
-	def byCategoryReport(gas: Tracer, filter: Category => Boolean): Double = vals.keys
+	def byCategoryReport(gas: Tracer, filter: Category => Boolean): Double = vals
 		.collect:
-			case cv: CategoryVariable if cv.tracer == gas && filter(cv.category) => vals(cv)
+			case (cv: CategoryVariable, v) if cv.tracer == gas && filter(cv.category) => v
 		.sum
 
 	def toJson = JsObject:
