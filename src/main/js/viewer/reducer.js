@@ -40,13 +40,13 @@ export default function(state, action){
 
 		case SET_SELECTED_STATION:
 			const station = action.selectedStation;
-			const selectedYear = config.viewerScope ? null : station.years.length === 1
-			? station.years[0]
-			: station.years.find(({year}) => state.selectedScope && state.selectedScope.year === year);
+			const selectedYear = station.years.length === 1
+				? station.years[0]
+				: station.years.find(({year}) => state.selectedScope && state.selectedScope.year === year);
 
 			const selectedScope = selectedYear
-				? Object.assign({}, selectedYear, {dataObject: selectedYear.dataObject[state.selectedGas]})
-				: selectedYear
+				? Object.assign({}, selectedYear, state.selectedScope, {dataObject: selectedYear.dataObject[state.selectedGas]})
+				: state.selectedScope
 
 			return keep(['icosFormat', 'stations', 'countriesTopo', 'options', 'selectedGas'], {
 				selectedStation: station,

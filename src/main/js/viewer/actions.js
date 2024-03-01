@@ -28,8 +28,11 @@ export const fetchInitData = dispatch => {
 			dispatch(Object.assign({type: FETCHED_INITDATA}, initData));
 			if (config.viewerScope){
 				const {stationId, fromDate, toDate} = config.viewerScope;
+				const fromYear = fromDate.substring(0, 4)
+				const scope = {fromDate, toDate}
+				if (fromYear == toDate.substring(0, 4)) scope.year = parseInt(fromYear)
+				dispatch(setSelectedScope(scope));
 				dispatch(setSelectedStationById(stationId));
-				dispatch(setSelectedScope({fromDate, toDate}));
 			}
 			dispatch({type: HIDE_SPINNER});
 		},
@@ -107,7 +110,7 @@ const setSelectedStationById = stationId => (dispatch, getState) => {
 	if(station) dispatch(setSelectedStation(station));
 };
 
-export const setSelectedScope = selectedScope => dispatch => {
+const setSelectedScope = selectedScope => dispatch => {
 	dispatch({
 		type: SET_SELECTED_SCOPE,
 		selectedScope
