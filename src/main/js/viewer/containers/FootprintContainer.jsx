@@ -23,39 +23,40 @@ class FootprintContainer extends Component {
 
 	render(){
 		const props = this.props;
-		return(
-			<div ref="container" style={{display:'flex'}}>
-				<div style={{height: containerHeight, flex: 100}}>
-					<NetCDFMap
-						mapHeight={containerHeight}
-						mapOptions={{
-							maxBounds: [[28, -20],[78, 40]],
-							center: [53, 10],
-							zoom: 3
-						}}
-						geoJson={props.countriesTopo}
-						raster={props.raster}
-						overlay={getMarkers(props.selectedStation, "Station")}
-						latLngBounds={getLatLngBounds(props.selectedStation, this.lastSelectedStation)}
-						reset={doReset(props.selectedStation, this.lastSelectedStation, props.raster)}
-						colorMaker={colorMaker}
-						renderCompleted={props.renderCompleted}
-						mask={polygonMask}
-					/>
-				</div>
-				<div style={{flex: legendWidth + 'px', minWidth: legendWidth}}>
-					<Legend
-						horizontal={false}
-						canvasWidth={20}
-						containerHeight={containerHeight}
-						margin={7}
-						getLegend={getLegend}
-						legendId={props.raster ? props.raster.id : ""}
-						legendText="surface influence [ppm / (&mu;mol / m&sup2;s)]"
-					/>
-				</div>
+
+		return <div style={{width: "100%"}}>
+			<div style={{height: containerHeight, position: "relative", float: "left", width: `calc(100% - ${legendWidth + 15}px`}} >
+				<NetCDFMap
+					mapHeight={containerHeight}
+					mapOptions={{
+						maxBounds: [[28, -20],[78, 40]],
+						center: [53, 10],
+						zoom: 3
+					}}
+					geoJson={props.countriesTopo}
+					raster={props.raster}
+					overlay={getMarkers(props.selectedStation, "Station")}
+					latLngBounds={getLatLngBounds(props.selectedStation, this.lastSelectedStation)}
+					reset={doReset(props.selectedStation, this.lastSelectedStation, props.raster)}
+					colorMaker={colorMaker}
+					renderCompleted={props.renderCompleted}
+					mask={polygonMask}
+				/>
 			</div>
-		);
+			<div style={{height: containerHeight, minWidth: legendWidth, position: "relative", float: "right"}}>
+				<Legend
+					horizontal={false}
+					canvasWidth={20}
+					containerHeight={containerHeight}
+					margin={7}
+					decimals={3}
+					getLegend={getLegend}
+					rangeValues={{}}
+					legendId={props.raster ? props.raster.id : ""}
+					legendText="surface influence [ppm / (&mu;mol / (m&sup2;s))]"
+				/>
+			</div>
+		</div>
 	}
 }
 
@@ -83,9 +84,7 @@ function getLatLngBounds(selectedStation, lastSelectedStation){
 }
 
 function stateToProps(state){
-	return Object.assign({},
-		copyprops(state, ['countriesTopo', 'raster', 'selectedStation'])
-	);
+	return copyprops(state, ['countriesTopo', 'raster', 'selectedStation'])
 }
 
 function dispatchToProps(dispatch){

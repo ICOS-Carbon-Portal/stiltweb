@@ -6,6 +6,7 @@ export const FETCHED_INITDATA = 'FETCHED_INITDATA';
 export const FETCHED_STATIONDATA = 'FETCHED_STATIONDATA';
 export const FETCHED_RESULT_PACKS_LIST = 'FETCHED_RESULT_PACKS_LIST';
 export const FETCHED_RASTER = 'FETCHED_RASTER';
+export const SET_STATION_FILTER = 'SET_STATION_FILTER'
 export const SET_SELECTED_STATION = 'SET_SELECTED_STATION';
 export const SET_SELECTED_SCOPE = 'SET_SELECTED_SCOPE';
 export const SET_SELECTED_GAS = 'SET_SELECTED_GAS';
@@ -87,6 +88,14 @@ export const fetchStationData = (dispatch, getState) => {
 		err => dispatch(failWithError(err))
 	);
 };
+
+export function setStationFilter(stationFilter){
+	return {
+		type: SET_STATION_FILTER,
+		stationFilter
+	}
+}
+
 
 export const setSelectedStation = selectedStation => dispatch => {
 	dispatch({

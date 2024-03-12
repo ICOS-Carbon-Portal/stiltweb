@@ -1,5 +1,5 @@
 import { createStore, applyMiddleware } from 'redux'
-import thunkMiddleware from 'redux-thunk'
+import {thunk} from 'redux-thunk'
 import reducer from './reducer'
 import {fetchInitData} from './actions'
 import Axes from "./models/Axes";
@@ -13,14 +13,25 @@ for(let gas in config.byTracer){
 	defaultVisibility[gas + ".observed"] = true
 }
 
+export const StationFilters = [{
+	label: "ICOS",
+	predicate: station => station.isIcos
+}, {
+	label: "Obspack",
+	predicate: (station, gas) => station.years && station.years.some(year => year.dataObject && year.dataObject[gas])
+}, {
+	label: "All",
+	predicate: () => true
+}]
+
 const initState = {
 	axes: new Axes(defaultGas),
 	showSpinner: false,
 	icosFormat: null,
-	stations: [],
+	stationFilter: StationFilters[0], //ICOS by default
+	allStations: [],
 	selectedGas: defaultGas,
 	selectedStation: null,
-	selectedYear: null,
 	footprints: null,
 	footprint: null,
 	resultPacks: [],
@@ -29,6 +40,7 @@ const initState = {
 	options: {
 		modelComponentsVisibility: defaultVisibility
 	},
+	toasterData: null,
 	error: null
 };
 
@@ -50,8 +62,7 @@ function logger({ getState }) {
 */
 
 export default function(){
-	const store = createStore(reducer, initState, applyMiddleware(thunkMiddleware));//, logger));
+	const store = createStore(reducer, initState, applyMiddleware(thunk));//, logger));
 	store.dispatch(fetchInitData);
 	return store;
 }
-

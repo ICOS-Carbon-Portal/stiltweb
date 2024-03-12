@@ -26,8 +26,9 @@ export function getLegend(pixelMin, pixelMax){
 	const tickPixel = linearInterpolation(logRange, [pixelMin, pixelMax]);
 
 	return {
-		colorMaker: pixel => color(toLogRange(pixel)),
 		valueMaker,
+		domain: logRange.map(e => Math.pow(10, e)),
+		colorMaker: pixel => color(toLogRange(pixel)),
 		suggestedTickLocations: Array.from({length: 7}, (_, i) => i - 6).map(tickPixel)
 	};
 }

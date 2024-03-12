@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import * as LCommon from 'icos-cp-leaflet-common';
+import {MarkerClusterGroup} from 'leaflet.markercluster';
 
 const warningRadius = (lat => {
 	return 20000 * Math.cos(Math.PI / 180 * lat);
 });
-
 
 export default class LMap extends Component{
 	constructor(props){
 		super(props);
 		this.app = {
 			map: null,
-			markers: L.markerClusterGroup({
+			markers: new MarkerClusterGroup({
 				maxClusterRadius: function(zoom){
 					return 0.1;
 				},
@@ -81,7 +81,7 @@ export default class LMap extends Component{
 
 	panMap(selectedStation, markers, map){
 		if (!map.getZoom()
-			|| selectedStation === null
+			|| !selectedStation
 			|| selectedStation.lat === undefined
 			|| selectedStation.lon === undefined
 			|| selectedStation.lat === ''

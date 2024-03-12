@@ -39,7 +39,7 @@ export default class FootprintsRegistry{
 		const d = typeof date === 'object' ? date.valueOf() : date;
 
 		function improve(left, right){
-			if(right === left) return left;
+			if(right <= left) return left;
 			const dmin = dates[left];
 			const dmax = dates[right];
 			if(right - left === 1) return (d - dmin > dmax - d) ? right : left;

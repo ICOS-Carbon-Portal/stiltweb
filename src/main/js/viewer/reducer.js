@@ -1,14 +1,13 @@
 import {
 	FETCHED_INITDATA, FETCHED_STATIONDATA, FETCHED_RASTER, SET_SELECTED_STATION, SET_SELECTED_SCOPE,
 	SET_DATE_RANGE, SET_VISIBILITY, INCREMENT_FOOTPRINT, PUSH_PLAY, SET_DELAY, ERROR,
-	SHOW_SPINNER, HIDE_SPINNER, SET_FOOTPRINT, FETCHED_RESULT_PACKS_LIST, SET_SELECTED_GAS
+	SHOW_SPINNER, HIDE_SPINNER, SET_FOOTPRINT, FETCHED_RESULT_PACKS_LIST, SET_SELECTED_GAS, SET_STATION_FILTER
 } from './actions';
 import {makeTimeSeriesGraphData} from './models/timeSeriesHelpers';
 import FootprintsRegistry from './models/FootprintsRegistry';
 import FootprintsFetcher from './models/FootprintsFetcher';
 import {copyprops, deepUpdate} from 'icos-cp-utils';
 import * as Toaster from 'icos-cp-toaster';
-import config from './config';
 import Axes from './models/Axes';
 
 export default function(state, action){
@@ -22,7 +21,7 @@ export default function(state, action){
 			return update({showSpinner: false});
 
 		case FETCHED_INITDATA:
-			const stations = action.stations.map(s => {
+			const allStations = action.stations.map(s => {
 				s.years.forEach(yObj => Object.assign(yObj, {
 					fromDate: yObj.year + "-01-01",
 					toDate: yObj.year + "-12-31"
@@ -31,12 +30,15 @@ export default function(state, action){
 			});
 			let newState = updateWith(['icosFormat', 'countriesTopo']);
 
-			return Object.assign(newState, {stations});
+			return Object.assign(newState, {allStations});
 
 		case FETCHED_RASTER:
 			return state.desiredFootprint.date === action.footprint.date
 				? updateWith(['raster', 'footprint'])
 				: state;
+
+		case SET_STATION_FILTER:
+			return update({stationFilter: action.stationFilter})
 
 		case SET_SELECTED_STATION:
 			const station = action.selectedStation;
@@ -45,10 +47,10 @@ export default function(state, action){
 				: station.years.find(({year}) => state.selectedScope && state.selectedScope.year === year);
 
 			const selectedScope = selectedYear
-				? Object.assign({}, selectedYear, state.selectedScope, {dataObject: selectedYear.dataObject[state.selectedGas]})
-				: state.selectedScope
+				? Object.assign({}, selectedYear, {dataObject: selectedYear.dataObject[state.selectedGas]})
+				: null
 
-			return keep(['icosFormat', 'stations', 'countriesTopo', 'options', 'selectedGas'], {
+			return update({
 				selectedStation: station,
 				selectedScope,
 				axes: state.axes.withSelectedScope(selectedScope)
@@ -127,10 +129,6 @@ export default function(state, action){
 
 	function checkStationId(id){
 		return state.selectedStation && state.selectedStation.id === id;
-	}
-
-	function keep(props, updatesObj){
-		return Object.assign(copyprops(state, props), updatesObj); 
 	}
 
 	function update(){

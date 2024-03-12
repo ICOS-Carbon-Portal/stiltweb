@@ -12,7 +12,6 @@ import akka.http.scaladsl.model.RequestEntity
 import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import se.lu.nateko.cp.cpauth.core.DownloadEventInfo
 import se.lu.nateko.cp.cpauth.core.UserId
 import spray.json.DefaultJsonProtocol
 import spray.json.*
@@ -91,14 +90,7 @@ object AtmoAccessClient extends DefaultJsonProtocol:
 		service: String = "FOOTPRINTS"
 	)
 
-	//TODO Use JsonSupport from cpauthCore after the config branch has been merged to master
-	//(maybe move more JsonFormats there first)
-	import DownloadEventInfo.{given RootJsonFormat[Instant]}
-	given JsonFormat[UserId] with
-		def write(uid: UserId) = JsString(uid.email)
-		def read(js: JsValue) = js match
-			case JsString(uidStr) => UserId(uidStr)
-			case _ => deserializationError("Expected UserId as JsString")
+	import se.lu.nateko.cp.cpauth.core.JsonSupport.given
 
 	given RootJsonFormat[AppInfo] = jsonFormat7(AppInfo.apply)
 

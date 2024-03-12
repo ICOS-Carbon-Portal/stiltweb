@@ -1,9 +1,8 @@
-import 'whatwg-fetch';
 import _ from 'lodash';
 import {checkStatus, sparql, getJson, getBinaryTable, getBinRaster, tableFormatForSpecies} from 'icos-cp-backend';
 import {icosAtmoReleaseQuery} from './sparqlQueries';
 import {copyprops} from 'icos-cp-utils';
-import {feature} from 'topojson';
+import {feature} from 'topojson-client';
 import config from './config';
 
 export function getInitialData(){

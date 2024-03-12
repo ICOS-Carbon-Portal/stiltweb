@@ -9,6 +9,7 @@ import config from '../config';
 import { Copyright } from 'icos-cp-copyright';
 import ResultsControl from '../components/ResultsControl.jsx';
 import { failWithError, fetchedResultsPackList } from '../actions.js';
+import {formatDate} from '../models/formatting';
 
 const marginTop = 10;
 
@@ -35,6 +36,8 @@ class App extends Component {
 			updateResultPacks: props.updateResultPacks
 		}
 
+		const footprintStatus = props.footprint ? formatDate(props.footprint.date) : 'not loaded';
+
 		return (
 			<div>
 				<AnimatedToasters toasterData={this.props.toasterData} autoCloseDelay={5000} />
@@ -52,12 +55,19 @@ class App extends Component {
 				</div>
 				<div className="row" style={{marginTop}}>
 
-					<div className="col-md-5" style={{paddingRight:0}}>
-						{showSpinner ? <Spinner /> : null}
-						<FootprintContainer />
+					<div className="col-md-4" style={{paddingRight:0}}>
+						<ul className="list-group">
+							<li className="list-group-item" style={{padding: 0}}>
+								{showSpinner ? <Spinner /> : null}
+								<FootprintContainer />
+							</li>
+							<li className="list-group-item">
+								<strong>Footprint: </strong>{footprintStatus}
+							</li>
+						</ul>
 					</div>
 
-					<div className="col-md-7" style={{paddingLeft:0}}>
+					<div className="col-md-8" style={{paddingLeft:0}}>
 						<ControlPanelContainer />
 					</div>
 

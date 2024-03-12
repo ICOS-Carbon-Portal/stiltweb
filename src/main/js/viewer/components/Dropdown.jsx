@@ -55,8 +55,8 @@ export default class Dropdown extends Component{
 		const availableValues = getAvailableValues(props.sort, props.availableValues, props.presenter);
 		const selectOptions = availableValues.map(v => toStringValue(v, props.presenter));
 		const buttonLbl = toStringValue(props.selectedValue, props.presenter) || props.buttonLbl;
-		const selectedIsICOS = props.selectedValue === null ? false : props.selectedValue.isICOS;
-		const rootStyle = Object.assign({display: 'inline-block', marginBottom: 10}, props.style);
+		const selectedIsICOS = props.selectedValue ? props.selectedValue.isICOS : false;
+		const rootStyle = Object.assign({display: 'inline-block'}, props.style);
 		const menuCls = dropdownOpen ? 'dropdown-menu overflow-scroll show' : 'dropdown-menu overflow-scroll';
 
 		return (

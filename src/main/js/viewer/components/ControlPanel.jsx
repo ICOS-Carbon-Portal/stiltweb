@@ -2,26 +2,23 @@ import React from 'react';
 
 import config from '../config';
 
-import {formatDate} from '../models/formatting';
 import Select from '../../common/components/Select.jsx';
 import StationsMap from '../../common/components/LMap.jsx';
-import Dropdown from "./Dropdown.jsx";
 import { getPrimaryComponents } from '../models/Axes.js';
+import StationAndYearSelector from './StationAndYearSelector.jsx';
 
 
 export default props =>
-	<div className="border" style={{padding: 15}}>
 		<div className="row">
 			<div className="col-md-5" style={{paddingRight:0}}>
 				<StationSelectingMap {...props} />
 			</div>
-			<div className="col-md-7">
+			<div className="col-md-7" style={{paddingLeft: 0}}>
 				<ul className="list-group" style={{marginBottom:0}}>
-					<li className="list-group-item">{config.viewerScope
+					{config.viewerScope
 						? <ViewerScopeDisplay {...config.viewerScope} />
 						: <StationAndYearSelector {...props} />
-					}</li>
-					<li className="list-group-item"><FootprintState {...props} /></li>
+					}
 					<li className="list-group-item">
 						<GasSelector selectGas={props.selectGas} gas="CO2" selectedGas={props.selectedGas} />
 						<GasSelector selectGas={props.selectGas} gas="CH4" selectedGas={props.selectedGas} />
@@ -36,7 +33,6 @@ export default props =>
 				</ul>
 			</div>
 		</div>
-	</div>
 
 const GasSelector = ({selectGas, gas, selectedGas}) => {
 	const gasVar = gas.toLowerCase();
@@ -60,55 +56,22 @@ const StationSelectingMap = ({stations, selectedStation, selectStation}) => {
 			selectedStation={selectedStation}
 			action={selectStation}
 		/>
-	</div>;
+	</div>
 };
 
-const ViewerScopeDisplay = props => <div className="row">
-	<div className="col-md-4">
-		<strong>Pre-selected site:</strong> {props.stationId}
-	</div>
-	<div className="col-md-4">
-		<strong>Start date:</strong> {props.fromDate}
-	</div>
-	<div className="col-md-4">
-		<strong>End date:</strong> {props.toDate}
-	</div>
-</div>;
-
-function yearInfoToLabel(info, gas){
-	if(!info) return info;
-	if(!info.dataObject || !info.dataObject[gas]) return info.year
-	return info.year + ` (+ObsPack ${info.dataObject[gas].samplingHeight} m)`;
-}
-
-const StationAndYearSelector = ({selectYear, selectStation, selectedGas, selectedScope, selectedStation, stations}) => {
-	const yearInfos = selectedStation ? selectedStation.years : []
-	const yearLookup = year => yearInfos.find(info => info.year === year)
-	const yearsDisabled = !yearInfos.length;
-
-	return <div className="row">
-		<div className="col">
-			<Dropdown
-				buttonLbl="Select station here or on the map"
-				presenter={station => station ? `${station.id} (${station.name}, ${station.alt} m)` : station}
-				itemClickAction={selectStation}
-				availableValues={stations}
-				selectedValue={selectedStation}
-				sort={true}
-			/>
+const ViewerScopeDisplay = props => <li className="list-group-item">
+	<div className="row">
+		<div className="col-md-4">
+			<strong>Pre-selected site:</strong> {props.stationId}
 		</div>
-		<div className="col">
-			<Select
-				selectValue={year => selectYear(yearLookup(year))}
-				infoTxt={yearsDisabled ? "Select station first" : "Select year"}
-				availableValues={yearInfos.map(info => info.year)}
-				value={selectedScope && selectedScope.year}
-				presenter={year => yearInfoToLabel(yearLookup(year), selectedGas)}
-				options={{disabled: yearsDisabled}}
-			/>
+		<div className="col-md-4">
+			<strong>Start date:</strong> {props.fromDate}
 		</div>
-	</div>;
-};
+		<div className="col-md-4">
+			<strong>End date:</strong> {props.toDate}
+		</div>
+	</div>
+</li>
 
 
 const AxisControlPrimary = props => {
@@ -164,18 +127,6 @@ const StiltComponentSelector = ({label, comment, disabled, updateVisibility, opt
 		/>
 		{label}
 	</span>;
-};
-
-
-const FootprintState = ({footprint, options, updateStationVisibility}) => {
-
-	const status = footprint ? formatDate(footprint.date) : 'not loaded';
-
-	return <div className="row">
-		<div className="col-md-6">
-			<strong>Footprint: </strong>{status}
-		</div>
-	</div>;
 };
 
 
