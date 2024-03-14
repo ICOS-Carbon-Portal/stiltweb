@@ -3,6 +3,7 @@ import WorkerFormData from './WorkerFormData';
 
 export default class WorkerData{
 	constructor(stations, workerFormData, selectedStation, errors){
+		console.log(stations)
 		this._stations = stations || [];
 		this._workerFormData = workerFormData || new WorkerFormData();
 		this._selectedStation = selectedStation || new StationInfo();

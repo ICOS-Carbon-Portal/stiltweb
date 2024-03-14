@@ -66,7 +66,7 @@ export default class DatePickerWrapper extends Component{
 
 	render(){
 		const {defaultValue, hasValError} = this.state;
-		const {name, minDate, maxDate, style, value, hasLogicError} = this.props;
+		const {name, minDate, maxDate, style, value} = this.props;
 
 		return (
 			<DatePickerInput
@@ -78,7 +78,7 @@ export default class DatePickerWrapper extends Component{
 				style={style}
 				showOnInputClick={false}
 				value={value}
-				className={hasLogicError || hasValError ? 'cp-dpi-error' : ''}
+				className={ hasValError ? 'cp-dpi-error' : ''}
 				onChange={this.onDateSet.bind(this)}
 				onClear={this.onDateSet.bind(this)}
 				displayFormat="YYYY-MM-DD"

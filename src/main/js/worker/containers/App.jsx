@@ -47,7 +47,7 @@ class App extends Component {
 				autoCloseDelay={5000}
 				fadeInTime={100}
 				fadeOutTime={400}
-				toasterData={this.state.toasterData}
+				toasterData={this.state.toasterData || null}
 				maxWidth={400}
 			/>
 
@@ -78,10 +78,6 @@ class App extends Component {
 	}
 }
 
-function stateToProps(state){
-	return Object.assign({}, state);
-}
-
 function dispatchToProps(dispatch){
 	return {
 		selectStation: station => dispatch(stationSelected(station)),
@@ -95,5 +91,4 @@ function dispatchToProps(dispatch){
 	};
 }
 
-export default connect(stateToProps, dispatchToProps)(App)
-
+export default connect(state => state, dispatchToProps)(App)

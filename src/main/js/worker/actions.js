@@ -1,3 +1,4 @@
+import { copyprops } from 'icos-cp-utils';
 import {getStationInfo, getWhoIam, makeDashboardWebsocketConnection, enqueueJob, deleteJob, getAvailableMonths} from './backend';
 
 export const FETCHED_INIT_INFO = 'FETCHED_INIT_INFO';
@@ -75,7 +76,8 @@ export const cancelJob = jobId => dispatch => {
 
 export const startJob = (dispatch, getState) => {
 	const state = getState();
-	const job = Object.assign({}, state.workerData.jobDef, {userId: state.currUser.email});
+	const job = copyprops(state, ['lat', 'lon', 'alt', 'siteId', 'start', 'stop'])
+	job.userId = state.currUser.email
 	enqueueJob(job).then(
 		() => dispatch({type: STARTED_JOB}),
 		err => dispatch(failWithError(err))

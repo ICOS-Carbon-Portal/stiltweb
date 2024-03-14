@@ -1,15 +1,28 @@
 import { createStore, applyMiddleware } from 'redux';
-import thunkMiddleware from 'redux-thunk';
+import {thunk} from 'redux-thunk';
 import reducer from './reducer';
 import {fetchInitialInfo, establishWsCommunication, fetchAvailableMonths, MAP_VIEW} from './actions';
-import WorkerData from './models/WorkerData';
 
-const initState = {
-	workerData: new WorkerData(),
-	currentView: MAP_VIEW,
-	dashboardState: {running: [], done: [], queue: [], infra: []}
-};
+export const initJob = {
+	start: null,
+	stop: null,
+	lat: NaN,
+	lon: NaN,
+	alt: NaN,
+	siteId: null,
+}
 
+const initState = Object.assign(
+	{
+		stations: [],
+		currentView: MAP_VIEW,
+		currUser: undefined,
+		jobSubmissionObstacles: [],
+		disableLatLonAlt: false,
+		dashboardState: {running: [], done: [], queue: [], infra: []}
+	},
+	initJob
+)
 
 function logger({ getState }) {
 	return (next) => (action) => {
@@ -28,7 +41,7 @@ function logger({ getState }) {
 
 
 export default function(){
-	const store = createStore(reducer, initState, applyMiddleware(thunkMiddleware));//, logger));
+	const store = createStore(reducer, initState, applyMiddleware(thunk, logger));
 	store.dispatch(fetchInitialInfo);
 	store.dispatch(fetchAvailableMonths);
 	store.dispatch(establishWsCommunication);

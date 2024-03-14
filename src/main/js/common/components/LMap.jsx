@@ -2,10 +2,13 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import * as LCommon from 'icos-cp-leaflet-common';
 import {MarkerClusterGroup} from 'leaflet.markercluster';
+import config from '../../worker/config'
 
-const warningRadius = (lat => {
+const {geoBoundary} = config
+
+function warningRadius(lat){
 	return 20000 * Math.cos(Math.PI / 180 * lat);
-});
+}
 
 export default class LMap extends Component{
 	constructor(props){
@@ -47,7 +50,7 @@ export default class LMap extends Component{
 			const self = this;
 
 			map.on('click', function (e) {
-				self.app.isOutside = isOutside(self.props.geoBoundary, e.latlng);
+				self.app.isOutside = isOutside(e.latlng);
 				mapClick(map, e.latlng, self);
 			});
 		}
@@ -58,7 +61,7 @@ export default class LMap extends Component{
 
 	componentWillReceiveProps(nextProps){
 		const map = this.app.map;
-		this.app.isOutside = isOutside(nextProps.geoBoundary, nextProps.selectedStation);
+		this.app.isOutside = isOutside(nextProps.selectedStation);
 
 		this.buildWarningCircles(nextProps.workerMode, nextProps.stations);
 		this.buildMarkers(nextProps.stations, nextProps.action, nextProps.selectedStation);
@@ -67,25 +70,21 @@ export default class LMap extends Component{
 		if (!map.getZoom()) {
 			if (nextProps.stations.length > 0){
 				LCommon.setView(map, nextProps.stations);
-			} else if (nextProps.geoBoundary){
-				const bdry = nextProps.geoBoundary;
-				map.fitBounds([[bdry.latMin, bdry.lonMin], [bdry.latMax, bdry.lonMax]]);
 			} else {
-				map.setView([55, 10], 3);
+				const bdry = geoBoundary;
+				map.fitBounds([[bdry.latMin, bdry.lonMin], [bdry.latMax, bdry.lonMax]]);
 			}
 		}
 
 		this.updateClickMarker(map, nextProps.selectedStation);
-		this.addMask(nextProps.geoBoundary);
+		this.addMask()
 	}
 
 	panMap(selectedStation, markers, map){
 		if (!map.getZoom()
 			|| !selectedStation
-			|| selectedStation.lat === undefined
-			|| selectedStation.lon === undefined
-			|| selectedStation.lat === ''
-			|| selectedStation.lon === ''
+			|| !selectedStation.lat
+			|| !selectedStation.lon
 			|| markers.getLayers().length === 0
 			|| this.app.isOutside) return;
 
@@ -106,10 +105,10 @@ export default class LMap extends Component{
 		}
 	}
 
-	addMask(geoBoundary){
+	addMask(){
 		const app = this.app;
 
-		if(!geoBoundary || app.maskHole || !this.app.map.getZoom()) return;
+		if(!this.props.workerMode || app.maskHole || !this.app.map.getZoom()) return;
 
 		app.maskHole = LCommon.polygonMask(geoBoundary);
 		app.maskHole.addTo(app.map);
@@ -154,7 +153,7 @@ export default class LMap extends Component{
 			});
 
 			circles.addLayer(circle);
-	 	});
+		})
 	}
 
 	buildMarkers(geoms, action, selectedStation){
@@ -231,8 +230,8 @@ function roundPos(pos){
 	}
 }
 
-function isOutside(geoBoundary, pos){
-	if (geoBoundary && pos.lat && (pos.lng || pos.lon)){
+function isOutside(pos){
+	if (pos.lat && (pos.lng || pos.lon)){
 		const latLng = pos.hasOwnProperty("lng")
 			? pos
 			: {

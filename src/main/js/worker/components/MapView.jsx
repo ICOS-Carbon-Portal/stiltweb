@@ -2,17 +2,13 @@ import React, { Component } from 'react';
 import StationsMap from '../../common/components/LMap.jsx';
 import Select from '../../common/components/Select.jsx';
 import TextInput from '../components/TextInput.jsx';
-import StationInfo from '../models/StationInfo';
 import DatePickerWrapper from './DatePickerWrapper.jsx';
 import {cardHeaderInfo} from '../containers/App.jsx';
+import config from '../config.js'
+import { copyprops } from 'icos-cp-utils';
 
 
-const geoBoundary = {
-	latMin: 33,
-	lonMin: -15,
-	latMax: 72.9166666666667,
-	lonMax: 34.875
-};
+const {geoBoundary} = config
 const marginBottom = 30;
 
 export default class MapView extends Component {
@@ -33,15 +29,15 @@ export default class MapView extends Component {
 
 	render() {
 		const props = this.props;
-		const formData = props.workerData.formData;
-		const errors = props.workerData.errors;
-		const errorStart = !!errors.start;
-		const errorStop = !!errors.stop;
+		const {disableLatLonAlt} = props
+
 		const {start, stop, minDate, maxDate, disabledDates, disabledMonths} = getDatesFromProps(props);
-		const isExisting = props.workerData.selectedStation.isExisting;
-		const selectedStation = props.workerData.isFormAndExistingStationDifferent
-			? new StationInfo(formData.lat, formData.lon)
-			: props.workerData.selectedStation;
+		const selectedStation = props.stations.find(s =>
+			s.siteId == props.siteId &&
+			s.lat == props.lat &&
+			s.lon == props.lon &&
+			s.alt == props.alt
+		)
 
 		const labelStyle = {display: 'block', clear: 'both'};
 		const buttonStyle = {display: 'block', clear: 'both', marginTop: 40};
@@ -60,8 +56,8 @@ export default class MapView extends Component {
 							<Select
 								selectValue={props.selectStation}
 								infoTxt="Select station here or on the map"
-								availableValues={props.workerData.stations}
-								value={props.workerData.selectedStation}
+								availableValues={props.stations}
+								value={selectedStation}
 								presenter={station => station ? `${station.siteId} (${station.name})` : station}
 								sort={true}
 							/>
@@ -70,8 +66,8 @@ export default class MapView extends Component {
 						<div ref={(div) => {this.mapDiv = div;}} style={{width: '100%', height: 600}}>
 							<StationsMap
 								workerMode={true}
-								stations={props.workerData.stations}
-								selectedStation={selectedStation}
+								stations={props.stations}
+								selectedStation={copyprops(props, ['lat', 'lon', 'alt', 'siteId'])}
 								action={props.selectStation}
 								toastWarning={props.toastWarning}
 								toastError={props.toastError}
@@ -91,22 +87,22 @@ export default class MapView extends Component {
 							<div className="card-body">
 
 								<label style={labelStyle}>Latitude (decimal degree)</label>
-								<TextInput style={verticalMargin} value={formData.lat} action={this.getJobDefUpdater('lat')}
-										converter={validateLatLngVal(geoBoundary.latMin, geoBoundary.latMax)} disabled={isExisting}/>
+								<TextInput style={verticalMargin} value={props.lat} action={this.getJobDefUpdater('lat')}
+										converter={validateLatLngVal(geoBoundary.latMin, geoBoundary.latMax)} disabled={disableLatLonAlt}/>
 
 								<label style={labelStyle}>Longitude (decimal degree)</label>
-								<TextInput style={verticalMargin} value={formData.lon} action={this.getJobDefUpdater('lon')}
-										converter={validateLatLngVal(geoBoundary.lonMin, geoBoundary.lonMax)} disabled={isExisting}/>
+								<TextInput style={verticalMargin} value={props.lon} action={this.getJobDefUpdater('lon')}
+										converter={validateLatLngVal(geoBoundary.lonMin, geoBoundary.lonMax)} disabled={disableLatLonAlt}/>
 
 								<label style={labelStyle}>Altitude above ground (meters)</label>
-								<TextInput style={verticalMargin} value={formData.alt} action={this.getJobDefUpdater('alt')} converter={toInt} disabled={isExisting}/>
+								<TextInput style={verticalMargin} value={props.alt} action={this.getJobDefUpdater('alt')} converter={toInt} disabled={disableLatLonAlt}/>
 
 								<label style={labelStyle}>Site id (usually a 3 letter code)</label>
 								<div className="input-group" style={verticalMargin}>
-									<TextInput value={formData.siteId} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="6"/>
+									<TextInput value={props.siteId} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="6"/>
 									<button className="btn btn-primary cp-pointer"
 												onClick={this.onLoadDataBtnClick.bind(this)}
-												disabled={!isExisting}>Load data</button>
+												disabled={!disableLatLonAlt}>Load data</button>
 								</div>
 
 								<label style={labelStyle}>Start date (YYYY-MM-DD)</label>
@@ -117,7 +113,6 @@ export default class MapView extends Component {
 									style={verticalMargin}
 									value={start}
 									siblingValue={stop}
-									hasLogicError={errorStart}
 									updateDates={props.updateDates}
 									disabledDates={disabledDates}
 									disabledMonths={disabledMonths}
@@ -133,7 +128,6 @@ export default class MapView extends Component {
 									style={verticalMargin}
 									value={stop}
 									siblingValue={start}
-									hasLogicError={errorStop}
 									updateDates={props.updateDates}
 									disabledDates={disabledDates}
 									disabledMonths={disabledMonths}
@@ -143,7 +137,7 @@ export default class MapView extends Component {
 
 								<button style={buttonStyle}
 										className="btn btn-primary cp-pointer"
-										disabled={!props.workerData.isJobDefComplete || !props.currUser.email}
+										disabled={props.jobSubmissionObstacles.length > 0}
 										onClick={props.startJob}>Submit STILT job</button>
 
 							</div>
@@ -221,8 +215,8 @@ To: ${job.stop}`
 
 function getDatesFromProps(props){
 	return {
-		start: props.workerData.formData ? props.workerData.formData.start : undefined,
-		stop: props.workerData.formData ? props.workerData.formData.stop : undefined,
+		start: props.start,
+		stop: props.stop,
 		minDate: props.availableMonths ? props.availableMonths.min : undefined,
 		maxDate: props.availableMonths ? props.availableMonths.max : undefined,
 		disabledDates: props.availableMonths ? props.availableMonths.disabledDates : undefined,

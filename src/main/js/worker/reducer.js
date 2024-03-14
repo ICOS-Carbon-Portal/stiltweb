@@ -3,47 +3,58 @@ import {MAP_VIEW, DASHBOARD_VIEW, FETCHED_MONTHS} from './actions';
 
 import AvailableMonths from './models/AvailableMonths';
 import {copyprops, deepUpdate} from 'icos-cp-utils';
-import * as Toaster from 'icos-cp-toaster';
+import {TOAST_ERROR, TOAST_INFO, ToasterData} from 'icos-cp-toaster';
+import { initJob } from './store';
 
 
 export default function(state, action){
-
+	console.log({action})
 	switch(action.type){
 
 		case ERROR:
-			return update({toasterData: new Toaster.ToasterData(Toaster.TOAST_ERROR, action.error.message.split('\n')[0])});
+			return update({toasterData: new ToasterData(TOAST_ERROR, action.error.message.split('\n')[0])});
 
 		case FETCHED_INIT_INFO:
-			return update({workerData: state.workerData.withStations(action.stations), currUser: action.currUser});
+			const stations = action.stations.map(s => {
+				const newStation = copyprops(s, ['lat', 'lon', 'alt', 'name'])
+				newStation.siteId = s.id
+				return newStation
+			})
+			return update({stations, currUser: action.currUser})
 
 		case FETCHED_MONTHS:
 			return update({availableMonths: new AvailableMonths(action.availableMonths)});
 
 		case STATION_SELECTED:
-			return update({workerData: state.workerData.withSelectedStation(action.selectedStation, true)});
+			return update(action.selectedStation)
 
 		case JOBDEF_UPDATED:
-			const workerData = state.workerData.withUpdatedFormData(action.update);
-
-			if (workerData.isFormAndExistingStationDifferent) {
-				const msg = 'You have entered the site code for an existing station. Press "Load data" to use its parameters.';
-				return update({workerData}, {toasterData: new Toaster.ToasterData(Toaster.TOAST_INFO, msg)});
-			} else if (workerData.isJobDefComplete && !state.currUser.email){
-				const msg = 'You have to log in before submitting a new STILT job.';
-				return update({workerData}, {toasterData: new Toaster.ToasterData(Toaster.TOAST_INFO, msg)});
-			} else {
-				return update({workerData});
-			}
+			const jobUpdate = {}
+			jobUpdate[action.update.propertyName] = action.update.value
+			return withFeedbackToUser(update(jobUpdate))
 
 		case DATES_UPDATED:
-			return update({workerData: state.workerData.withDates(action.dates)});
+			const datesUpdate = {}
+			const {start, stop} = action.dates
+			if (start) datesUpdate.start = start
+			if (stop) datesUpdate.stop = stop
+			return update(datesUpdate)
 
 		case USE_EXISTING_STATION:
-			return update({workerData: state.workerData.withExistingStationData()});
+			const existing = existingStation()
+			return existing
+				? update(copyprops(existing, ['lat', 'lon', 'alt', 'siteId']))
+				: state
 
 		case STARTED_JOB:
-			const newStation = copyprops(state.workerData.jobDef, ['lat', 'lon', 'alt', 'siteId']);
-			return update({workerData: state.workerData.resetAndAddNewStation(newStation)});
+			const updates = Object.assign({}, initJob)
+			if(!existingStation()){
+				const newStations = state.stations.slice()
+				const newStation = copyprops(state, ['lat', 'lon', 'alt', 'siteId'])
+				newStations.push(newStation)
+				update.stations = newStations
+			}
+			return update(updates)
 
 		case GOT_DASHBOARD_STATE:
 			// return update(copyprops(mockActivity(action), ['dashboardState']));
@@ -70,7 +81,40 @@ export default function(state, action){
 			: update(copyprops(action, actionProps));
 	}
 
+	function existingStation(){
+		return state.stations.find(s => s.siteId === state.siteId)
+	}
+
 }
+
+function withFeedbackToUser(state){
+	const {lat, lon, alt, siteId, stations, start, stop} = state
+	const jobSubmissionObstacles = []
+	const existingStation = stations.find(s => s.siteId === siteId)
+	const disableLatLonAlt = !!existingStation
+	let toasterData = null
+	if(existingStation){
+		const es = existingStation
+		if (es.lat !== lat || es.lon !== lon || es.alt != alt){
+			const msg = 'You have entered an existing station\'s site code. Press "Load data" to use its parameters.'
+			jobSubmissionObstacles.push(msg)
+			toasterData = new ToasterData(TOAST_INFO, msg)
+		}
+	}
+	if(!start) jobSubmissionObstacles.push("Start date missing")
+	if(!stop) jobSubmissionObstacles.push("Stop date missing")
+	if(state.currUser && !state.currUser.email){
+		const msg = 'You must log in (USE SEPARATE BROWSER TAB) to submit a STILT job';
+		jobSubmissionObstacles.push(msg)
+		toasterData = new ToasterData(TOAST_INFO, msg)
+	}
+	return Object.assign({}, state, {
+		jobSubmissionObstacles,
+		disableLatLonAlt,
+		toasterData
+	})
+}
+
 
 function mockActivity(action){
 	const getRndStr = () => 'rnd' + Math.floor(Math.random() * 9999999);
