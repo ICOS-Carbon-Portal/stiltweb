@@ -1,6 +1,6 @@
 import { createStore, applyMiddleware } from 'redux';
 import {thunk} from 'redux-thunk';
-import reducer from './reducer';
+import reducer, {withFeedbackToUser} from './reducer';
 import {fetchInitialInfo, establishWsCommunication, fetchAvailableMonths, MAP_VIEW} from './actions';
 
 export const initJob = {
@@ -41,7 +41,7 @@ function logger({ getState }) {
 
 
 export default function(){
-	const store = createStore(reducer, initState, applyMiddleware(thunk, logger));
+	const store = createStore(reducer, withFeedbackToUser(initState), applyMiddleware(thunk, logger));
 	store.dispatch(fetchInitialInfo);
 	store.dispatch(fetchAvailableMonths);
 	store.dispatch(establishWsCommunication);

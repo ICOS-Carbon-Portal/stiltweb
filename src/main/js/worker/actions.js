@@ -75,11 +75,18 @@ export const cancelJob = jobId => dispatch => {
 };
 
 export const startJob = (dispatch, getState) => {
-	const state = getState();
-	const job = copyprops(state, ['lat', 'lon', 'alt', 'siteId', 'start', 'stop'])
-	job.userId = state.currUser.email
+	const state = getState()
+	const job = {
+		siteId: state.siteId,
+		userId: state.currUser.email,
+		lat: parseFloat(state.lat),
+		lon: parseFloat(state.lon),
+		alt: parseInt(state.alt),
+		start: state.start,
+		stop: state.stop
+	}
 	enqueueJob(job).then(
-		() => dispatch({type: STARTED_JOB}),
+		() => dispatch({job, type: STARTED_JOB}),
 		err => dispatch(failWithError(err))
 	);
 };

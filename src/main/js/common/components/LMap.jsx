@@ -4,11 +4,7 @@ import * as LCommon from 'icos-cp-leaflet-common';
 import {MarkerClusterGroup} from 'leaflet.markercluster';
 import config from '../../worker/config'
 
-const {geoBoundary} = config
-
-function warningRadius(lat){
-	return 20000 * Math.cos(Math.PI / 180 * lat);
-}
+const {geoBoundary, proximityTolerance} = config
 
 export default class LMap extends Component{
 	constructor(props){
@@ -138,7 +134,7 @@ export default class LMap extends Component{
 		const self = this;
 
 		geoms.forEach(geom => {
-			const circle = L.circle([geom.lat, geom.lon], {radius: warningRadius(geom.lat), color: 'red'});
+			const circle = L.circle([geom.lat, geom.lon], {radius: proximityTolerance, color: 'red'});
 			addPopup(circle, "Avoid adding new footprints here", {closeButton: false});
 
 			circle.on('mousemove', function (e) {
@@ -206,7 +202,7 @@ function getPopupTxt(station){
 
 function mapClick(map, clickedPosLatlng, self, triggerAction = true){
 	const pos = roundPos(clickedPosLatlng);
-	if (triggerAction) self.props.action(pos);
+	if (triggerAction) self.props.action({lat: pos.lat, lon: pos.lng, siteId: null})
 	map.removeLayer(self.app.clickMarker);
 
 	if (self.app.isOutside){
@@ -218,9 +214,6 @@ function mapClick(map, clickedPosLatlng, self, triggerAction = true){
 	self.app.clickMarker = L.circleMarker(pos, LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
 	map.addLayer(self.app.clickMarker);
 
-	if (isTooClose(self.app.markers, pos)) {
-		self.props.toastWarning("The position of your new footprint is too close to an existing footprint!");
-	}
 }
 
 function roundPos(pos){
@@ -246,18 +239,6 @@ function isOutside(pos){
 	}
 }
 
-function isTooClose(markers, clickedPosLatlng){
-	let proximityFail = false;
-
-	markers.eachLayer(marker => {
-		if (marker.getLatLng().distanceTo(clickedPosLatlng) < warningRadius(clickedPosLatlng.lat)){
-			proximityFail = true;
-
-		}
-	});
-
-	return proximityFail;
-}
 
 function addPopup(marker, text, options){
 	marker.bindPopup(LCommon.popupHeader(text), options);

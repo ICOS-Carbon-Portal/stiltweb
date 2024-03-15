@@ -39,8 +39,11 @@ export default class MapView extends Component {
 			s.alt == props.alt
 		)
 
+		const showJobSubmProblems = props.jobSubmissionObstacles.length > 0 && (
+			!isNaN(props.lat) || !isNaN(props.lon) || !isNaN(props.alt) || props.siteId || props.start || props.stop
+		)
+
 		const labelStyle = {display: 'block', clear: 'both'};
-		const buttonStyle = {display: 'block', clear: 'both', marginTop: 40};
 		const verticalMargin = {marginBottom: 20};
 		const ds = props.dashboardState;
 
@@ -99,7 +102,7 @@ export default class MapView extends Component {
 
 								<label style={labelStyle}>Site id (usually a 3 letter code)</label>
 								<div className="input-group" style={verticalMargin}>
-									<TextInput value={props.siteId} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="6"/>
+									<TextInput value={props.siteId || ''} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="6"/>
 									<button className="btn btn-primary cp-pointer"
 												onClick={this.onLoadDataBtnClick.bind(this)}
 												disabled={!disableLatLonAlt}>Load data</button>
@@ -135,10 +138,15 @@ export default class MapView extends Component {
 									toastError={props.toastError}
 								/>
 
-								<button style={buttonStyle}
-										className="btn btn-primary cp-pointer"
-										disabled={props.jobSubmissionObstacles.length > 0}
-										onClick={props.startJob}>Submit STILT job</button>
+								{showJobSubmProblems &&
+									<div className="alert alert-warning" role="alert">
+										{props.jobSubmissionObstacles.join('; ')}
+									</div>
+								}
+
+								<button className="btn btn-primary cp-pointer"
+									disabled={props.jobSubmissionObstacles.length > 0}
+									onClick={props.startJob}>Submit STILT job</button>
 
 							</div>
 						</div>
@@ -226,7 +234,7 @@ function getDatesFromProps(props){
 
 function validateLatLngVal(min, max){
 	return str => {
-		if (str.length === 0) return str;
+		if (str === undefined || str === null || str.length === 0) return NaN;
 
 		// Force '.' as decimal character and remove duplicate decimal character
 		const cleanedStr = str.replace(',', '.').split('.').slice(0, 2).join('.');
@@ -241,7 +249,7 @@ function validateLatLngVal(min, max){
 }
 
 function toInt(str){
-	if (str.length === 0) return str;
+	if (str === undefined || str === null || str.length === 0) return NaN;
 
 	const res = parseInt(str);
 	if(!isNumber(res)) throw new Error("This is not a number");

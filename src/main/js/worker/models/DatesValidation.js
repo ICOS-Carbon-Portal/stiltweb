@@ -14,7 +14,7 @@ export default class DatesValidation{
 	}
 
 	getDateObj(date){
-		if (date === undefined) return undefined;
+		if (!date ) return date
 		// date as an object assumes it is defined with no offset ("Z")
 		// date as string assumes ISO format without time (e.g. "2000-01-01")
 		if (typeof date === "object"){
@@ -29,7 +29,7 @@ export default class DatesValidation{
 	}
 
 	getISOStr(date){
-		return date === undefined ? undefined : date.toISOString().substring(0, 10);
+		return date ? date.toISOString().substring(0, 10) : date
 	}
 
 	get start(){
@@ -41,9 +41,7 @@ export default class DatesValidation{
 	}
 
 	isInvalidDates(first, second){
-		return first === undefined || second === undefined
-			? false
-			: first.getTime() > second.getTime();
+		return (!first || !second) ? false : first.getTime() > second.getTime()
 	}
 
 	validateStart(){
@@ -89,7 +87,7 @@ export default class DatesValidation{
 	}
 
 	validateForGapError(){
-		if (this._start === undefined || this._stop === undefined || this._disabledDates.length === 0) {
+		if (!this._start || !this._stop || this._disabledDates.length === 0) {
 			return undefined;
 		}
 
@@ -102,13 +100,13 @@ export default class DatesValidation{
 	}
 
 	validateForGapWarning(){
-		if (this._start === undefined || this._stop === undefined || this._disabledDates.length === 0) {
+		if (!this._start || !this._stop || this._disabledDates.length === 0) {
 			return undefined;
 		}
 
 		const msStart = this._start.getTime();
 		const msStop = this._stop.getTime();
-		const hits = this._disabledDates.filter(d => msStart <= d.getTime() && d.getTime() <= msStop).length;
+		//const hits = this._disabledDates.filter(d => msStart <= d.getTime() && d.getTime() <= msStop).length;
 
 		return this._disabledDates.filter(d => msStart <= d.getTime() && d.getTime() <= msStop).length > 0
 			? "Your selected dates stretches over a gap in the meteorological input data: "

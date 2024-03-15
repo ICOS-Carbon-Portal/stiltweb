@@ -2,13 +2,14 @@ import {ERROR, FETCHED_INIT_INFO, GOT_DASHBOARD_STATE, STATION_SELECTED, JOBDEF_
 import {MAP_VIEW, DASHBOARD_VIEW, FETCHED_MONTHS} from './actions';
 
 import AvailableMonths from './models/AvailableMonths';
-import {copyprops, deepUpdate} from 'icos-cp-utils';
+import {copyprops} from 'icos-cp-utils';
 import {TOAST_ERROR, TOAST_INFO, ToasterData} from 'icos-cp-toaster';
 import { initJob } from './store';
+import config from './config'
 
 
 export default function(state, action){
-	console.log({action})
+
 	switch(action.type){
 
 		case ERROR:
@@ -26,7 +27,7 @@ export default function(state, action){
 			return update({availableMonths: new AvailableMonths(action.availableMonths)});
 
 		case STATION_SELECTED:
-			return update(action.selectedStation)
+			return withFeedbackToUser(update(action.selectedStation))
 
 		case JOBDEF_UPDATED:
 			const jobUpdate = {}
@@ -38,27 +39,27 @@ export default function(state, action){
 			const {start, stop} = action.dates
 			if (start) datesUpdate.start = start
 			if (stop) datesUpdate.stop = stop
-			return update(datesUpdate)
+			return withFeedbackToUser(update(datesUpdate))
 
 		case USE_EXISTING_STATION:
 			const existing = existingStation()
 			return existing
-				? update(copyprops(existing, ['lat', 'lon', 'alt', 'siteId']))
+				? withFeedbackToUser(update(copyprops(existing, ['lat', 'lon', 'alt', 'siteId'])))
 				: state
 
 		case STARTED_JOB:
 			const updates = Object.assign({}, initJob)
 			if(!existingStation()){
 				const newStations = state.stations.slice()
-				const newStation = copyprops(state, ['lat', 'lon', 'alt', 'siteId'])
+				const newStation = copyprops(action.job, ['lat', 'lon', 'alt', 'siteId'])
 				newStations.push(newStation)
 				update.stations = newStations
 			}
-			return update(updates)
+			return withFeedbackToUser(update(updates))
 
 		case GOT_DASHBOARD_STATE:
 			// return update(copyprops(mockActivity(action), ['dashboardState']));
-			return updateWith(['dashboardState']);
+			return update({dashboardState: action.dashboardState})
 
 		case DASHBOARD_VIEW:
 			return update({currentView: DASHBOARD_VIEW});
@@ -75,19 +76,13 @@ export default function(state, action){
 		return Object.assign.apply(Object, [{}, state].concat(updates));
 	}
 
-	function updateWith(actionProps, path){
-		return path
-			? deepUpdate(state, path, copyprops(action, actionProps))
-			: update(copyprops(action, actionProps));
-	}
-
 	function existingStation(){
 		return state.stations.find(s => s.siteId === state.siteId)
 	}
 
 }
 
-function withFeedbackToUser(state){
+export function withFeedbackToUser(state){
 	const {lat, lon, alt, siteId, stations, start, stop} = state
 	const jobSubmissionObstacles = []
 	const existingStation = stations.find(s => s.siteId === siteId)
@@ -95,12 +90,33 @@ function withFeedbackToUser(state){
 	let toasterData = null
 	if(existingStation){
 		const es = existingStation
-		if (es.lat !== lat || es.lon !== lon || es.alt != alt){
-			const msg = 'You have entered an existing station\'s site code. Press "Load data" to use its parameters.'
+		if (es.lat != lat || es.lon != lon || es.alt != alt){
+			const msg = 'You have entered an existing site code. Press "Load data" to use its parameters'
 			jobSubmissionObstacles.push(msg)
 			toasterData = new ToasterData(TOAST_INFO, msg)
 		}
 	}
+	if(isNaN(lat)) jobSubmissionObstacles.push("Latitude missing")
+	if(isNaN(lon)) jobSubmissionObstacles.push("Longitude missing")
+	if(!existingStation && jobSubmissionObstacles.length === 0){
+		// lat/lon present, but not existing station
+		stations.forEach(s => {
+			if(s.lat != lat && s.lon != lon){
+				const R = 6371000
+				const degreeLength = Math.PI * R / 180
+				const latRads = (s.lat + lat) * Math.PI / 360
+				const dlon = (s.lon - lon) * Math.cos(latRads)
+				const dlat = s.lat - lat
+				const distance = Math.sqrt(dlon * dlon + dlat * dlat) * degreeLength
+				const tolerance = config.proximityTolerance
+				if(distance < tolerance){
+					jobSubmissionObstacles.push(`Selected location too close (${Math.round(distance)} m) to site ${s.siteId}`)
+				}
+			}
+		})
+	}
+	if(isNaN(alt)) jobSubmissionObstacles.push("Altitude missing")
+	if(!siteId) jobSubmissionObstacles.push("Site id missing")
 	if(!start) jobSubmissionObstacles.push("Start date missing")
 	if(!stop) jobSubmissionObstacles.push("Stop date missing")
 	if(state.currUser && !state.currUser.email){

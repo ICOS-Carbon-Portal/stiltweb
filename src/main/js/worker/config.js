@@ -7,6 +7,7 @@ export default {
 		latMax: 72.9166666666667,
 		lonMax: 34.875
 	},
+	proximityTolerance: 20000,
 	scopedViewLink(job){
 		return `/viewer/?stationId=${job.siteId}&fromDate=${job.start}&toDate=${job.stop}`;
 	}

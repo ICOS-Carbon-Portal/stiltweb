@@ -3,73 +3,44 @@ import {copyprops} from 'icos-cp-utils';
 
 export default class TextInput extends Component {
 	constructor(props) {
-		super(props);
+		super(props)
 		this.state = {
 			val: this.props.value,
 			error: null
-		};
-		this.sendVal = undefined;
+		}
 	}
 
 	componentWillReceiveProps(nextProps){
-		if (this.state.val != nextProps.value || this.state.error != nextProps.error) {
-			const val = nextProps.value
-				? nextProps.value + ""
-				: "";
-			this.updateText(val, nextProps.error);
+		if (this.state.val != nextProps.value) {
+			this.setState({val: nextProps.value, error: null})
 		}
 	}
 
-	updateText(val, externalErr){
+	updateText(event){
+		const val = event.target.value
 		try {
 			const converted = this.props.converter
 				? this.props.converter(val)
-				: val;
+				: val
 
-			this.setState({val: converted, error: externalErr});
-			act(this, converted, null);
+			this.setState({val: converted, error: null})
+			if(this.props.action) this.props.action({value: converted})
 		} catch(err) {
-			this.setState({val, error: err.message});
-			act(this, val, "" + err.message);
-		}
-	}
-
-	onTextChange(event){
-		this.updateText(event.target.value);
-	}
-
-	onTextBlur(event){
-		const orgVal = event.target.value;
-		const parsedVal = parseFloat(parseFloat(orgVal).toFixed(2));
-
-		// Update state only for numbers
-		if(isNaN(Date.parse(orgVal)) && isNumber(parsedVal) && parsedVal.toString() != orgVal) {
-			act(this, parsedVal, null);
-			this.setState({val: parsedVal, error: null});
+			this.setState({val, error: err.message})
 		}
 	}
 
 	render(){
 		const props = copyprops(this.props, ['disabled', 'maxLength', 'onClick']);
-		const style = Object.assign(
-			{},
+
+		props.style = Object.assign(
+			(this.state.error ? {backgroundColor: "pink"} : {}),
 			this.props.style,
-			(this.state.error ? {backgroundColor: "pink"} : {})
-		);
+		)
+		const val = this.state.val
+		props.value = (typeof val === 'number' && isNaN(val)) ? '' : this.state.val
 
-		return <input className="form-control" type="text" {...props}
-			value={this.state.val || ''} title={this.state.error} style={style}
-			onChange={this.onTextChange.bind(this)} onBlur={this.onTextBlur.bind(this)}
-		/>;
+		return <input {...props} className="form-control" type="text"
+			title={this.state.error} onChange={this.updateText.bind(this)}/>
 	}
-}
-
-function act(self, value, error){
-	if (value != self.sendVal && self.props.action) self.props.action({value, error});
-
-	self.sendVal = value;
-}
-
-function isNumber(n){
-	return !isNaN(parseFloat(n)) && isFinite(n);
 }
