@@ -53,7 +53,7 @@ export default function(state, action){
 				const newStations = state.stations.slice()
 				const newStation = copyprops(action.job, ['lat', 'lon', 'alt', 'siteId'])
 				newStations.push(newStation)
-				update.stations = newStations
+				updates.stations = newStations
 			}
 			return withFeedbackToUser(update(updates))
 
@@ -87,6 +87,7 @@ export function withFeedbackToUser(state){
 	const jobSubmissionObstacles = []
 	const existingStation = stations.find(s => s.siteId === siteId)
 	const disableLatLonAlt = !!existingStation
+	const gbnd = config.geoBoundary
 	let toasterData = null
 	if(existingStation){
 		const es = existingStation
@@ -96,8 +97,12 @@ export function withFeedbackToUser(state){
 			toasterData = new ToasterData(TOAST_INFO, msg)
 		}
 	}
-	if(isNaN(lat)) jobSubmissionObstacles.push("Latitude missing")
-	if(isNaN(lon)) jobSubmissionObstacles.push("Longitude missing")
+	if(!Number.isFinite(lat)) jobSubmissionObstacles.push("Latitude missing")
+	else if(lat < gbnd.latMin || lat > gbnd.latMax) jobSubmissionObstacles.push("Latitude outside boundary")
+
+	if(!Number.isFinite(lon)) jobSubmissionObstacles.push("Longitude missing")
+	else if(lon < gbnd.lonMin || lon > gbnd.lonMax) jobSubmissionObstacles.push("Longitude outside boundary")
+
 	if(!existingStation && jobSubmissionObstacles.length === 0){
 		// lat/lon present, but not existing station
 		stations.forEach(s => {
@@ -115,8 +120,9 @@ export function withFeedbackToUser(state){
 			}
 		})
 	}
-	if(isNaN(alt)) jobSubmissionObstacles.push("Altitude missing")
+	if(!Number.isFinite(alt)) jobSubmissionObstacles.push("Altitude missing")
 	if(!siteId) jobSubmissionObstacles.push("Site id missing")
+	else if(siteId.length < 3) jobSubmissionObstacles.push("Site id is too short")
 	if(!start) jobSubmissionObstacles.push("Start date missing")
 	if(!stop) jobSubmissionObstacles.push("Stop date missing")
 	if(state.currUser && !state.currUser.email){

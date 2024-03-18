@@ -20,7 +20,6 @@ export default class LMap extends Component{
 			circles: L.layerGroup(),
 			clickMarker: L.circleMarker(),
 			maskHole: undefined,
-			isOutside: undefined
 		};
 	}
 
@@ -46,7 +45,6 @@ export default class LMap extends Component{
 			const self = this;
 
 			map.on('click', function (e) {
-				self.app.isOutside = isOutside(e.latlng);
 				mapClick(map, e.latlng, self);
 			});
 		}
@@ -57,9 +55,8 @@ export default class LMap extends Component{
 
 	componentWillReceiveProps(nextProps){
 		const map = this.app.map;
-		this.app.isOutside = isOutside(nextProps.selectedStation);
 
-		this.buildWarningCircles(nextProps.workerMode, nextProps.stations);
+		if (nextProps.workerMode) this.buildWarningCircles(nextProps.stations)
 		this.buildMarkers(nextProps.stations, nextProps.action, nextProps.selectedStation);
 		this.panMap(nextProps.selectedStation, this.app.markers, map);
 
@@ -72,22 +69,20 @@ export default class LMap extends Component{
 			}
 		}
 
-		this.updateClickMarker(map, nextProps.selectedStation);
 		this.addMask()
 	}
 
 	panMap(selectedStation, markers, map){
 		if (!map.getZoom()
 			|| !selectedStation
-			|| !selectedStation.lat
-			|| !selectedStation.lon
-			|| markers.getLayers().length === 0
-			|| this.app.isOutside) return;
+			|| !Number.isFinite(selectedStation.lat)
+			|| !Number.isFinite(selectedStation.lon)
+			|| markers.getLayers().length === 0) return
 
 		const mapBounds = map.getBounds();
 		const selectedStationPosition = L.latLng(selectedStation.lat, selectedStation.lon);
 		const markerOptions = markers.getLayers()[0].options;
-		const markerPoint = map.latLngToLayerPoint(L.latLng(selectedStationPosition));
+		const markerPoint = map.latLngToLayerPoint(selectedStationPosition)
 		const markerBoundaryLL = map.layerPointToLatLng(
 			L.point(markerPoint.x - markerOptions.radius, markerPoint.y)
 		);
@@ -110,71 +105,43 @@ export default class LMap extends Component{
 		app.maskHole.addTo(app.map);
 	}
 
-	updateClickMarker(map, selectedStation){
-		if (!selectedStation) return;
-
-		if (selectedStation.isExisting || !selectedStation.hasPosition) {
-			map.removeLayer(this.app.clickMarker);
-			this.app.clickMarker = L.circleMarker();
-		} else if (selectedStation.hasPosition) {
-			const clickMarkerPos = this.app.clickMarker.getLatLng();
-
-			if (!clickMarkerPos || selectedStation.lat !== clickMarkerPos.lat || selectedStation.lon !== clickMarkerPos.lng) {
-				mapClick(map, L.latLng(selectedStation.lat, selectedStation.lon), this, false)
-			}
-		}
-	}
-
-	buildWarningCircles(workerMode, geoms){
-		if (!workerMode || geoms.length === 0) return;
+	buildWarningCircles(stations){
+		if (stations.length === 0) return;
 
 		const circles = this.app.circles;
 		circles.clearLayers();
 		const map = this.app.map;
 		const self = this;
 
-		geoms.forEach(geom => {
-			const circle = L.circle([geom.lat, geom.lon], {radius: proximityTolerance, color: 'red'});
-			addPopup(circle, "Avoid adding new footprints here", {closeButton: false});
+		stations.forEach(st => {
+			const circle = L.circle([st.lat, st.lon], {radius: proximityTolerance, color: 'red'})
 
-			circle.on('mousemove', function (e) {
-				this.closePopup();
-				this.openPopup(e.latlng);
-			});
-			circle.on('mouseout', function (e) {
-				this.closePopup();
-			});
 			circle.on('click', function (e) {
-				mapClick(map, e.latlng, self);
-			});
+				mapClick(map, e.latlng, self)
+			})
 
-			circles.addLayer(circle);
+			circles.addLayer(circle)
 		})
 	}
 
-	buildMarkers(geoms, action, selectedStation){
+	buildMarkers(stations, action, selectedStation){
 		const markers = this.app.markers;
 		markers.clearLayers();
 
-		//First all non selected
-		geoms.filter(geom => !selectedStation || geom.siteId !== selectedStation.siteId).forEach(geom => {
-			const marker = L.circleMarker([geom.lat, geom.lon], LCommon.pointIcon(6, 1, 'rgb(255,100,100)', 'black'));
+		stations.forEach(st => {
+			const marker = L.circleMarker([st.lat, st.lon], LCommon.pointIcon(6, 1, 'rgb(255,100,100)', 'black'));
 
-			addPopup(marker, getPopupTxt(geom), {offset:[0,0], closeButton: false});
-			addEvents(this.app, marker, action, geom);
-
-			markers.addLayer(marker);
-		});
-
-		//Then the selected
-		const selected = geoms.find(geom => selectedStation && geom.siteId === selectedStation.siteId);
-		if (selected){
-			const marker = L.circleMarker([selected.lat, selected.lon], LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
-
-			addPopup(marker, getPopupTxt(selected), {offset:[0,0], closeButton: false});
-			addEvents(this.app, marker, action, selected);
+			addPopup(marker, getPopupTxt(st), {offset:[0,0], closeButton: false});
+			addEvents(this.app, marker, action, st);
 
 			markers.addLayer(marker);
+		})
+
+		if(selectedStation && Number.isFinite(selectedStation.lat) && Number.isFinite(selectedStation.lon)){
+			const clickMarkerPos = this.app.clickMarker.getLatLng()
+			if (!clickMarkerPos || selectedStation.lat !== clickMarkerPos.lat || selectedStation.lon !== clickMarkerPos.lng) {
+				mapClick(this.app.map, L.latLng(selectedStation.lat, selectedStation.lon), this, false)
+			}
 		}
 	}
 
@@ -205,12 +172,6 @@ function mapClick(map, clickedPosLatlng, self, triggerAction = true){
 	if (triggerAction) self.props.action({lat: pos.lat, lon: pos.lng, siteId: null})
 	map.removeLayer(self.app.clickMarker);
 
-	if (self.app.isOutside){
-		self.app.clickMarker = L.circleMarker(pos);
-		self.props.toastError("The position is outside of the boundary!");
-		return;
-	}
-
 	self.app.clickMarker = L.circleMarker(pos, LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
 	map.addLayer(self.app.clickMarker);
 
@@ -222,23 +183,6 @@ function roundPos(pos){
 		lng: parseFloat(parseFloat(pos.lng).toFixed(2))
 	}
 }
-
-function isOutside(pos){
-	if (pos.lat && (pos.lng || pos.lon)){
-		const latLng = pos.hasOwnProperty("lng")
-			? pos
-			: {
-				lat: parseFloat(pos.lat),
-				lng: parseFloat(pos.lon)
-			};
-
-		return latLng.lat < geoBoundary.latMin || latLng.lat > geoBoundary.latMax
-			|| latLng.lng < geoBoundary.lonMin || latLng.lng > geoBoundary.lonMax;
-	} else {
-		return false;
-	}
-}
-
 
 function addPopup(marker, text, options){
 	marker.bindPopup(LCommon.popupHeader(text), options);

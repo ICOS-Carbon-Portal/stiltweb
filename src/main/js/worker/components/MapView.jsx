@@ -74,7 +74,6 @@ export default class MapView extends Component {
 								action={props.selectStation}
 								toastWarning={props.toastWarning}
 								toastError={props.toastError}
-								geoBoundary={geoBoundary}
 							/>
 						</div>
 					</div>

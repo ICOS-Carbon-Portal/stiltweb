@@ -17,6 +17,10 @@ export default class DashboardView extends Component {
 					<CompInfraState infra={ds.infra} />
 				</WideRow>
 
+				<WideRow show={true}>
+					<button className="btn btn-primary" onClick={this.props.showMap}>To the job starter</button>
+				</WideRow>
+
 				<WideRow show={ds.queue.length > 0}>
 					<JobInfoList
 						title="Job queue"
@@ -40,10 +44,6 @@ export default class DashboardView extends Component {
 						title="Finished computations"
 						jobs={ds.done}
 					/>
-				</WideRow>
-
-				<WideRow show={true}>
-					<button className="btn btn-primary" onClick={this.props.showMap}>To the job starter</button>
 				</WideRow>
 			</div>
 		);
