@@ -5,6 +5,8 @@ import {MarkerClusterGroup} from 'leaflet.markercluster';
 import config from '../../worker/config'
 
 const {geoBoundary, proximityTolerance} = config
+const stationIcon = LCommon.pointIcon(6, 1, 'rgb(255,100,100)', 'black')
+const selectedStationIcon = LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black')
 
 export default class LMap extends Component{
 	constructor(props){
@@ -19,8 +21,9 @@ export default class LMap extends Component{
 			}),
 			circles: L.layerGroup(),
 			clickMarker: L.circleMarker(),
-			maskHole: undefined,
-		};
+		}
+		const self = this
+		self.onMapClick = e => self.mapClick(e.latlng)
 	}
 
 	componentDidMount() {
@@ -34,7 +37,7 @@ export default class LMap extends Component{
 				maxBounds: [[-90, -180],[90, 180]],
 				attributionControl: false
 			}
-		);
+		)
 
 		L.control.layers(baseMaps).addTo(map);
 		map.addControl(new LCommon.CoordViewer({decimals: 4}));
@@ -42,67 +45,32 @@ export default class LMap extends Component{
 		map.addLayer(this.app.markers);
 
 		if(this.props.workerMode) {
-			const self = this;
-
-			map.on('click', function (e) {
-				mapClick(map, e.latlng, self);
-			});
+			map.on('click', this.onMapClick)
+			LCommon.polygonMask(geoBoundary).addTo(map)
 		}
 
-		// Update map if we are returning to this view from another view
+		if(this.props.stations.length <= 1){
+			const {latMin, latMax, lonMin, lonMax} = geoBoundary
+			map.fitBounds([[latMin, lonMin], [latMax, lonMax]])
+		}
+
+		// the rest of map initialization
 		this.componentWillReceiveProps(this.props);
 	}
 
 	componentWillReceiveProps(nextProps){
-		const map = this.app.map;
+		const map = this.app.map
+		const {stations, workerMode} = nextProps
 
-		if (nextProps.workerMode) this.buildWarningCircles(nextProps.stations)
-		this.buildMarkers(nextProps.stations, nextProps.action, nextProps.selectedStation);
-		this.panMap(nextProps.selectedStation, this.app.markers, map);
-
-		if (!map.getZoom()) {
-			if (nextProps.stations.length > 0){
-				LCommon.setView(map, nextProps.stations);
-			} else {
-				const bdry = geoBoundary;
-				map.fitBounds([[bdry.latMin, bdry.lonMin], [bdry.latMax, bdry.lonMax]]);
-			}
+		if (stations.length > 1){
+			const stCoords = stations.map(s => L.latLng(s.lat, s.lon))
+			const selPos = this.getSelectedPos(nextProps)
+			if (selPos) stCoords.push(selPos)
+			map.fitBounds(L.latLngBounds(stCoords))
 		}
 
-		this.addMask()
-	}
-
-	panMap(selectedStation, markers, map){
-		if (!map.getZoom()
-			|| !selectedStation
-			|| !Number.isFinite(selectedStation.lat)
-			|| !Number.isFinite(selectedStation.lon)
-			|| markers.getLayers().length === 0) return
-
-		const mapBounds = map.getBounds();
-		const selectedStationPosition = L.latLng(selectedStation.lat, selectedStation.lon);
-		const markerOptions = markers.getLayers()[0].options;
-		const markerPoint = map.latLngToLayerPoint(selectedStationPosition)
-		const markerBoundaryLL = map.layerPointToLatLng(
-			L.point(markerPoint.x - markerOptions.radius, markerPoint.y)
-		);
-		const markerBoundaryUR = map.layerPointToLatLng(
-			L.point(markerPoint.x + markerOptions.radius, markerPoint.y)
-		);
-		const selectedStationBounds = L.latLngBounds(markerBoundaryLL, markerBoundaryUR);
-
-		if (!mapBounds.contains(selectedStationBounds)){
-			map.panTo(selectedStationPosition);
-		}
-	}
-
-	addMask(){
-		const app = this.app;
-
-		if(!this.props.workerMode || app.maskHole || !this.app.map.getZoom()) return;
-
-		app.maskHole = LCommon.polygonMask(geoBoundary);
-		app.maskHole.addTo(app.map);
+		if (workerMode) this.buildWarningCircles(stations)
+		this.buildMarkers(nextProps)
 	}
 
 	buildWarningCircles(stations){
@@ -110,39 +78,48 @@ export default class LMap extends Component{
 
 		const circles = this.app.circles;
 		circles.clearLayers();
-		const map = this.app.map;
 		const self = this;
 
 		stations.forEach(st => {
 			const circle = L.circle([st.lat, st.lon], {radius: proximityTolerance, color: 'red'})
 
-			circle.on('click', function (e) {
-				mapClick(map, e.latlng, self)
-			})
+			circle.on('click', self.onMapClick)
 
 			circles.addLayer(circle)
 		})
 	}
 
-	buildMarkers(stations, action, selectedStation){
-		const markers = this.app.markers;
-		markers.clearLayers();
+	buildMarkers(props){
+		const app = this.app
+		app.markers.clearLayers()
 
-		stations.forEach(st => {
-			const marker = L.circleMarker([st.lat, st.lon], LCommon.pointIcon(6, 1, 'rgb(255,100,100)', 'black'));
+		props.stations.forEach(st => {
+			const marker = L.circleMarker([st.lat, st.lon], stationIcon)
+			const popupTxt = st.name
+					? st.siteId + " (" + st.name + ")"
+					: st.siteId;
 
-			addPopup(marker, getPopupTxt(st), {offset:[0,0], closeButton: false});
-			addEvents(this.app, marker, action, st);
+			marker.bindPopup(LCommon.popupHeader(popupTxt), {offset:[0,0], closeButton: false})
 
-			markers.addLayer(marker);
+			marker.on('mouseover', () => marker.openPopup())
+			marker.on('mouseout',  () => marker.closePopup())
+			marker.on('click',     () => props.action(st))
+
+			app.markers.addLayer(marker)
 		})
 
-		if(selectedStation && Number.isFinite(selectedStation.lat) && Number.isFinite(selectedStation.lon)){
-			const clickMarkerPos = this.app.clickMarker.getLatLng()
-			if (!clickMarkerPos || selectedStation.lat !== clickMarkerPos.lat || selectedStation.lon !== clickMarkerPos.lng) {
-				mapClick(this.app.map, L.latLng(selectedStation.lat, selectedStation.lon), this, false)
-			}
+		const selPos = this.getSelectedPos(props)
+		if(selPos) {
+			app.map.removeLayer(app.clickMarker)
+			app.clickMarker = L.circleMarker(selPos, selectedStationIcon)
+			app.map.addLayer(app.clickMarker)
 		}
+	}
+
+	getSelectedPos(props){
+		const ss = props.selectedStation
+		if(!ss || !Number.isFinite(ss.lat) || !Number.isFinite(ss.lon)) return null
+		return L.latLng(ss.lat, ss.lon)
 	}
 
 	shouldComponentUpdate(){
@@ -150,8 +127,28 @@ export default class LMap extends Component{
 	}
 
 	componentWillUnmount() {
-		this.app.map.off('click', this.onMapClick);
-		this.app.map = null;
+		const {app} = this
+		this.props.action({lat: NaN, lon: NaN, siteId: null})
+		app.map.off('click')
+		app.circles.eachLayer(c => c.off('click'))
+		app.markers.eachLayer(m => {
+			m.off('mouseover')
+			m.off('mouseout')
+			m.off('click')
+		})
+		app.circles.clearLayers()
+		app.markers.clearLayers()
+		app.map.eachLayer(l => app.map.removeLayer(l))
+		app.map = null
+	}
+
+	mapClick(pos){
+		this.props.action({
+			lat: parseFloat(parseFloat(pos.lat).toFixed(2)),
+			lon: parseFloat(parseFloat(pos.lng).toFixed(2)),
+			alt: NaN,
+			siteId: null
+		})
 	}
 
 	render() {
@@ -159,46 +156,4 @@ export default class LMap extends Component{
 			<div ref='map' style={{width: '100%', height: '100%', display: 'block', border: '1px solid darkgrey'}}></div>
 		);
 	}
-}
-
-function getPopupTxt(station){
-	return station.name
-		? station.siteId + " (" + station.name + ")"
-		: station.siteId;
-}
-
-function mapClick(map, clickedPosLatlng, self, triggerAction = true){
-	const pos = roundPos(clickedPosLatlng);
-	if (triggerAction) self.props.action({lat: pos.lat, lon: pos.lng, siteId: null})
-	map.removeLayer(self.app.clickMarker);
-
-	self.app.clickMarker = L.circleMarker(pos, LCommon.pointIcon(8, 1, 'rgb(85,131,255)', 'black'));
-	map.addLayer(self.app.clickMarker);
-
-}
-
-function roundPos(pos){
-	return {
-		lat: parseFloat(parseFloat(pos.lat).toFixed(2)),
-		lng: parseFloat(parseFloat(pos.lng).toFixed(2))
-	}
-}
-
-function addPopup(marker, text, options){
-	marker.bindPopup(LCommon.popupHeader(text), options);
-}
-
-function addEvents(app, marker, action, geom){
-	marker.on('mouseover', function (e) {
-		this.openPopup();
-	});
-	marker.on('mouseout', function (e) {
-		this.closePopup();
-	});
-
-	marker.on('click', function(){
-		app.map.removeLayer(app.clickMarker);
-
-		action(geom);
-	});
 }

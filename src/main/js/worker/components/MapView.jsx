@@ -4,11 +4,8 @@ import Select from '../../common/components/Select.jsx';
 import TextInput from '../components/TextInput.jsx';
 import DatePickerWrapper from './DatePickerWrapper.jsx';
 import {cardHeaderInfo} from '../containers/App.jsx';
-import config from '../config.js'
 import { copyprops } from 'icos-cp-utils';
 
-
-const {geoBoundary} = config
 const marginBottom = 30;
 
 export default class MapView extends Component {
@@ -90,11 +87,11 @@ export default class MapView extends Component {
 
 								<label style={labelStyle}>Latitude (decimal degree)</label>
 								<TextInput style={verticalMargin} value={props.lat} action={this.getJobDefUpdater('lat')}
-										converter={validateLatLngVal(geoBoundary.latMin, geoBoundary.latMax)} disabled={disableLatLonAlt}/>
+										converter={validateLatLngVal(-90, 90)} disabled={disableLatLonAlt}/>
 
 								<label style={labelStyle}>Longitude (decimal degree)</label>
 								<TextInput style={verticalMargin} value={props.lon} action={this.getJobDefUpdater('lon')}
-										converter={validateLatLngVal(geoBoundary.lonMin, geoBoundary.lonMax)} disabled={disableLatLonAlt}/>
+										converter={validateLatLngVal(-180, 180)} disabled={disableLatLonAlt}/>
 
 								<label style={labelStyle}>Altitude above ground (meters)</label>
 								<TextInput style={verticalMargin} value={props.alt} action={this.getJobDefUpdater('alt')} converter={toInt} disabled={disableLatLonAlt}/>
@@ -240,7 +237,7 @@ function validateLatLngVal(min, max){
 
 		const res = parseFloat(parseFloat(cleanedStr).toFixed(2));
 		if (!isNumber(res)) throw new Error("This is not a number");
-		else if (res < min || res > max) throw new Error("The position lies outside of boundary");
+		else if (res < min || res > max) throw new Error("The position lies outside of allowed range");
 		else if (cleanedStr.match(/\.$/) || cleanedStr.match(/\.\d0$/) || cleanedStr.match(/\.0+$/)) return cleanedStr;
 		else if (res.toString() !== cleanedStr) throw new Error("The number is not in a canonical format");
 		else return res;

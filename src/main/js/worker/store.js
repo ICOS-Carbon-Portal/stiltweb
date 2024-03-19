@@ -41,7 +41,7 @@ function logger({ getState }) {
 
 
 export default function(){
-	const store = createStore(reducer, withFeedbackToUser(initState), applyMiddleware(thunk, logger));
+	const store = createStore(reducer, withFeedbackToUser(initState), applyMiddleware(thunk))//, logger))
 	store.dispatch(fetchInitialInfo);
 	store.dispatch(fetchAvailableMonths);
 	store.dispatch(establishWsCommunication);
