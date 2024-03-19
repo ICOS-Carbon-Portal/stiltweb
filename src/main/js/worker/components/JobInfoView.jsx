@@ -51,7 +51,7 @@ export default class JobInfoView extends Component {
 					<span> <b>Site id: <i>{job.siteId}</i></b> (<b>lat:</b> {job.lat}, <b>lon:</b> {job.lon}), </span>
 					<span><b>alt:</b> {job.alt}, <b>start:</b> {job.start}, <b>stop:</b> {job.stop}, </span>
 					<span><b>done:</b> {jinfo.nSlotsFinished} of {jinfo.nSlots}</span>
-					<span> - submitted by {job.userId}</span>
+					<span> - submitted by {obfuscate(job.userId)}</span>
 				</span>
 			</div>
 			{showCancelJobDialog || failuresMustBeShown
@@ -100,4 +100,8 @@ const timeStr = ({year, month, day, hour}) => {
 
 function pad(num){
 	return (num > 9 ? '' : '0') + num;
+}
+
+function obfuscate(userId){
+	return userId.substring(0, 3) + '*'.repeat(userId.length - 6) + userId.substring(userId.length - 3)
 }
