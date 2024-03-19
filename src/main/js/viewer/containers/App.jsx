@@ -47,6 +47,9 @@ class App extends Component {
 						{title}
 						<span style={{float:'right'}}>
 							<ResultsControl {...resControlProps}/>
+							<a className="btn btn-primary text-white" href="/worker/" target="_blank">
+								<i className="fas fa-calculator"/> STILT runner
+							</a>
 							<a className="btn btn-info text-white" href="https://www.icos-cp.eu/about-stilt-viewer" target="_blank">
 								<i className="fas fa-question-circle" /> Help
 							</a>

@@ -1,8 +1,8 @@
 
-export function icosAtmoReleaseQuery(specs){
+export function observationDataQuery(specs){
 	const query = `prefix cpmeta: <http://meta.icos-cp.eu/ontologies/cpmeta/>
 	prefix prov: <http://www.w3.org/ns/prov#>
-	select ?stationId ?spec ?dobj ?samplingHeight ?nRows ?acqStartTime ?acqEndTime
+	select ?isIcos ?stationId ?spec ?dobj ?samplingHeight ?nRows ?acqStartTime ?acqEndTime
 	where {
 		VALUES ?spec {<${specs.join("> <")}>}
 		?dobj cpmeta:hasObjectSpec ?spec ;
@@ -15,7 +15,8 @@ export function icosAtmoReleaseQuery(specs){
 			cpmeta:hasSamplingHeight ?samplingHeight
 		]
 		FILTER NOT EXISTS {[] cpmeta:isNextVersionOf ?dobj}
-		?station cpmeta:hasStationId ?stationId
+		?station cpmeta:hasStationId ?stationId .
+		bind(exists{?station cpmeta:hasLabelingDate ?lblDate} as ?isIcos)
 	}`;
 	return {"text": query};
 }

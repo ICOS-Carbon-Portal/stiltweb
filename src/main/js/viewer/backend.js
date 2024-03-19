@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import {checkStatus, sparql, getJson, getBinaryTable, getBinRaster, tableFormatForSpecies} from 'icos-cp-backend';
-import {icosAtmoReleaseQuery} from './sparqlQueries';
+import {observationDataQuery} from './sparqlQueries';
 import {copyprops} from 'icos-cp-utils';
 import {feature} from 'topojson-client';
 import config from './config';
@@ -24,7 +24,7 @@ function getStationInfo(){
 
 	return Promise.all([
 		getJson('stationinfo'),
-		sparql(icosAtmoReleaseQuery(specs), config.sparqlEndpoint, true)
+		sparql(observationDataQuery(specs), config.sparqlEndpoint, true)
 	])
 	.then(([stInfos, sparqlResult]) => {
 		const tsLookup = {}
@@ -34,6 +34,7 @@ function getStationInfo(){
 				start: new Date(binding.acqStartTime.value),
 				stop: new Date(binding.acqEndTime.value),
 				nRows: parseInt(binding.nRows.value),
+				isICOS: (binding.isIcos.value === 'true'),
 				samplingHeight: parseFloat(binding.samplingHeight.value),
 				spec: binding.spec.value,
 				id: binding.dobj.value
@@ -60,10 +61,10 @@ function getStationInfo(){
 
 		return stInfos.map(stInfo => {
 			const name = stInfo.name || stInfo.icosId || stInfo.id;
-			const isICOS = stInfo.icosId !== undefined;
 			const years = stInfo.years.map(year =>
 				({year, dataObject: dobjByStation(stInfo, year)})
-			);
+			)
+			const isICOS = years.some(year => Object.values(year.dataObject).some(dobj => dobj.isICOS))
 
 			return Object.assign(copyprops(stInfo, ['id', 'lat', 'lon', 'alt']), {name, years, isICOS})
 		});

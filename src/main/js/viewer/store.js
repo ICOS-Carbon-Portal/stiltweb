@@ -15,7 +15,7 @@ for(let gas in config.byTracer){
 
 export const StationFilters = [{
 	label: "ICOS",
-	predicate: station => station.isIcos
+	predicate: station => station.isICOS
 }, {
 	label: "Obspack",
 	predicate: (station, gas) => station.years && station.years.some(year => year.dataObject && year.dataObject[gas])
@@ -62,7 +62,7 @@ function logger({ getState }) {
 */
 
 export default function(){
-	const store = createStore(reducer, initState, applyMiddleware(thunk));//, logger));
+	const store = createStore(reducer, initState, applyMiddleware(thunk))//, logger))
 	store.dispatch(fetchInitData);
 	return store;
 }

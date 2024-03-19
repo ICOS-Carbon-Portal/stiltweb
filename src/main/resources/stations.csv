@@ -45,14 +45,14 @@ BER_UW,Berlin upwind,,,DE
 BES200,Besancon,,,FR
 BGU,Begur,,,ES
 BIE200,Bielefeld,,,DE
-BIK180,Bialystok 180m,,,PL
-BIK300,Bialystok 300m,,,PL
+BIK180,Bialystok 180m,BIK,180.0,PL
+BIK300,Bialystok 300m,BIK,180.0,PL
 BIL200,Biel/Bienne,,,CH
 BIR,Birkenes 40m,,,NO
 BIR010,Birkenes 10m,BIR,10.0,NO
 BIR050,Birkenes 50m,BIR,50.0,NO
 BIR075,Birkenes 75m,BIR,75.0,NO
-BIS047,Biscarrosse 47m,,,FR
+BIS047,Biscarrosse 47m,BIS,47.0,FR
 BMN200,Bremen,,,DE
 BOC200,Bocholt,,,DE
 BON200,Bonn,,,DE
@@ -65,14 +65,14 @@ BRA200,Brandenburg an der Havel,,,DE
 BRD200,Breda,,,NL
 BRE200,Bremerhaven,,,DE
 BRI200,Brighton and Hove,,,GB
-BRM212,Beromünster 212m,,,CH
-BRM213,,,,CH
+BRM212,Beromünster 212m,BRM,212.0,CH
+BRM213,,BRM,212.0,CH
 BRN200,Brno,,,CZ
 BRS200,Brussels,,,BE
 BRT200,Bratislava,,,SK
 BRU200,Brugge,,,BE
 BSC,Black Sea Constanta,,,RO
-BSD248,Bilsdale 248m,,,GB
+BSD248,Bilsdale 248m,BSD,248.0,GB
 BSW200,Braunschweig-Salzgitter-Wolfsburg,,,DE
 BYD200,Bydgoszcz,,,PL
 BZO200,Bergen op Zoom,,,NL
@@ -111,15 +111,15 @@ COT200,Cottbus,,,DE
 COV200,Coventry,,,GB
 CP2,,,,IT
 CPH200,Copenhagen,,,DK
-CRA060,Centre de Recherches Atmospheriques 60m,,,FR
+CRA060,Centre de Recherches Atmospheriques 60m,CRA,60.0,FR
 CRE200,Creil,,,FR
-CRP014,Carnsore Point 14m,,,IE
+CRP014,Carnsore Point 14m,CRP,14.0,IE
 DAN,,,,DE
 DAO,,,,CH
 DAR200,Darmstadt,,,DE
 DAV,,,,CH
-DEC,Delta Ebre,,,ES
-DEC010,,,,ES
+DEC,Delta Ebre,DEC,10.0,ES
+DEC010,,DEC,10.0,ES
 DER200,Derby,,,GB
 DES200,Dessau-Roßlau,,,DE
 DEV200,Deventer,,,NL
@@ -136,14 +136,14 @@ EIN200,Eindhoven,,,NL
 ENS200,Enschede,,,NL
 ERERER,,,,SE
 ERF200,Erfurt,,,DE
-ERS040,Ersa,,,FR
+ERS040,Ersa,ERS,40.0,FR
 ERS290,Ersa,,,FR
 EST110,SMEAR Estonia 110m,,,EE
 ET-ACD,,,,SE
 EVR200,Evreux,,,FR
 FBR200,Freiburg im Breisgau,,,DE
 FIK,Finokalia 150m,,,GR
-FKL015,Finokalia 15m,,,GR
+FKL015,Finokalia 15m,FKL,15.0,GR
 FLE200,Flensburg,,,DE
 FRA200,Frankfurt am Main,,,DE
 FRE,Freinsheim,,,DE
@@ -189,7 +189,7 @@ HAN200,Hannover,,,DE
 HAS200,Hastings,,,GB
 HEB200,Heilbronn,,,DE
 HEE200,Heerlen,,,NL
-HEI,Heidelberg,,,DE
+HEI,Heidelberg,HEI,30,DE
 HEL,Helgoland,,,DE
 HEL110,Helgoland 110m,HEL,110.0,DE
 HEN200,Henin - Carvin,,,FR
@@ -207,9 +207,9 @@ HTM,,,,SE
 HTM030,Hyltemossa 30m,HTM,30.0,SE
 HTM070,Hyltemossa 70m,HTM,70.0,SE
 HTM150,Hyltemossa 150m,HTM,150.0,SE
-HUN082,,,,HU
-HUN096,Hegyhátsál 96m,,,HU
-HUN115,Hegyhátsál 115m,,,HU
+HUN082,Hegyhátsál 82m,HUN,82.0,HU
+HUN096,Hegyhátsál 96m,HUN,96.0,HU
+HUN115,Hegyhátsál 115m,HUN,115.0,HU
 IDA,,,,LV
 IDS,,,,SE
 ING200,Ingolstadt,,,DE
@@ -240,7 +240,7 @@ JUE120,Jülich 120m,JUE,120.0,DE
 KAI200,Kaiserslautern,,,DE
 KAL200,Kalisz,,,PL
 KAR200,Karlovy Vary,,,CZ
-KAS,Kasprowy Wierch,,,PL
+KAS,Kasprowy Wierch,KAS,7.0,PL
 KEM200,Kempten (Allgau),,,DE
 KIE200,Kiel,,,DE
 KII,,,,FI
@@ -294,7 +294,7 @@ LIZ200,Linz,,,AT
 LLE200,Lille,,,FR
 LMP,Lampedusa,LMP,8.0,IT
 LMT,,,,IT
-LMU080,La Muela 80m,,,ES
+LMU080,La Muela 80m,LMU,79.0,ES
 LOD200,London,,,GB
 LON,London,,,GB
 LPO,Ile Grande,,,FR
@@ -325,7 +325,7 @@ MED-4,,,,
 MED-5,,,,
 MEL200,Melun,,,FR
 MET200,Metz,,,FR
-MHD,Mace Head,,,IE
+MHD,Mace Head,MHD,24.0,IE
 MIB200,Middelburg,,,NL
 MID100,,,,GB
 MID200,Middlesbrough,,,GB
@@ -357,7 +357,7 @@ ODE200,Odense,,,DK
 OES,Östergarnsholm,,,SE
 OFB200,Offenburg,,,DE
 OFF100,,,,DE
-OHP100,Observatoire Haute Provence 100m,,,FR
+OHP100,Observatoire Haute Provence 100m,OHP,100.0,FR
 OLD200,Oldenburg (Oldenburg),,,DE
 OLO200,Olomouc,,,CZ
 OOS200,Oostende,,,BE
@@ -383,7 +383,7 @@ PAR,Paris,,,FR
 PAR_DW,Paris downwind,,,FR
 PAS200,Passau,,,DE
 PCW150,,,,PL
-PDM,Pic du Midi,,,FR
+PDM,Pic du Midi,PDM,28.0,FR
 PFO200,Pforzheim,,,DE
 PIL200,Pila,,,PL
 PLA200,Plauen,,,DE
@@ -419,7 +419,7 @@ RGL090,Ridge Hill 90m,RGL,90.0,GB
 RIB,,,,SE
 RIS,Risø 100m,,,DK
 RMS,Reims,,,FR
-ROC140,Roc Tredudon,,,FR
+ROC140,Roc Tredudon,ROC,140.0,FR
 ROH200,Rosenheim,,,DE
 ROM1,,,,RO
 ROO200,Roosendaal,,,NL
@@ -485,7 +485,7 @@ SWI200,Swidnica,,,PL
 SZC200,Szczecin,,,PL
 SZE200,Szekesfehervar,,,HU
 SZO200,Szombathely,,,HU
-TAC191,Tacolneston 191m,,,GB
+TAC191,Tacolneston 191m,TAC,185.0,GB
 TAT200,Tatabanya,,,HU
 TCZ200,Tczew,,,PL
 TEST,,,,NO
