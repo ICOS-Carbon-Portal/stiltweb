@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import * as LCommon from 'icos-cp-leaflet-common';
 import {MarkerClusterGroup} from 'leaflet.markercluster';
 import config from '../../worker/config'
+import { isEqual } from 'lodash';
 
 const {geoBoundary, proximityTolerance} = config
 const stationIcon = LCommon.pointIcon(6, 1, 'rgb(255,100,100)', 'black')
@@ -21,6 +22,7 @@ export default class LMap extends Component{
 			}),
 			circles: L.layerGroup(),
 			clickMarker: L.circleMarker(),
+			haveAutoZoomed: false,
 		}
 		const self = this
 		self.onMapClick = e => self.mapClick(e.latlng)
@@ -59,14 +61,17 @@ export default class LMap extends Component{
 	}
 
 	componentWillReceiveProps(nextProps){
-		const map = this.app.map
+		const {app, props} = this
+		const hasEarlierInitialized = app.markers.getLayers().length > 0
+		if(isEqual(nextProps, props) && hasEarlierInitialized) return
 		const {stations, workerMode} = nextProps
 
-		if (stations.length > 1){
+		if (stations.length > 1 && !app.haveAutoZoomed){
 			const stCoords = stations.map(s => L.latLng(s.lat, s.lon))
 			const selPos = this.getSelectedPos(nextProps)
 			if (selPos) stCoords.push(selPos)
-			map.fitBounds(L.latLngBounds(stCoords))
+			app.map.fitBounds(L.latLngBounds(stCoords))
+			app.haveAutoZoomed = true
 		}
 
 		if (workerMode) this.buildWarningCircles(stations)
