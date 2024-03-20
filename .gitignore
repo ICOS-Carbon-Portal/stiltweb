@@ -20,7 +20,9 @@ src/main/resources/bundle.js
 .metals
 .vscode
 .bsp
+.scala-build
 metals.sbt
+
 
 nohup.out
 /outText.txt

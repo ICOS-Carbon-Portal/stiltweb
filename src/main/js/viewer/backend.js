@@ -44,7 +44,7 @@ function getStationInfo(){
 		})
 
 		function dobjByStation(stInfo, year){
-			const cands = tsLookup[stInfo.icosId]
+			const cands = stInfo.icosId ? tsLookup[stInfo.icosId] : undefined
 			const altDiff = dInfo => Math.abs(dInfo.samplingHeight - stInfo.alt)
 			const byTracer = {}
 			for(let gas in config.byTracer){
@@ -64,8 +64,7 @@ function getStationInfo(){
 			const years = stInfo.years.map(year =>
 				({year, dataObject: dobjByStation(stInfo, year)})
 			)
-			const isICOS = years.some(year => Object.values(year.dataObject).some(dobj => dobj.isICOS))
-
+			const isICOS = years.some(year => Object.values(year.dataObject).some(dobj => dobj && dobj.isICOS))
 			return Object.assign(copyprops(stInfo, ['id', 'lat', 'lon', 'alt']), {name, years, isICOS})
 		});
 	});
