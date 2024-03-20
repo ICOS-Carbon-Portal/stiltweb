@@ -106,7 +106,7 @@ export function withFeedbackToUser(state){
 	if(!existingStation && jobSubmissionObstacles.length === 0){
 		// lat/lon present, but not existing station
 		stations.forEach(s => {
-			if(s.lat != lat && s.lon != lon){
+			if(s.lat != lat || s.lon != lon){
 				const R = 6371000
 				const degreeLength = Math.PI * R / 180
 				const latRads = (s.lat + lat) * Math.PI / 360
@@ -117,6 +117,13 @@ export function withFeedbackToUser(state){
 				if(distance < tolerance){
 					jobSubmissionObstacles.push(`Selected location too close (${Math.round(distance)} m) to site ${s.siteId}`)
 				}
+			} else if(s.alt == alt)
+				jobSubmissionObstacles.push(`Site ${s.siteId} already has these coordinates`)
+			else if(siteId){
+				const prefix = s.siteId.substring(0, 3)
+				if(!siteId.startsWith(prefix)) jobSubmissionObstacles.push(
+					`Site id for these coordinates must start with ${prefix}`
+				)
 			}
 		})
 	}

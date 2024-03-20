@@ -63,7 +63,7 @@ export default class MapView extends Component {
 							/>
 						</div>
 
-						<div ref={(div) => {this.mapDiv = div;}} style={{width: '100%', height: 600}}>
+						<div ref={(div) => {this.mapDiv = div;}} style={{width: '100%', height: 1000}}>
 							<StationsMap
 								workerMode={true}
 								stations={props.stations}
