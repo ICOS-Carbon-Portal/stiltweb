@@ -107,14 +107,8 @@ export function withFeedbackToUser(state){
 		// lat/lon present, but not existing station
 		stations.forEach(s => {
 			if(s.lat != lat || s.lon != lon){
-				const R = 6371000
-				const degreeLength = Math.PI * R / 180
-				const latRads = (s.lat + lat) * Math.PI / 360
-				const dlon = (s.lon - lon) * Math.cos(latRads)
-				const dlat = s.lat - lat
-				const distance = Math.sqrt(dlon * dlon + dlat * dlat) * degreeLength
-				const tolerance = config.proximityTolerance
-				if(distance < tolerance){
+				const distance = L.latLng(lat, lon).distanceTo([s.lat, s.lon])
+				if(distance < config.proximityTolerance){
 					jobSubmissionObstacles.push(`Selected location too close (${Math.round(distance)} m) to site ${s.siteId}`)
 				}
 			} else if(s.alt == alt)

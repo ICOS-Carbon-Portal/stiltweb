@@ -56,6 +56,9 @@ class App extends Component {
 						<h1>
 							STILT calculation service <span className="fs-3 text-secondary">{subtitle}</span>
 							<span style={{float:'right'}}>
+								<a className="btn btn-primary text-white" href="/viewer/" target="_blank">
+									<i className="fas fa-search"/> STILT viewer
+								</a>
 								<a className="btn btn-info text-white" href="https://www.icos-cp.eu/about-stilt-calculator" target="_blank">
 									<i className="fas fa-question-circle" /> Help
 								</a>
