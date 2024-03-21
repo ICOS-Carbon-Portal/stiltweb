@@ -9,6 +9,7 @@ import FootprintsFetcher from './models/FootprintsFetcher';
 import {copyprops, deepUpdate} from 'icos-cp-utils';
 import * as Toaster from 'icos-cp-toaster';
 import Axes from './models/Axes';
+import { initResultsState } from './store';
 
 export default function(state, action){
 
@@ -50,11 +51,11 @@ export default function(state, action){
 				? Object.assign({}, selectedYear, {dataObject: selectedYear.dataObject[state.selectedGas]})
 				: null
 
-			return update({
+			return update(initResultsState, {
 				selectedStation: station,
 				selectedScope,
 				axes: state.axes.withSelectedScope(selectedScope)
-			});
+			})
 
 		case SET_SELECTED_GAS:
 			return update({selectedGas: action.selectedGas, axes: new Axes(action.selectedGas)});
@@ -64,19 +65,21 @@ export default function(state, action){
 
 		case FETCHED_STATIONDATA:
 			if(checkStationId(action.stationId) && checkScope(action)){
-
-				const footprints = action.footprints
-					? new FootprintsRegistry(action.footprints)
-					: state.footprints;
-				const footprintsFetcher = action.footprints
-					? new FootprintsFetcher(footprints, action.stationId)
-					: state.footprintsFetcher;
-				const seriesId = action.stationId + '_' + action.fromDate + '_' + action.toDate;
-				const timeSeriesData = action.footprints
-					? makeTimeSeriesGraphData(action, seriesId, state.selectedGas)
-					: state.timeSeriesData;
-
-				return update({timeSeriesData, footprints, footprintsFetcher, resultPacks: action.packs});
+				const updates = {resultPacks: action.packs}
+				const {footprints, stationId} = action
+				if(footprints) {
+					const footReg = new FootprintsRegistry(footprints)
+					updates.footprints = footReg
+					updates.footprintsFetcher = new FootprintsFetcher(footReg, stationId)
+					const seriesId = stationId + '_' + action.fromDate + '_' + action.toDate;
+					updates.timeSeriesData = makeTimeSeriesGraphData(action, seriesId, state.selectedGas)
+					if(footprints.length > 0){
+						updates.desiredFootprint = footReg.getFootprint(0)
+						const fdates = footReg.dates
+						updates.dateRange = [fdates[0], fdates[fdates.length - 1]]
+					}
+				}
+				return update(updates)
 			} else return state;
 
 		case FETCHED_RESULT_PACKS_LIST:

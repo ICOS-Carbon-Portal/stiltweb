@@ -24,7 +24,17 @@ export const StationFilters = [{
 	predicate: () => true
 }]
 
-const initState = {
+export const initResultsState = {
+	footprints: null,
+	footprint: null,
+	timeSeriesData: null,
+	footprintsFetcher: null,
+	resultPacks: [],
+	desiredFootprint: null,
+	dateRange: null
+}
+
+const initState = Object.assign({
 	axes: new Axes(defaultGas),
 	showSpinner: false,
 	icosFormat: null,
@@ -32,17 +42,13 @@ const initState = {
 	allStations: [],
 	selectedGas: defaultGas,
 	selectedStation: null,
-	footprints: null,
-	footprint: null,
-	resultPacks: [],
-	desiredFootprint: null,
 	playingMovie: false,
 	options: {
 		modelComponentsVisibility: defaultVisibility
 	},
 	toasterData: null,
 	error: null
-};
+}, initResultsState)
 
 /*
 function logger({ getState }) {

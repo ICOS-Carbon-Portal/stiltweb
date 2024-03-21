@@ -48,6 +48,7 @@ export default class Dygraphs extends Component {
 		this.canvasOverlay.removeEventListener("mousemove", this.mousemoveCOHandler);
 		this.graphDiv.removeEventListener("mouseleave", this.graphOut);
 		this.graphDiv.removeEventListener("mouseup", this.graphOut);
+		this.graph = undefined
 	}
 
 	resizeHandler(){

@@ -84,6 +84,7 @@ export const fetchStationData = (dispatch, getState) => {
 		stationData => {
 			dispatch(gotStationData(stationData, stationId, scope.fromDate, scope.toDate));
 			dispatch({type: HIDE_SPINNER});
+			dispatch(fetchFootprint)
 		},
 		err => dispatch(failWithError(err))
 	);
@@ -115,7 +116,7 @@ export const setSelectedGas = selectedGas => (dispatch, getState) => {
 }
 
 const setSelectedStationById = stationId => (dispatch, getState) => {
-	const station = getState().stations.find(s => s.id === stationId);
+	const station = getState().allStations.find(s => s.id === stationId);
 	if(station) dispatch(setSelectedStation(station));
 };
 
@@ -144,7 +145,7 @@ export const setDateRange = dateRange => (dispatch, getState) => {
 	});
 
 	fetchFootprintThrottled(dispatch);
-};
+}
 
 const fetchFootprint = (dispatch, getState) => {
 	const state = getState();

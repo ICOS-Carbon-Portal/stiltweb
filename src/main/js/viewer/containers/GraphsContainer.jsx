@@ -27,7 +27,7 @@ function stateToProps(state){
 				}
 			}
 		},
-		copyprops(state, ['timeSeriesData', 'dateRange', 'selectedStation', 'axes', 'footprint', 'footprints', 'jumpToFootprint'])
+		copyprops(state, ['timeSeriesData', 'dateRange', 'selectedStation', 'axes', 'footprint', 'footprints'])
 	);
 }
 

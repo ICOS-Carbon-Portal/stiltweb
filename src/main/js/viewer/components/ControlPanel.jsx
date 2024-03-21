@@ -118,7 +118,7 @@ const StiltComponentSelector = ({label, comment, disabled, updateVisibility, opt
 	if (disabled)
 		Object.assign(style, {cursor: 'not-allowed'})
 
-	return <span key={label} title={disabled ? 'Not available' : comment} style={{marginLeft: 7}}>
+	return <div key={label} title={disabled ? 'Not available' : comment} style={{marginLeft: 7, display: 'inline-block'}}>
 		<input type="checkbox"
 			checked={disabled ? false : !!visibility[label]}
 			onChange={visibilityChangeHandler}
@@ -126,7 +126,7 @@ const StiltComponentSelector = ({label, comment, disabled, updateVisibility, opt
 			disabled={disabled}
 		/>
 		{label}
-	</span>;
+	</div>
 };
 
 
