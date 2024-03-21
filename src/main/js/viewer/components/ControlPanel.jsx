@@ -10,10 +10,10 @@ import StationAndYearSelector from './StationAndYearSelector.jsx';
 
 export default props =>
 		<div className="row">
-			<div className="col-md-5" style={{paddingRight:0}}>
+			<div className="col-md-6" style={{paddingRight:0}}>
 				<StationSelectingMap {...props} />
 			</div>
-			<div className="col-md-7" style={{paddingLeft: 0}}>
+			<div className="col-md-6" style={{paddingLeft: 0}}>
 				<ul className="list-group" style={{marginBottom:0}}>
 					{config.viewerScope
 						? <ViewerScopeDisplay {...config.viewerScope} />
@@ -50,7 +50,7 @@ const GasSelector = ({selectGas, gas, selectedGas}) => {
 }
 
 const StationSelectingMap = ({stations, selectedStation, selectStation}) => {
-	return <div style={{height: 490}}>
+	return <div style={{height: 565}}>
 		<StationsMap
 			stations={stations}
 			selectedStation={selectedStation}
