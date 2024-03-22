@@ -61,7 +61,8 @@ export default class Dygraphs extends Component {
 
 		this.dataId = props.data.id;
 		const station = props.selectedStation;
-		const title = `${station.name} (${station.alt} m, lat: ${station.lat}, lng: ${station.lon})`;
+		const gas = props.selectedGas.toUpperCase()
+		const title = `${gas}, ${station.name} (${station.alt} m, lat: ${station.lat}, lon: ${station.lon})`;
 
 		this.graph = new Dygraph(
 			this.graphDiv,
