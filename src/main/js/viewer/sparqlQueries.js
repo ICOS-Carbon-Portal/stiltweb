@@ -16,7 +16,7 @@ export function observationDataQuery(specs){
 		]
 		FILTER NOT EXISTS {[] cpmeta:isNextVersionOf ?dobj}
 		?station cpmeta:hasStationId ?stationId .
-		bind(exists{?station cpmeta:hasLabelingDate ?lblDate} as ?isIcos)
+		bind(exists{?station cpmeta:hasStationClass ?stClass} as ?isIcos)
 	}`;
 	return {"text": query};
 }
