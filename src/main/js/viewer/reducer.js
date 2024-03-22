@@ -117,8 +117,10 @@ export default function(state, action){
 			return update({footprintsFetcher});
 
 		case ERROR:
-			return Object.assign({}, state, {
-				toasterData: new Toaster.ToasterData(Toaster.TOAST_ERROR, action.error.message.split('\n')[0])
+			const errMsgFull = action.error.message
+			const errMsg = errMsgFull.length > 100 ? errMsgFull.slice(0, 100) : errMsgFull
+			return update({
+				toasterData: new Toaster.ToasterData(Toaster.TOAST_ERROR, errMsg)
 			});
 
 		default:

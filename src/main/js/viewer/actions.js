@@ -49,7 +49,7 @@ export function visibilityUpdate(name, visibility){
 }
 
 export function failWithError(error){
-	console.log(error);
+	console.error(error);
 	return {
 		type: ERROR,
 		error

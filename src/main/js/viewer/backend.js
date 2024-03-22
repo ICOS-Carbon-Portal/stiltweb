@@ -99,10 +99,9 @@ export function getStationData(stationId, scope, icosFormat, gas){
 	const packsPromise = getResultBatchJson('listresultpackages', resultBatch)
 
 	return Promise.all([observationsPromise, modelResultsPromise, footprintsListPromise, packsPromise])
-		.then(
-			([obsBinTable, modelResults, footprints, packs]) => ({obsBinTable, modelResults, footprints, packs}),
-			err => console.error(err)
-		);
+		.then(([obsBinTable, modelResults, footprints, packs]) =>
+			({obsBinTable, modelResults, footprints, packs})
+		)
 }
 
 export function packageResults(resultBatch){
