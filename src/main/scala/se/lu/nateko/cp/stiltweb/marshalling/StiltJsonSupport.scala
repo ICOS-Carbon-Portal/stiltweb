@@ -1,17 +1,20 @@
 package se.lu.nateko.cp.stiltweb.marshalling
 
-import java.time.{ Instant, LocalDate }
+import java.time.Instant
+import java.time.LocalDate
+
 import akka.actor.Address
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
-import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
+import play.twirl.api.Html
+import spray.json.*
+import se.lu.nateko.cp.cpauth.core.JsonSupport.{given RootJsonFormat[Instant]}
 import se.lu.nateko.cp.data.formats.netcdf.Raster
-import se.lu.nateko.cp.stiltcluster._
-import spray.json._
+import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
+import se.lu.nateko.cp.stiltcluster.*
 import se.lu.nateko.cp.stiltweb.StiltResultsRequest
+import se.lu.nateko.cp.stiltweb.StiltStationIds
 import se.lu.nateko.cp.stiltweb.StiltStationInfo
 import se.lu.nateko.cp.stiltweb.WhoamiResult
-import se.lu.nateko.cp.stiltweb.StiltStationIds
-import play.twirl.api.Html
 
 object StiltJsonSupport {
 	import DefaultJsonProtocol.*
@@ -50,15 +53,7 @@ object StiltJsonSupport {
 		)
 	}
 
-	given JsonFormat[Instant] with {
-		def write(i: Instant) = JsString(i.toString)
-		// We never want to read the time{Started,Stopped} from JSON
-		def read(value: JsValue) = throw new DeserializationException(
-			"JSON-parsing of Instant is not needed/accepted."
-		)
-	}
-
-	private val jobDefaultFormat: JsonFormat[Job] = jsonFormat9(Job.apply)
+	private val jobDefaultFormat: JsonFormat[Job] = jsonFormat10(Job.apply)
 
 	given RootJsonFormat[Job] with {
 		def write(job: Job) = {
@@ -75,7 +70,7 @@ object StiltJsonSupport {
 	given JsonFormat[StiltSlot] = jsonFormat2(StiltSlot.apply)
 	given JsonFormat[SlotFailure] = jsonFormat3(SlotFailure.apply)
 
-	given JsonFormat[JobInfo] = jsonFormat4(JobInfo.apply)
+	given JsonFormat[JobInfo] = jsonFormat5(JobInfo.apply)
 	given JsonFormat[WorkMasterStatus] = jsonFormat3(WorkMasterStatus.apply)
 	given JsonFormat[WorkerNodeInfo] = jsonFormat3(WorkerNodeInfo.apply)
 

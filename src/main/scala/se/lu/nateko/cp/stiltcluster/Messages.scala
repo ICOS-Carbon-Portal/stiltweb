@@ -13,27 +13,32 @@ case class Job(
 	start: LocalDate,
 	stop: LocalDate,
 	userId: String,
+	submissionTime: Option[Instant] = None,
 	timeStarted: Option[Instant] = None,
 	timeStopped: Option[Instant] = None,
-){
+):
 	def id = "job_" + this.copy(timeStarted = None, timeStopped = None).hashCode()
 
 	def pos = StiltPosition(lat, lon, alt)
 
-	def copySetStarted =
-		this.copy(timeStarted=(Some(Instant.now())))
+	def copySetStarted = copy(timeStarted=(Some(Instant.now())))
+	def copySetStopped = copy(timeStopped=Some(Instant.now()))
+	def submittedNow   = copy(submissionTime = Some(Instant.now()))
 
-	def copySetStopped =
-		this.copy(timeStopped=Some(Instant.now()))
-}
 
 case class CancelJob(id: String)
 
 case class SlotFailure(slot: StiltSlot, errorMessages: Seq[String], logsFilename: String)
 
-case class JobInfo(job: Job, nSlots: Int, nSlotsFinished: Int, failures: Seq[SlotFailure] = Nil) {
-	def id = job.id
-}
+case class JobInfo(
+	job: Job,
+	nSlots: Int,
+	nSlotsFinished: Int,
+	minutesRemaining: Option[Int],
+	failures: Seq[SlotFailure] = Nil
+):
+	export job.id
+
 
 case class WorkerNodeInfo(address: Address, nCpusFree: Int, nCpusTotal: Int)
 
