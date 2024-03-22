@@ -7,7 +7,8 @@ case class StiltResultsRequest(
 	columns: Option[Seq[String]],
 	fromDate: LocalDate,
 	toDate: LocalDate
-)
+):
+	def batch = ResultBatch(stationId, fromDate, toDate)
 
 case class StiltStationIds(
 	id: String,

@@ -31,6 +31,8 @@ class AuthRouting(authConfig: PublicAuthConfig):
 
 	val userReq: Directive1[UserId] = user | complete(StatusCodes.Unauthorized -> "Please log in with ATMO ACCESS")
 
+	val userOpt: Directive1[Option[UserId]] = user.map(Some(_)) | provide(None)
+
 	private def toMessage(err: Throwable): String =
 		val msg = err.getMessage
 		if(msg == null || msg.isEmpty) err.getClass.getName else msg

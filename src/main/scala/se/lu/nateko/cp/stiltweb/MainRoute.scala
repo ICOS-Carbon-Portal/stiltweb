@@ -39,7 +39,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 
 	private val authRouting = new AuthRouting(config.auth)
 	import cluster.atmoClient
-	import authRouting.{user, userReq}
+	import authRouting.{user, userReq, userOpt}
 
 	private val service = new StiltResultsPresenter(config)
 	private val throttler = new PackagingThrottler[ResultRelPath](using cluster.dispatcher)
@@ -81,14 +81,14 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 								val startTime = Instant.now()
 								withRequestTimeout(5.minutes):
 									onSuccess(zipPathFut): zipPath =>
-										logAppInfo(startTime, user, "Packaging", Some(batch), zipPath)
+										logResPackUse(startTime, user, "Packaging", Some(batch), zipPath)
 										complete(service.listResultPackages(batch).get)
 						)
 			} ~
 			pathPrefix("downloadresults" / StiltResRelPath): relPath =>
 				userReq: user =>
 					val startDt = Instant.now()
-					onResponseStreamed(() => logAppInfo(startDt, user, "Downloading", None, relPath)):
+					onResponseStreamed(() => logResPackUse(startDt, user, "Downloading", None, relPath)):
 						getFromFile(service.toResultPath(relPath).toFile)
 			~
 			path("listresultpackages"):
@@ -113,7 +113,10 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 			entity(as[StiltResultsRequest]): req =>
 				withRequestTimeout(5.minutes):
 					path("stiltresult"):
-						complete(service.getStiltResults(req).toSeq)
+						val startDt = Instant.now()
+						userOpt: user =>
+							onResponseStreamed(() => logResultsFetch(startDt, user, req)):
+								complete(service.getStiltResults(req).toSeq)
 					~
 					path("stiltrawresult"):
 						complete(service.getStiltRawResults(req).toSeq)
@@ -207,8 +210,9 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 		`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> fileName))
 	)
 
-	private def logAppInfo(startDt: Instant, user: UserId, action: String, batch: Option[ResultBatch], relPath: ResultRelPath) =
-		import atmoClient.baseStiltUrl
+	import atmoClient.baseStiltUrl
+
+	private def logResPackUse(startDt: Instant, user: UserId, action: String, batch: Option[ResultBatch], relPath: ResultRelPath) =
 		val basicInfo = AppInfo(
 			user = user,
 			startDate = startDt,
@@ -220,8 +224,24 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 		val info = batch.fold(basicInfo): resBatch =>
 			import resBatch.{stationId, fromDate, toDate}
 			basicInfo.copy(
-				infoUrl = Some(s"$baseStiltUrl/viewer/?stationId=${stationId}&fromDate=${fromDate}&toDate=${toDate}"),
+				infoUrl = Some(scopedViewerUrl(resBatch)),
 				comment = Some(s"$action STILT results for station $stationId from $fromDate to $toDate")
 			)
 		atmoClient.log(info)
+
+	private def scopedViewerUrl(batch: ResultBatch): String =
+		import batch.{stationId, fromDate, toDate}
+		s"$baseStiltUrl/viewer/?stationId=${stationId}&fromDate=${fromDate}&toDate=${toDate}"
+
+	private def logResultsFetch(startDt: Instant, user: Option[UserId], req: StiltResultsRequest) =
+		import req.{stationId, fromDate, toDate}
+		val appInfo = AppInfo(
+			user = user.getOrElse(UserId("anonymous")),
+			startDate = startDt,
+			endDate = Some(Instant.now()),
+			resultUrl = s"$baseStiltUrl/viewer/stiltresult",
+			infoUrl = Some(scopedViewerUrl(req.batch)),
+			comment = Some(s"Viewing STILT result time series for station $stationId from $fromDate to $toDate")
+		)
+		atmoClient.log(appInfo)
 end MainRoute
