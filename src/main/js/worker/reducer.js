@@ -105,19 +105,24 @@ export function withFeedbackToUser(state){
 
 	if(!existingStation && jobSubmissionObstacles.length === 0){
 		// lat/lon present, but not existing station
+		let existingLatLon = false
 		stations.forEach(s => {
-			if(s.lat != lat || s.lon != lon){
-				const distance = L.latLng(lat, lon).distanceTo([s.lat, s.lon])
-				if(distance < config.proximityTolerance){
-					jobSubmissionObstacles.push(`Selected location too close (${Math.round(distance)} m) to site ${s.siteId}`)
+			if(s.lat == lat && s.lon == lon){
+				existingLatLon = true
+				if(s.alt == alt)
+					jobSubmissionObstacles.push(`Site ${s.siteId} already has this location`)
+				else if(siteId){
+					const prefix = s.siteId.substring(0, 3)
+					if(!siteId.startsWith(prefix)) jobSubmissionObstacles.push(
+						`Site id for these coordinates must start with ${prefix}`
+					)
 				}
-			} else if(s.alt == alt)
-				jobSubmissionObstacles.push(`Site ${s.siteId} already has these coordinates`)
-			else if(siteId){
-				const prefix = s.siteId.substring(0, 3)
-				if(!siteId.startsWith(prefix)) jobSubmissionObstacles.push(
-					`Site id for these coordinates must start with ${prefix}`
-				)
+			}
+		})
+		if (!existingLatLon) stations.forEach(s => {
+			const distance = L.latLng(lat, lon).distanceTo([s.lat, s.lon])
+			if(distance < config.proximityTolerance){
+				jobSubmissionObstacles.push(`Selected location too close (${Math.round(distance)} m) to site ${s.siteId}`)
 			}
 		})
 	}
