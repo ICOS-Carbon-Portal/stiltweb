@@ -31,7 +31,7 @@ export default class JobInfoView extends Component {
 		const showLink = (jinfo.nSlotsFinished === jinfo.nSlots);
 		const hasFailures = !!jinfo.failures.length;
 		const failuresMustBeShown = hasFailures && this.state.showErrors;
-		const submTimeInfo = job.submissionTime ? ` at ${job.submissionTime}` : ''
+		const submTimeInfo = job.submissionTime ? ` at ${job.submissionTime.replace(/\.\d+/, "")}` : ''
 
 		return <div className={"mb-3 card text-dark bg-" + (hasFailures? "warning" : "light")}>
 			<div className="card-header" onClick={this.toggleShowErrors.bind(this)} style={hasFailures ? {cursor: 'pointer'} : {}}>
@@ -52,6 +52,10 @@ export default class JobInfoView extends Component {
 					<span> <b>Site id: <i>{job.siteId}</i></b> (<b>lat:</b> {job.lat}, <b>lon:</b> {job.lon}), </span>
 					<span><b>alt:</b> {job.alt}, <b>start:</b> {job.start}, <b>stop:</b> {job.stop}, </span>
 					<span><b>done:</b> {jinfo.nSlotsFinished} of {jinfo.nSlots}</span>
+					{jinfo.minutesRemaining
+						? <span>, <b>minutes left:</b> &le; {jinfo.minutesRemaining}</span>
+						: null
+					}
 					<span> - submitted by {obfuscate(job.userId)}{submTimeInfo}</span>
 				</span>
 			</div>

@@ -13,7 +13,7 @@ import java.time.Instant
  * By design, this class is not supposed to write to "outer world" or send any messages,
  * but can mutate itself and its members.
  */
-class State(archiver: Archiver) {
+class State(archiver: Archiver):
 
 	type Worker = ActorRef
 	type JobId = String
@@ -103,18 +103,26 @@ class State(archiver: Archiver) {
 	def onSlotFailure(slot: StiltSlot, errMsgs: Seq[String], logsPathMaker: Job => String): Seq[Job] =
 		jobs.values.flatMap{_.rememberFailuresIfRelevant(slot, errMsgs, logsPathMaker)}.toSeq
 
-	def getDashboardInfo: DashboardInfo = {
+	def getDashboardInfo: DashboardInfo =
 		val infra = workers.toSeq.map{case (worker, wstate) =>
 			WorkerNodeInfo(worker.path.address, wstate.freeCores, wstate.totalCores)
 		}
 		val (done, notFinished) = jobs.values.toSeq.partition(_.isDone())
 		val (running, queue) = notFinished.partition(_.hasBeenRun)
-		val optInstOrd = Ordering[Option[Instant]]
+
+		val leftMinutes: Option[Int] =
+			val totalCores = infra.map(_.nCpusTotal).sum
+			if totalCores == 0 then None else Some:
+				val totalSlots = running.map(_.nSlots).sum
+				val nBatches = (totalSlots + totalCores - 1) / totalCores // int div with roundup
+				val nSeconds = nBatches * 75
+				(nSeconds + 60 - 1) / 60 // int div with roundup
+
 		DashboardInfo(
-			running.map(_.toInfo).sortBy(_.job.timeStarted)(optInstOrd),
-			done.map(_.toInfo).sortBy(_.job.timeStopped)(optInstOrd.reverse),
-			queue.map(_.toInfo).sortBy(_.job.timeStarted)(optInstOrd),
+			running.map(_.toInfo.copy(minutesRemaining = leftMinutes))
+				.sortBy(_.job.timeStarted),
+			done.map(_.toInfo).sortBy(_.job.timeStopped).reverse,
+			queue.map(_.toInfo).sortBy(_.job.timeStarted),
 			infra
 		)
-	}
-}
+end State

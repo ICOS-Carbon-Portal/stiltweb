@@ -17,6 +17,8 @@ class JobState(val job: Job, nSlotsTotal: Int, initWork: Seq[StiltSlot]){
 	private[this] var doneTime: Option[Instant] = None
 
 	def slots = slotz.toSeq
+	def nSlots = slotz.size
+
 	def isDone() = {
 		val done = slotz.isEmpty
 		if(done && doneTime.isEmpty) doneTime = Some(Instant.now)
