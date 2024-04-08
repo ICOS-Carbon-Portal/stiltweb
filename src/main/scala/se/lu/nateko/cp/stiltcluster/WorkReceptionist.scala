@@ -44,6 +44,7 @@ class WorkReceptionist(archiver: Archiver, atmoClient: AtmoAccessClient) extends
 
 		case wms: WorkMasterStatus =>
 			val wm = sender()
+			wm ! Thanks
 			if (! state.isKnownWorker(wm)) {
 				log.info(s"Seeing new computational node with ${wms.nCpusTotal} CPUs at ${wm.path}")
 				context.watch(wm)

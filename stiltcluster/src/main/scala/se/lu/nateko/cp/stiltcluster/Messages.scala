@@ -11,3 +11,5 @@ case class WorkMasterStatus(nCpusTotal: Int, work: Seq[StiltSlot], respondingToR
 	def freeCores = nCpusTotal - work.size
 }
 
+case object Thanks
+

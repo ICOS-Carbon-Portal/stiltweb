@@ -1,18 +1,23 @@
 package se.lu.nateko.cp.stiltcluster
 
-import java.nio.file.{ Files, Paths }
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.ActorRef
+import akka.actor.Cancellable
+import akka.actor.Props
+import akka.actor.Terminated
+import akka.util.Timeout
 
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.time.Instant
+import java.time.Duration as JDuration
 import scala.collection.mutable.Set
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import scala.io.Source
 import scala.util.Success
-
-import akka.actor.{ Actor, ActorRef, Props, Terminated }
-import akka.actor.ActorLogging
-import akka.actor.Cancellable
-import akka.util.Timeout
-import java.nio.file.Path
 
 
 class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with ActorLogging {
@@ -21,6 +26,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 	var receptionist: ActorRef = context.system.deadLetters
 	val work = Set.empty[StiltSlot]
 	private var connAliveKeeper: Cancellable = Cancellable.alreadyCancelled
+	private var lastSeenReceptionist = Instant.MIN
 
 	log.info("WorkMaster starting up")
 
@@ -28,7 +34,12 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 		import context.dispatcher
 		findReceptionist()
 		connAliveKeeper = context.system.scheduler.scheduleAtFixedRate(58.seconds, 58.seconds){
-			() => receptionist ! myStatus()
+			() => if receptionist != context.system.deadLetters then
+				val lonelyTime = JDuration.between(lastSeenReceptionist, Instant.now())
+				if lonelyTime.compareTo(MaxLonelyTime) > 0 then
+					log.info("Lost connection with the Work Receptionist, will restart")
+					self ! Stop
+				else receptionist ! myStatus()
 		}
 
 	override def postStop(): Unit = connAliveKeeper.cancel()
@@ -42,6 +53,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 				context.watch(ref)
 				log.info(s"Found a receptionist at ${ref.path}")
 				receptionist = ref
+				lastSeenReceptionist = Instant.now()
 				ref ! myStatus()
 			case _ =>
 				context.system.scheduler.scheduleOnce(1.second)(findIt())
@@ -57,6 +69,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 		}
 
 		case CalculateSlots(id, slots: Seq[StiltSlot]) =>
+			lastSeenReceptionist = Instant.now()
 			val newSlots = slots.distinct.filterNot(work.contains)
 			log.debug("Received new slots: " + newSlots.mkString(", "))
 
@@ -75,8 +88,11 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 			newWork foreach calculateSlot
 			sender() ! myStatus(Some(id))
 
+		case Thanks =>
+			lastSeenReceptionist = Instant.now()
+
 		case Stop =>
-			log.info(s"WorkMaster terminated (was $self)")
+			log.info(s"WorkMaster terminating (was $self)")
 			context stop self
 	}
 
@@ -149,6 +165,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 object WorkMaster{
 
 	val MaxNumOfAttempts = 2
+	val MaxLonelyTime = JDuration.ofMinutes(2)
 
 	def props(nCores: Int, receptionistAddress: String) = Props.create(classOf[WorkMaster], Int.box(nCores), receptionistAddress)
 
