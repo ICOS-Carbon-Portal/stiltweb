@@ -38,8 +38,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 				val lonelyTime = JDuration.between(lastSeenReceptionist, Instant.now())
 				if lonelyTime.compareTo(MaxLonelyTime) > 0 then
 					log.info("Lost connection with the Work Receptionist, will restart")
-					context.stop(self)
-					context.system.terminate()
+					sys.exit(0)
 				else receptionist ! myStatus()
 		}
 
