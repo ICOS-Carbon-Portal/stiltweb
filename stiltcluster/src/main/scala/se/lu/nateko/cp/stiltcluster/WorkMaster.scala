@@ -34,7 +34,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 		import context.dispatcher
 		findReceptionist()
 		connAliveKeeper = context.system.scheduler.scheduleAtFixedRate(58.seconds, 58.seconds){
-			() => if receptionist != context.system.deadLetters then
+			() => if lastSeenReceptionist != Instant.MIN then
 				val lonelyTime = JDuration.between(lastSeenReceptionist, Instant.now())
 				if lonelyTime.compareTo(MaxLonelyTime) > 0 then
 					log.info("Lost connection with the Work Receptionist, will restart")
