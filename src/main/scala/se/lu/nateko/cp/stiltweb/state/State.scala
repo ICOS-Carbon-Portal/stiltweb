@@ -115,7 +115,7 @@ class State(archiver: Archiver):
 			if totalCores == 0 then None else Some:
 				val totalSlots = running.map(_.nSlots).sum
 				val nBatches = (totalSlots + totalCores - 1) / totalCores // int div with roundup
-				val nSeconds = nBatches * 75
+				val nSeconds = nBatches * 95
 				(nSeconds + 60 - 1) / 60 // int div with roundup
 
 		DashboardInfo(
