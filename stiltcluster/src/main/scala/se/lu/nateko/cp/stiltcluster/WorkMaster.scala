@@ -165,7 +165,7 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 object WorkMaster{
 
 	val MaxNumOfAttempts = 2
-	val MaxLonelyTime = JDuration.ofMinutes(2)
+	val MaxLonelyTime = JDuration.ofMinutes(3)
 
 	def props(nCores: Int, receptionistAddress: String) = Props.create(classOf[WorkMaster], Int.box(nCores), receptionistAddress)
 
