@@ -19,7 +19,6 @@ import spray.json.*
 import java.time.Instant
 import scala.concurrent.Future
 import scala.util.Success
-import scala.util.control.NoStackTrace
 
 class AtmoAccessClient(conf: AtmoAccessConfig)(using system: ActorSystem):
 	import AtmoAccessClient.*
@@ -43,7 +42,7 @@ class AtmoAccessClient(conf: AtmoAccessConfig)(using system: ActorSystem):
 			res <- http.singleRequest(req)
 			resTxt <- Unmarshal(res.entity).to[String]
 			_ <- if res.status.isSuccess then Future.successful(Done)
-				else Future.failed(new Exception(resTxt) with NoStackTrace)
+				else utils.failure(resTxt)
 		yield Done
 		doneFut.recover{
 			case exc =>

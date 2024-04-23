@@ -7,15 +7,18 @@ import akka.actor.Address
 /** The description of a Stilt simulation to be run. */
 case class Job(
 	siteId: String,
+	siteName: Option[String],
+	countryCode: Option[String],
 	lat: Double,
 	lon: Double,
 	alt: Int,
 	start: LocalDate,
 	stop: LocalDate,
 	userId: String,
+	icosStationId: Option[String],
 	submissionTime: Option[Instant] = None,
 	timeStarted: Option[Instant] = None,
-	timeStopped: Option[Instant] = None,
+	timeStopped: Option[Instant] = None
 ):
 	def id = "job_" + this.copy(timeStarted = None, timeStopped = None).hashCode()
 

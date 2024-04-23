@@ -52,49 +52,27 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 
 	private val archiver = new Archiver(Paths.get(config.stateDirectory), config.slotStepInMinutes)
 
-	def getStationInfos: Seq[StiltStationInfo] = {
-		import StiltStationIds.{STILT_id, STILT_name, ICOS_id, ICOS_height, Country}
+	def getStationInfos: Seq[StiltStationInfo] =
 
-		val idToIds: Map[String, StiltStationIds] = {
-			val lines = IoSource
-				.fromInputStream(getClass.getResourceAsStream("/stations.csv"), "UTF-8")
-				.getLines()
+		val idToIds: Map[String, StiltStationIds] = StationsFileDriver.readInfo
 
-			val headerIdxs: Map[String, Int] = lines.next().split(",", -1).map(_.trim).zipWithIndex.toMap
-
-			lines.map{line =>
-				val cells = line.split(",", -1).map(_.trim)
-				def cell(colName: String) = cells(headerIdxs(colName))
-				val id = cell(STILT_id)
-				val Array(name, icosId, icosHeight, ccode) = Array(STILT_name, ICOS_id, ICOS_height, Country)
-					.map(cell).map{s => if(s.isEmpty) None else Some(s)}
-				id -> StiltStationIds(id, name, icosId, icosHeight.flatMap(_.toFloatOption), ccode)
-			}
-			.toMap
-		}
-
-		subdirectories(archiver.stationsDir).map{directory =>
-			val id = directory.getFileName.toString
+		subdirectories(archiver.stationsDir).flatMap: stationDirLink =>
+			val id = stationDirLink.getFileName.toString
 
 			val ids = idToIds.getOrElse(id, StiltStationIds(id))
 
-			val pos = stiltPos(directory)
+			stiltPos(stationDirLink).flatMap: pos =>
 
-			val years = subdirectories(directory).map(_.getFileName.toString).collect{
-				case yearDirPattern(dddd) => dddd.toInt
-			}
+				val years = subdirectories(stationDirLink).map(_.getFileName.toString).collect:
+					case yearDirPattern(dddd) => dddd.toInt
 
-			StiltStationInfo(ids, pos.lat, pos.lon, pos.alt, years)
-		}.filter(!_.years.isEmpty)
-	}
+				if years.isEmpty then None
+				else Some(StiltStationInfo(ids, pos.lat, pos.lon, pos.alt, years))
+	end getStationInfos
 
-	private def stiltPos(stationDir: Path): StiltPosition = {
-		val id = stationDir.toRealPath().getFileName.toString
-		id match{
-			case StiltPosition(sp) => sp
-			case _ => throw new Exception(s"Could not parse $id as stilt site id to extract lat/lon/alt")
-		}
-	}
+	private def stiltPos(stationDirLink: Path): Option[StiltPosition] =
+		val stationRealFolder = stationDirLink.toRealPath().getFileName.toString
+		StiltPosition.unapply(stationRealFolder)
 
 	private def getCsvRows(batch: ResultBatch): Iterator[String] =
 		import batch.{stationId, fromDate, toDate}
@@ -135,16 +113,19 @@ class StiltResultsPresenter(config: StiltWebConfig) {
 		listSlotsWithFootprints(batch).map(_._2)
 
 	def packageResults(batch: ResultBatch)(using ExecutionContext): Future[ResultRelPath] =
-		val footPathsFut = Future:
+		val footprintsFut = Future:
 			listSlotsWithFootprints(batch)
 				.map(_._1.resolve(StiltResultFileType.Foot.toString))
+
 		val csvRowsFut = Future(getCsvRows(batch))
-		val stationDir = archiver.stationsDir.resolve(batch.stationId)
-		val pos = stiltPos(stationDir)
 
 		for
-			footPaths <- footPathsFut
+			footPaths <- footprintsFut
 			csvRows <- csvRowsFut
+			stationDir = archiver.stationsDir.resolve(batch.stationId)
+			pos <- stiltPos(stationDir) match
+				case None => utils.failure(s"Not a STILT station folder: $stationDir")
+				case Some(pos) => Future.successful(pos)
 			zipPath <- Packager.zipResults(footPaths, csvRows, batch, pos)
 			md5 <- Packager.md5Hex(zipPath)
 		yield

@@ -53,7 +53,7 @@ object StiltJsonSupport {
 		)
 	}
 
-	private val jobDefaultFormat: JsonFormat[Job] = jsonFormat10(Job.apply)
+	private val jobDefaultFormat: JsonFormat[Job] = jsonFormat13(Job.apply)
 
 	given RootJsonFormat[Job] with {
 		def write(job: Job) = {
