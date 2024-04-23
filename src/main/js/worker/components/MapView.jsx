@@ -47,7 +47,7 @@ export default class MapView extends Component {
 		return <div className="row">
 
 			<div className="col-md-7 col-sm-12" style={{marginBottom}}>
-				<h4>Existing STILT footprints</h4>
+				<h4>Existing STILT stations</h4>
 
 				<div className="card card-secondary">
 					<div className="card-body">
@@ -80,7 +80,7 @@ export default class MapView extends Component {
 			<div className="col">
 				<div className="row">
 					<div className="col" style={{minWidth: 310, marginBottom}}>
-						<h4>Create new STILT footprint</h4>
+						<h4>Start new STILT run</h4>
 
 						<div className="card card-secondary">
 							<div className="card-body">
