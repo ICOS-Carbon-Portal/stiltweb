@@ -3,14 +3,17 @@ import {thunk} from 'redux-thunk';
 import reducer, {withFeedbackToUser} from './reducer';
 import {fetchInitialInfo, establishWsCommunication, fetchAvailableMonths, MAP_VIEW} from './actions';
 
-export const initJob = {
-	start: null,
-	stop: null,
+export const initStation = {
 	lat: NaN,
 	lon: NaN,
 	alt: NaN,
 	siteId: null,
+	siteName: null,
+	icosId: null,
+	countryCode: null
 }
+
+export const initJob = Object.assign({start: null, stop: null}, initStation)
 
 const initState = Object.assign(
 	{

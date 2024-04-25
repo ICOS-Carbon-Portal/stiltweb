@@ -150,6 +150,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 					entity(as[Job]){job =>
 						if job.userId == userId.email then
 							cluster.enqueueJob(job.submittedNow)
+							StationsFileDriver.updateStaging(job)
 							complete(StatusCodes.OK)
 						else
 							complete((StatusCodes.Forbidden, "Wrong user id in the job definition!"))

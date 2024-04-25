@@ -24,7 +24,7 @@ export default class TextInput extends Component {
 				: val
 
 			this.setState({val: converted, error: null})
-			if(this.props.action) this.props.action({value: converted})
+			if(this.props.action) this.props.action(converted)
 		} catch(err) {
 			this.setState({val, error: err.message})
 		}

@@ -15,7 +15,7 @@ case class Job(
 	start: LocalDate,
 	stop: LocalDate,
 	userId: String,
-	icosStationId: Option[String],
+	icosId: Option[String] = None,
 	submissionTime: Option[Instant] = None,
 	timeStarted: Option[Instant] = None,
 	timeStopped: Option[Instant] = None

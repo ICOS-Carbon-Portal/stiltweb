@@ -56,7 +56,17 @@ class ArchiverTest extends AnyFunSuite with BeforeAndAfterAll{
 
 	test("two days have 16 3-hour slots"){
 		val pos = StiltPosition(50.0, 10.0, 100)
-		val job = Job("station", pos.lat, pos.lon, pos.alt, LocalDate.of(2012, 12, 7), LocalDate.of(2012, 12, 8), "username")
+		val job = Job(
+			siteId = "station",
+			siteName = None,
+			countryCode = None,
+			lat = pos.lat,
+			lon = pos.lon,
+			alt = pos.alt,
+			start = LocalDate.of(2012, 12, 7),
+			stop = LocalDate.of(2012, 12, 8),
+			userId = "username"
+		)
 		val sla = new Archiver(tmp, 180)
 		val slots = sla.calculateSlots(job)
 

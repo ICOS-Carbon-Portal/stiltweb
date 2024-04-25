@@ -1,6 +1,5 @@
 /local.conf
-*.class
-*.log
+/stationsStaging.csv
 
 # Node.js specific
 node_modules/

@@ -1,5 +1,6 @@
 import {getJson, checkStatus} from 'icos-cp-backend';
 import {copyprops} from 'icos-cp-utils';
+import { initStation } from './store';
 
 export function makeDashboardWebsocketConnection(onUpdate){
 	const l = window.location;
@@ -36,8 +37,11 @@ export function getStationInfo(){
 	return getJson('/viewer/stationinfo')
 		.then(sInfos => sInfos.map(
 			sInfo => {
-				const name = sInfo.name || sInfo.icosId || sInfo.id;
-				return Object.assign(copyprops(sInfo, ['id', 'lat', 'lon', 'alt']), {name});
+				sInfo.siteId = sInfo.id
+				sInfo.siteName = sInfo.name || sInfo.icosId || sInfo.id
+				delete sInfo.id
+				delete sInfo.name
+				return Object.assign({}, initStation, sInfo)
 			})
 		);
 }

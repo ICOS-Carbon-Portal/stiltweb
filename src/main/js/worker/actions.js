@@ -76,8 +76,12 @@ export const cancelJob = jobId => dispatch => {
 
 export const startJob = (dispatch, getState) => {
 	const state = getState()
+
 	const job = {
 		siteId: state.siteId,
+		siteName: state.siteName,
+		icosId: state.icosId,
+		countryCode: state.countryCode,
 		userId: state.currUser.email,
 		lat: parseFloat(state.lat),
 		lon: parseFloat(state.lon),

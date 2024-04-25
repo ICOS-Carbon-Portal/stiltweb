@@ -21,14 +21,21 @@ object StationsFileDriver:
 		val jobIds = StiltStationIds(
 			id = job.siteId,
 			name = job.siteName,
-			icosId = job.icosStationId,
+			icosId = job.icosId,
 			icosHeight = None,
 			countryCode = job.countryCode
 		)
 		val updated = current + (job.siteId -> jobIds)
 		writeStaging(updated)
 
-	private def writeStaging(info: IdInfo): Unit = ???
+	private def writeStaging(info: IdInfo): Unit =
+		val header = Seq(STILT_id, STILT_name, ICOS_id, ICOS_height, Country).mkString(",")
+		val lines = LazyList(header) ++ info.valuesIterator.map: id =>
+			val cells = id.id +:
+				Seq(id.name, id.icosId, id.icosHeight, id.countryCode).map(_.getOrElse(""))
+			cells.mkString(",")
+
+		Files.writeString(stagingFilePath, lines.mkString("\n"))
 
 	private def readStaging: IdInfo =
 		if Files.exists(stagingFilePath) then

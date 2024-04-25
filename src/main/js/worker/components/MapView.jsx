@@ -5,6 +5,7 @@ import TextInput from '../components/TextInput.jsx';
 import DatePickerWrapper from './DatePickerWrapper.jsx';
 import {cardHeaderInfo} from '../containers/App.jsx';
 import { copyprops } from 'icos-cp-utils';
+import config from '../config.js'
 
 const marginBottom = 30;
 
@@ -14,10 +15,10 @@ export default class MapView extends Component {
 	}
 
 	getJobDefUpdater(prop){
-		const props = this.props;
-		return function(update){
-			props.updateJobDef(Object.assign({propertyName: prop}, update));
-		};
+		const props = this.props
+		return function(value){
+			props.updateJobDef({propertyName: prop, value})
+		}
 	}
 
 	onLoadDataBtnClick(){
@@ -43,6 +44,7 @@ export default class MapView extends Component {
 		const labelStyle = {display: 'block', clear: 'both'};
 		const verticalMargin = {marginBottom: 20};
 		const ds = props.dashboardState;
+		const ccUpdater = this.getJobDefUpdater('countryCode')
 
 		return <div className="row">
 
@@ -58,7 +60,7 @@ export default class MapView extends Component {
 								infoTxt="Select station here or on the map"
 								availableValues={props.stations}
 								value={selectedStation}
-								presenter={station => station ? `${station.siteId} (${station.name})` : station}
+								presenter={station => station ? `${station.siteId} (${station.siteName})` : station}
 								sort={true}
 							/>
 						</div>
@@ -85,6 +87,28 @@ export default class MapView extends Component {
 						<div className="card card-secondary">
 							<div className="card-body">
 
+								<label style={labelStyle}>Site id (letter code + altitude)</label>
+								<div className="input-group" style={verticalMargin}>
+									<TextInput value={props.siteId || ''} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="8"/>
+									<button className="btn btn-primary cp-pointer"
+										onClick={this.onLoadDataBtnClick.bind(this)}
+										disabled={!disableLatLonAlt}>Load data</button>
+								</div>
+
+								<label style={labelStyle}>Site name</label>
+								<TextInput style={verticalMargin} value={props.siteName || ''} action={this.getJobDefUpdater('siteName')} maxLength="100"/>
+
+								<label style={labelStyle}>ICOS station id</label>
+								<TextInput style={verticalMargin} value={props.icosId || ''} action={this.getJobDefUpdater('icosId')} maxLength="6"/>
+
+								<label htmlFor="ccSelect" style={labelStyle}>Country code</label>
+								<select style={verticalMargin} className="form-control" id="ccSelect" value={props.countryCode || ''} onChange={e => ccUpdater(e.target.value)}>
+									<option value="">&mdash; Select &mdash;</option>
+									{config.europeanCountries.map(c => (
+										<option key={c.code} value={c.code}>{c.code} &mdash; {c.name}</option>
+									))}
+								</select>
+
 								<label style={labelStyle}>Latitude (decimal degree)</label>
 								<TextInput style={verticalMargin} value={props.lat} action={this.getJobDefUpdater('lat')}
 										converter={validateLatLngVal(-90, 90)} disabled={disableLatLonAlt}/>
@@ -95,14 +119,6 @@ export default class MapView extends Component {
 
 								<label style={labelStyle}>Altitude above ground (meters)</label>
 								<TextInput style={verticalMargin} value={props.alt} action={this.getJobDefUpdater('alt')} converter={toInt} disabled={disableLatLonAlt}/>
-
-								<label style={labelStyle}>Site id (usually a 3 letter code)</label>
-								<div className="input-group" style={verticalMargin}>
-									<TextInput value={props.siteId || ''} action={this.getJobDefUpdater('siteId')} converter={s => s.toUpperCase()} maxLength="6"/>
-									<button className="btn btn-primary cp-pointer"
-												onClick={this.onLoadDataBtnClick.bind(this)}
-												disabled={!disableLatLonAlt}>Load data</button>
-								</div>
 
 								<label style={labelStyle}>Start date (YYYY-MM-DD)</label>
 								<DatePickerWrapper

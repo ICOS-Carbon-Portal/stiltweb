@@ -7,6 +7,7 @@ import {TOAST_ERROR, TOAST_INFO, ToasterData} from 'icos-cp-toaster';
 import { initJob } from './store';
 import config from './config'
 
+const commonStationJobProps = ['lat', 'lon', 'alt', 'icosId', 'countryCode', 'siteId', 'siteName']
 
 export default function(state, action){
 
@@ -16,11 +17,7 @@ export default function(state, action){
 			return update({toasterData: new ToasterData(TOAST_ERROR, action.error.message.split('\n')[0])});
 
 		case FETCHED_INIT_INFO:
-			const stations = action.stations.map(s => {
-				const newStation = copyprops(s, ['lat', 'lon', 'alt', 'name'])
-				newStation.siteId = s.id
-				return newStation
-			})
+			const stations = action.stations.map(s => copyprops(s, commonStationJobProps))
 			return update({stations, currUser: action.currUser})
 
 		case FETCHED_MONTHS:
@@ -44,14 +41,14 @@ export default function(state, action){
 		case USE_EXISTING_STATION:
 			const existing = existingStation()
 			return existing
-				? withFeedbackToUser(update(copyprops(existing, ['lat', 'lon', 'alt', 'siteId'])))
+				? withFeedbackToUser(update(copyprops(existing, commonStationJobProps)))
 				: state
 
 		case STARTED_JOB:
 			const updates = Object.assign({}, initJob)
 			if(!existingStation()){
 				const newStations = state.stations.slice()
-				const newStation = copyprops(action.job, ['lat', 'lon', 'alt', 'siteId'])
+				const newStation = copyprops(action.job, commonStationJobProps)
 				newStations.push(newStation)
 				updates.stations = newStations
 			}
@@ -83,7 +80,7 @@ export default function(state, action){
 }
 
 export function withFeedbackToUser(state){
-	const {lat, lon, alt, siteId, stations, start, stop} = state
+	const {lat, lon, alt, siteId, stations, start, stop, countryCode} = state
 	const jobSubmissionObstacles = []
 	const existingStation = stations.find(s => s.siteId === siteId)
 	const disableLatLonAlt = !!existingStation
@@ -94,7 +91,6 @@ export function withFeedbackToUser(state){
 		if (es.lat != lat || es.lon != lon || es.alt != alt){
 			const msg = 'You have entered an existing site code. Press "Load data" to use its parameters'
 			jobSubmissionObstacles.push(msg)
-			toasterData = new ToasterData(TOAST_INFO, msg)
 		}
 	}
 	if(!Number.isFinite(lat)) jobSubmissionObstacles.push("Latitude missing")
@@ -128,9 +124,24 @@ export function withFeedbackToUser(state){
 	}
 	if(!Number.isFinite(alt)) jobSubmissionObstacles.push("Altitude missing")
 	if(!siteId) jobSubmissionObstacles.push("Site id missing")
-	else if(siteId.length < 3) jobSubmissionObstacles.push("Site id is too short")
+	else if(!existingStation) {
+		const sIdMatch = /^([A-Z]+)(\d+)$/.exec(siteId)
+		if(!sIdMatch) jobSubmissionObstacles.push("Site id must be '<alphacode><altitude>'")
+		else{
+			const siteCode = sIdMatch[1]
+			if(siteCode.length < 3) jobSubmissionObstacles.push("Site id alphacode too short")
+			else if(siteCode.length > 5) jobSubmissionObstacles.push("Site id alphacode too long")
+			const siteAlt = sIdMatch[2]
+			if(siteAlt.length < 3) jobSubmissionObstacles.push("Site id altitude too short")
+			if(siteAlt.length > 3) jobSubmissionObstacles.push("Site id altitude too long")
+			if(Number.isFinite(alt) && parseInt(siteAlt) != alt) jobSubmissionObstacles.push("Site id must contain altitude")
+		}
+
+	}
+	if(!countryCode) jobSubmissionObstacles.push("Country code missing")
 	if(!start) jobSubmissionObstacles.push("Start date missing")
 	if(!stop) jobSubmissionObstacles.push("Stop date missing")
+	if(start && stop && start > stop) jobSubmissionObstacles.push("Start date is after stop date")
 	if(state.currUser && !state.currUser.email){
 		const msg = 'You must log in (USE SEPARATE BROWSER TAB) to submit a STILT job';
 		jobSubmissionObstacles.push(msg)

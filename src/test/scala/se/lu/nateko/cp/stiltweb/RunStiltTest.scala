@@ -6,7 +6,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 
 class RunStiltTest extends AnyFunSuite {
-	val job = Job("HTM", 56.10, 13.42, 150,
+	val job = Job("HTM", None, None, 56.10, 13.42, 150,
 				  LocalDate.of(2012, 1, 1),
 				  LocalDate.of(2012, 1, 2),
 				  "user")
