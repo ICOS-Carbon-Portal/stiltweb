@@ -28,7 +28,6 @@ ASC200,Aschaffenburg,,,DE
 ASS200,Assen,,,NL
 AUG200,Augsburg,,,DE
 BAK014,,,,DE
-BAL,Baltic Sea,,,
 BAM200,Bamberg,,,DE
 BAN112,,,,CH
 BAN953,,,,CH
@@ -318,11 +317,6 @@ MAL200,Malmo,,,SE
 MAN200,Mannheim-Ludwigshafen,,,DE
 MAR200,Marburg,,,DE
 MAZ200,Mainz,,,DE
-MED-1,,,,ES
-MED-2,,,,
-MED-3,,,,
-MED-4,,,,
-MED-5,,,,
 MEL200,Melun,,,FR
 MET200,Metz,,,FR
 MHD,Mace Head,MHD,24.0,IE
@@ -490,7 +484,7 @@ TAT200,Tatabanya,,,HU
 TCZ200,Tczew,,,PL
 TEST,,,,NO
 THI005,Thissio,,,GR
-THRB,Thornton Buoy,,,
+THRB,Thornton Buoy,,,XZ
 TIL200,Tilburg,,,NL
 TOB010,,,,DE
 TOB100,,,,DE
@@ -508,7 +502,6 @@ TRN100,Trainou,TRN,100.0,FR
 TRN180,Trainou,TRN,180.0,FR
 TRO200,Troyes,,,FR
 TRV200,Trnava,,,SK
-TST,,,,
 TTA050,Angus,,,GB
 TTA222,Angus,,,GB
 TUB200,Tubingen,,,DE
