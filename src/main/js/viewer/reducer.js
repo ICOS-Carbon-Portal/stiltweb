@@ -49,7 +49,7 @@ export default function(state, action){
 
 			const selectedScope = selectedYear
 				? Object.assign({}, selectedYear, {dataObject: selectedYear.dataObject[state.selectedGas]})
-				: null
+				: state.selectedScope
 
 			return update(initResultsState, {
 				selectedStation: station,

@@ -32,6 +32,7 @@ export const fetchInitData = dispatch => {
 				const fromYear = fromDate.substring(0, 4)
 				const scope = {fromDate, toDate}
 				if (fromYear == toDate.substring(0, 4)) scope.year = parseInt(fromYear)
+				dispatch(setStationFilter({predicate: station => station.siteId === stationId}))
 				dispatch(setSelectedScope(scope));
 				dispatch(setSelectedStationById(stationId));
 			}
