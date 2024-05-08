@@ -66,7 +66,6 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 			} ~
 			path("listfootprints"):
 				resultBatchSpec: batch =>
-					val startD = Instant.now()
 					val footprintsList = service.listFootprints(batch)
 					complete(footprintsList.map(_.toString).toSeq)
 			~
@@ -199,13 +198,15 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 		}
 	}
 
-	def onResponseStreamed(cb: () => Unit): Directive0 = mapResponseEntity(re => {
-		re.transformDataBytes(Flow.apply[ByteString].watchTermination(){
-			case (mat, fut) =>
-				fut.onComplete{case _ => cb()}(cluster.ioDispatcher)
-				mat
-		})
-	})
+	def onResponseStreamed(cb: () => Unit): Directive0 = mapResponse: resp =>
+		if resp.status.isFailure then resp else
+			val re = resp.entity.transformDataBytes(Flow[ByteString].watchTermination(){
+				case (mat, fut) =>
+					fut.onComplete{case _ => cb()}(cluster.ioDispatcher)
+					mat
+			})
+			resp.withEntity(re)
+
 
 	def respondWithAttachment(fileName: String): Directive0 = respondWithHeader(
 		`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> fileName))

@@ -1,19 +1,20 @@
 package se.lu.nateko.cp.stiltweb.csv
 
+import se.lu.nateko.cp.stiltweb.StiltResultsPresenter.*
+import spray.json.*
+import spray.json.DefaultJsonProtocol.*
+
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.MonthDay
-
-import se.lu.nateko.cp.stiltweb.StiltResultsPresenter._
-import spray.json._
-import spray.json.DefaultJsonProtocol._
 
 object RowCache{
 	val BytesPerRow = 4096
@@ -29,6 +30,9 @@ object LocalDayTime{
 class RowCache(rowFactory: () => Iterator[RowCache.CachedRow], parentFolder: Path, year: Int, slotStepInMinutes: Int) {
 	import RowCache.BytesPerRow
 
+	if !Files.exists(cachePath.getParent) then throw NoSuchFileException(
+		s"There appears to be no results for year $year"
+	)
 	private val cachePath = parentFolder.resolve(s"cache${slotStepInMinutes}_${BytesPerRow}.txt")
 	private val yearStart = LocalDateTime.of(year, 1, 1, 0, 0)
 
