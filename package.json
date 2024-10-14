@@ -44,7 +44,7 @@
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "dygraphs": "^2.2.1",
-    "icos-cp-backend": "0.5.3",
+    "icos-cp-backend": "^0.5.4",
     "icos-cp-copyright": "^0.0.2",
     "icos-cp-leaflet-common": "1.0.1",
     "icos-cp-legend": "1.1.1",
@@ -52,6 +52,9 @@
     "icos-cp-spatial": "0.4.0",
     "icos-cp-toaster": "0.7.3",
     "icos-cp-utils": "0.2.0",
+    "leaflet": "1.9.4",
+    "leaflet.markercluster": "1.5.3",
+    "lodash": "^4.17.4",
     "rc-datepicker": "^5.0.16",
     "react": "16.14.0",
     "react-dom": "16.14.0",
@@ -59,9 +62,6 @@
     "react-transition-group": "4.4.5",
     "redux": "5.0.1",
     "redux-thunk": "3.1.0",
-    "leaflet": "1.9.4",
-    "leaflet.markercluster": "1.5.3",
-    "lodash": "^4.17.4",
     "topojson-client": "3.1.0"
   }
 }
