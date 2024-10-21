@@ -30,7 +30,7 @@ object LocalDayTime{
 class RowCache(rowFactory: () => Iterator[RowCache.CachedRow], parentFolder: Path, year: Int, slotStepInMinutes: Int) {
 	import RowCache.BytesPerRow
 
-	if !Files.exists(cachePath.getParent) then throw NoSuchFileException(
+	if !Files.exists(parentFolder) then throw NoSuchFileException(
 		s"There appears to be no results for year $year"
 	)
 	private val cachePath = parentFolder.resolve(s"cache${slotStepInMinutes}_${BytesPerRow}.txt")
