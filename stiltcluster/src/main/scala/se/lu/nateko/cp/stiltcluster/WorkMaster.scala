@@ -106,11 +106,11 @@ class WorkMaster(nCores: Int, receptionistAddr: String) extends Actor with Actor
 			val attempts = prevAttempts + 1
 
 			val res = Future{
-				log.debug(s"Attempt $attempts (of max $MaxNumOfAttempts) of stilt calculation of $slot")
+				log.info(s"Attempt $attempts (of max $MaxNumOfAttempts) of stilt calculation of $slot")
 
-				val stiltOutput = RunStilt.cmd_run(slot)
+				val stiltOutput = RunStilt.computeSlot(slot)
 
-				log.debug(s"Stilt simulation finished $slot ($stiltOutput)")
+				log.info(s"Stilt simulation finished $slot ($stiltOutput)")
 
 				val d = Paths.get(stiltOutput)
 				assert(Files.isDirectory(d))

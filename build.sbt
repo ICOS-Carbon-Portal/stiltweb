@@ -25,7 +25,7 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 	.enablePlugins(IcosCpSbtDeployPlugin)
 	.settings(
 		name := "stiltcluster",
-		version := "0.4.0",
+		version := "0.4.1",
 		libraryDependencies ++= Seq(
 			"com.typesafe.akka" %% "akka-remote"         % akkaVersion cross CrossVersion.for3Use2_13,
 			"com.typesafe.akka" %% "akka-slf4j"          % akkaVersion cross CrossVersion.for3Use2_13,

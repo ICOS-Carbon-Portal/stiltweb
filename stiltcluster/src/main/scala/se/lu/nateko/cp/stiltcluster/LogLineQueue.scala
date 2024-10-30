@@ -4,6 +4,8 @@ import scala.collection.mutable.Queue
 import scala.collection.immutable.Seq
 import scala.annotation.tailrec
 
+// TODO This class is only used by ProcessRunner, which in turn is not being used
+// Should probably be cleaned up
 class LogLineQueue(sizeBound: Int):
 
 	private val queue = Queue.empty[String]

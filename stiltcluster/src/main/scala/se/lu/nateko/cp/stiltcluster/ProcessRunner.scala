@@ -3,9 +3,10 @@ package se.lu.nateko.cp.stiltcluster
 import java.io.InputStream
 import scala.collection.immutable.Seq
 
+// TODO This class does not appear to be used. Should it be cleaned up?
 class ProcessRunner(command: Seq[String], logSizeBound: Int) {
 
-	private val process = new ProcessBuilder(command: _*).start()
+	private val process: Process = new ProcessBuilder(command*).start()
 
 	private val outStream = process.getInputStream
 	private val errStream = process.getErrorStream
