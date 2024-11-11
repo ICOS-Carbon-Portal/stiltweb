@@ -34,8 +34,8 @@ object StiltPosition:
 
 	extension (d: Double)
 		def rootFormat(fmt: String): String = String.format(java.util.Locale.ROOT, fmt, d)
-		def latFmt = d.abs.rootFormat("%05.2f")
-		def lonFmt = d.abs.rootFormat("%06.2f")
+		def latFmt = d.rootFormat("%05.2f")
+		def lonFmt = d.rootFormat("%06.2f")
 
 	val re = """(\d+\.\d+)([NS])x(\d+\.\d+)([EW])x(\d+)""".r
 
