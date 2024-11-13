@@ -43,7 +43,7 @@ case class JobInfo(
 	export job.id
 
 
-case class WorkerNodeInfo(address: Address, nCpusFree: Int, nCpusTotal: Int)
+case class WorkerNodeInfo(address: Address, nCpusFree: Int, nCpusTotal: Int, isBad: Boolean)
 
 case class DashboardInfo(
 		running: Seq[JobInfo],

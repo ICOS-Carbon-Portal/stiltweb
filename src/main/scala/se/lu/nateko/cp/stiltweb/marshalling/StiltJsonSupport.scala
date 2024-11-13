@@ -72,7 +72,7 @@ object StiltJsonSupport {
 
 	given JsonFormat[JobInfo] = jsonFormat5(JobInfo.apply)
 	given JsonFormat[WorkMasterStatus] = jsonFormat3(WorkMasterStatus.apply)
-	given JsonFormat[WorkerNodeInfo] = jsonFormat3(WorkerNodeInfo.apply)
+	given JsonFormat[WorkerNodeInfo] = jsonFormat4(WorkerNodeInfo.apply)
 
 	given JsonFormat[DashboardInfo] = jsonFormat4(DashboardInfo.apply)
 

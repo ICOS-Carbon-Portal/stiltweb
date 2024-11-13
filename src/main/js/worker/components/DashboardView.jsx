@@ -92,7 +92,7 @@ const CompInfraState = props => <InfoPanelWithList title="Computational resource
 		</thead>
 		<tbody>{props.infra.map(nodeInfo =>
 			<tr key={nodeInfo.address}>
-				<td style={{borderBottomWidth: 0, borderTopWidth: 1}}>{nodeInfo.address}</td>
+				<td style={{borderBottomWidth: 0, borderTopWidth: 1}}>{nodeInfo.address + workerStatus(nodeInfo)}</td>
 				<td style={{borderBottomWidth: 0, borderTopWidth: 1}}>{nodeInfo.nCpusFree}</td>
 				<td style={{borderBottomWidth: 0, borderTopWidth: 1}}>{nodeInfo.nCpusTotal}</td>
 			</tr>
@@ -100,3 +100,6 @@ const CompInfraState = props => <InfoPanelWithList title="Computational resource
 	</table>
 </InfoPanelWithList>;
 
+function workerStatus(nodeInfo){
+	return nodeInfo.isBad ? " (BAD)" : ""
+}

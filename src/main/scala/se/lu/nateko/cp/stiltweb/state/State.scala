@@ -61,7 +61,7 @@ class State(archiver: Archiver):
 
 	def distributeWork(): Map[Worker, CalculateSlots] = workers
 		.collect{
-			case (wm, wstate) if wstate.freeCores > 0 && !slots.isEmpty =>
+			case (wm, wstate) if wstate.freeCores > 0 && !wstate.isBadWorker && !slots.isEmpty =>
 				val work = grabWork(wstate.freeCores)
 				val requestId = wstate.requestWork(work)
 				wm -> CalculateSlots(requestId, work)
@@ -105,7 +105,7 @@ class State(archiver: Archiver):
 
 	def getDashboardInfo: DashboardInfo =
 		val infra = workers.toSeq.map{case (worker, wstate) =>
-			WorkerNodeInfo(worker.path.address, wstate.freeCores, wstate.totalCores)
+			WorkerNodeInfo(worker.path.address, wstate.freeCores, wstate.totalCores, wstate.isBadWorker)
 		}
 		val (done, notFinished) = jobs.values.toSeq.partition(_.isDone())
 		val (running, queue) = notFinished.partition(_.hasBeenRun)

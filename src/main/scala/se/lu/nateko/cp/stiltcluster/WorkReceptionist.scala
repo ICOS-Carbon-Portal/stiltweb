@@ -51,7 +51,7 @@ class WorkReceptionist(archiver: Archiver, atmoClient: AtmoAccessClient) extends
 			}
 			val lostWork = state.handleWorkerUpdate(wm, wms)
 			if(!lostWork.isEmpty){
-				log.warning(s"Work lost (and re-queued): " + lostWork.mkString(", "))
+				log.warning(s"Work lost by $wm, re-queued again: " + lostWork.mkString(", "))
 			}
 			distributeWork()
 

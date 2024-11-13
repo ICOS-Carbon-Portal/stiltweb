@@ -5,16 +5,18 @@ import se.lu.nateko.cp.stiltcluster.WorkMasterStatus
 import scala.collection.mutable.Map
 import se.lu.nateko.cp.stiltcluster.StiltSlot
 
-class WorkmasterState(wms: WorkMasterStatus) {
+class WorkmasterState(initStatus: WorkMasterStatus) {
 
 	import WorkmasterState._
 
-	private[this] var reportedFreeCores: Int = 0
-	private[this] var reportedTotalCores: Int = 0
-	private[this] var reportedActiveWork = Seq.empty[StiltSlot]
+	private var reportedFreeCores: Int = 0
+	private var reportedTotalCores: Int = 0
+	private var reportedActiveWork = Seq.empty[StiltSlot]
 	private val requests: Map[RequestId, Request] = Map.empty
+	private var totalRequestedWork: Long = 0
+	private var totalLostWork: Long = 0
 
-	updateAndGetLostWork(wms)
+	updateAndGetLostWork(initStatus)
 
 	def freeCores = Math.max(reportedFreeCores - requests.values.map(_.work.size).sum, 0)
 	def totalCores = reportedTotalCores
@@ -22,6 +24,7 @@ class WorkmasterState(wms: WorkMasterStatus) {
 	def requestWork(work: Seq[StiltSlot]): RequestId = {
 		val id = getRequestId
 		requests.update(id, new Request(work))
+		totalRequestedWork += work.size
 		id
 	}
 
@@ -43,7 +46,9 @@ class WorkmasterState(wms: WorkMasterStatus) {
 			case (id, _) => ! purgedRequests.contains(id)
 		}
 
-		(purgedWork ++ previouslyReportedWork).distinct.diff(wms.work)
+		val lost = (purgedWork ++ previouslyReportedWork).distinct.diff(wms.work)
+		totalLostWork += lost.size
+		lost
 	}
 
 	def onSlotDone(slot: StiltSlot): Unit = {
@@ -51,6 +56,8 @@ class WorkmasterState(wms: WorkMasterStatus) {
 	}
 
 	def unfinishedWork: Seq[StiltSlot] = (reportedActiveWork ++ requests.values.flatMap(_.work)).distinct
+
+	def isBadWorker: Boolean = totalRequestedWork > 100 && (totalLostWork > 0.7 * totalRequestedWork)
 }
 
 object WorkmasterState{
