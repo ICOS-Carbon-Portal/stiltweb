@@ -67,7 +67,7 @@ lazy val stiltweb = (project in file("."))
 			"com.typesafe.akka"  %% "akka-http-spray-json"               % akkaHttpVersion excludeAll("io.spray") cross CrossVersion.for3Use2_13,
 			"com.typesafe.akka"  %% "akka-stream"                        % akkaVersion cross CrossVersion.for3Use2_13,
 			"se.lu.nateko.cp"    %% "views-core"                         % "0.7.10",
-			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.9.1", //to force newer version
+			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.10.1", //to force newer version
 			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.3.1" excludeAll("com.google.protobuf"),
 			"edu.ucar"            % "netcdf4"                            % "5.5.3" excludeAll("com.google.protobuf"),
 			"com.typesafe.akka"  %% "akka-testkit"                       % akkaVersion % "test" cross CrossVersion.for3Use2_13,
