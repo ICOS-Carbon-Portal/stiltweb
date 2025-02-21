@@ -146,41 +146,39 @@ const MovieControl = props => {
 	const playClass = "fas fa-" + (props.playingMovie ? 'pause' : 'play');
 	const playTitle = props.playingMovie ? 'Pause playback' : 'Play';
 
-	return <Fragment>
-		<div className="row my-1 justify-content-between align-items-center">
-			<div className="col-auto me-auto">
-				<strong>Playback</strong>
+	return <div className="row">
+		<div className="d-flex col my-1 justify-content-between align-items-center">
+			<div className="me-auto fw-bold pe-1">
+				Playback
 			</div>
-			<div className="col-auto ms-auto">
-				<div className="btn-group" style={{minWidth: 120}}>
-					<button title="To previous footprint" type="button" className="btn btn-outline-secondary" onClick={toPrevious} disabled={navDisabled}>
-						<i className="fas fa-chevron-left" />
-					</button>
-					<button title={playTitle} type="button" className="btn btn-outline-secondary" onClick={props.pushPlay} disabled={!props.footprint}>
-						<i className={playClass} />
-					</button>
-					<button  title="To next footprint" type="button" className="btn btn-outline-secondary" onClick={toNext} disabled={navDisabled}>
-					<i className="fas fa-chevron-right" />
-					</button>
-				</div>
+			<div className="ms-auto btn-group" style={{minWidth: 120}}>
+				<button title="To previous footprint" type="button" className="btn btn-outline-secondary" onClick={toPrevious} disabled={navDisabled}>
+					<i className="fas fa-chevron-left" />
+				</button>
+				<button title={playTitle} type="button" className="btn btn-outline-secondary" onClick={props.pushPlay} disabled={!props.footprint}>
+					<i className={playClass} />
+				</button>
+				<button  title="To next footprint" type="button" className="btn btn-outline-secondary" onClick={toNext} disabled={navDisabled}>
+				<i className="fas fa-chevron-right" />
+				</button>
 			</div>
 		</div>
-		<div className="row my-1 justify-content-between align-items-center">
-			<div className="col-auto me-auto">
-				<strong>Playback speed</strong>
+		<div className="d-flex col my-1 justify-content-between align-items-center">
+			<div className="me-auto fw-bold pe-1">
+				Playback speed
 			</div>
-			<div className="col-auto ms-auto">
-				<Select
-					selectValue={props.setDelay}
-					infoTxt="Select playback speed"
-					availableValues={delayValues}
-					value={props.movieDelay}
-					presenter={delayPresenter}
-					options={{disabled: !props.footprint}}
-				/>
-			</div>
+			<Select
+				selectValue={props.setDelay}
+				infoTxt="Select playback speed"
+				availableValues={delayValues}
+				value={props.movieDelay}
+				presenter={delayPresenter}
+				options={{disabled: !props.footprint}}
+				className="ms-auto w-auto"
+				style={{minWidth: "100px"}}
+			/>
 		</div>
-	</Fragment>;
+	</div>;
 };
 
 const delayValues = [0, 50, 100, 200, 500, 1000, 3000];

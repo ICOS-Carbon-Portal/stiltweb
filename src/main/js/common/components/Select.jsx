@@ -23,7 +23,12 @@ export default function(props){
 	const stringValues = [props.infoTxt].concat(availableValues.map(toStringValue));
 	const current = toStringValue(props.value) || props.infoTxt;
 
-	return <select value={current} className="form-control" onChange={changeHandler} {...props.options}>{
+	return <select
+		value={current}
+		className={`form-control ${props.className ? props.className : ""}`}
+		style={props.style ? props.style : {}}
+		onChange={changeHandler}
+		{...props.options}>{
 		stringValues.map(sv => <option key={sv} value={sv}>{sv}</option>)
 	}</select>;
 }
