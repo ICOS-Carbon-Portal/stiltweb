@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 
 import config from '../config';
 
@@ -10,11 +10,14 @@ import StationAndYearSelector from './StationAndYearSelector.jsx';
 
 export default props =>
 		<div className="row">
-			<div className="col-md-6" style={{paddingRight:0}}>
+			<div className="col-md-6 pe-0">
+			
+				<h2 className="visually-hidden">Station selection map</h2>
 				<StationSelectingMap {...props} />
 			</div>
-			<div className="col-md-6" style={{paddingLeft: 0}}>
-				<ul className="list-group" style={{marginBottom:0}}>
+			<div className="col-md-6 ps-0">
+				<h2 className="visually-hidden">Configuration settings</h2>
+				<ul className="list-group rounded-0 mb-0">
 					{config.viewerScope
 						? <ViewerScopeDisplay {...config.viewerScope} />
 						: <StationAndYearSelector {...props} />
@@ -45,7 +48,7 @@ const GasSelector = ({selectGas, gas, selectedGas}) => {
 			onChange={() => selectGas(gasVar)}
 			checked={selectedGas === gasVar}
 		/>
-		<label className="form-check-label" htmlFor={gasVar + "radio"}>{gas}</label>
+		<label className="form-check-label fw-bold" htmlFor={gasVar + "radio"}>{gas}</label>
 	</div>
 }
 
@@ -76,7 +79,7 @@ const ViewerScopeDisplay = props => <li className="list-group-item">
 
 const AxisControlPrimary = props => {
 	return <div>
-		<strong>{props.title}:</strong>
+		<h3 className="h6 text-black fw-bold">{props.title}:</h3>
 		<FanOutComponents fanOuts={props.components} {...props} />
 	</div>;
 };
@@ -94,10 +97,10 @@ const FanOutComponents = props => {
 const AxisControlSecondary = props => {
 	return (
 		<div>
-			<strong>{props.title}:</strong>
+			<h3 className="h6 text-black fw-bold">{props.title}:</h3>
 			{Object.keys(props.components).map((label, i) =>
 				<div key={'group' + i}>
-					<div style={{textDecoration:'underline'}}>{label}</div>
+					<div className="text-decoration-underline">{label}</div>
 					<FanOutComponents fanOuts={props.components[label]} {...props} />
 				</div>
 			)}
@@ -124,8 +127,11 @@ const StiltComponentSelector = ({label, comment, disabled, updateVisibility, opt
 			onChange={visibilityChangeHandler}
 			style={style}
 			disabled={disabled}
+			id={label.replaceAll(".", "-")}
 		/>
-		{label}
+		<label htmlFor={label.replaceAll(".", "-")}>
+			{label}
+		</label>
 	</div>
 };
 
@@ -140,37 +146,41 @@ const MovieControl = props => {
 	const playClass = "fas fa-" + (props.playingMovie ? 'pause' : 'play');
 	const playTitle = props.playingMovie ? 'Pause playback' : 'Play';
 
-	return <div className="row">
-		<div className="col-md-2">
-			<strong>Playback</strong>
-		</div>
-		<div className="col-md-4">
-			<div className="btn-group" style={{minWidth: 120}}>
-				<button title="To previous footprint" type="button" className="btn btn-outline-secondary" onClick={toPrevious} disabled={navDisabled}>
-					<i className="fas fa-chevron-left" />
-				</button>
-				<button title={playTitle} type="button" className="btn btn-outline-secondary" onClick={props.pushPlay} disabled={!props.footprint}>
-					<i className={playClass} />
-				</button>
-				<button  title="To next footprint" type="button" className="btn btn-outline-secondary" onClick={toNext} disabled={navDisabled}>
-				<i className="fas fa-chevron-right" />
-				</button>
+	return <Fragment>
+		<div className="row my-1 justify-content-between align-items-center">
+			<div className="col-auto me-auto">
+				<strong>Playback</strong>
+			</div>
+			<div className="col-auto ms-auto">
+				<div className="btn-group" style={{minWidth: 120}}>
+					<button title="To previous footprint" type="button" className="btn btn-outline-secondary" onClick={toPrevious} disabled={navDisabled}>
+						<i className="fas fa-chevron-left" />
+					</button>
+					<button title={playTitle} type="button" className="btn btn-outline-secondary" onClick={props.pushPlay} disabled={!props.footprint}>
+						<i className={playClass} />
+					</button>
+					<button  title="To next footprint" type="button" className="btn btn-outline-secondary" onClick={toNext} disabled={navDisabled}>
+					<i className="fas fa-chevron-right" />
+					</button>
+				</div>
 			</div>
 		</div>
-		<div className="col-md-2">
-			<strong>Playback speed</strong>
+		<div className="row my-1 justify-content-between align-items-center">
+			<div className="col-auto me-auto">
+				<strong>Playback speed</strong>
+			</div>
+			<div className="col-auto ms-auto">
+				<Select
+					selectValue={props.setDelay}
+					infoTxt="Select playback speed"
+					availableValues={delayValues}
+					value={props.movieDelay}
+					presenter={delayPresenter}
+					options={{disabled: !props.footprint}}
+				/>
+			</div>
 		</div>
-		<div className="col-md-4">
-			<Select
-				selectValue={props.setDelay}
-				infoTxt="Select playback speed"
-				availableValues={delayValues}
-				value={props.movieDelay}
-				presenter={delayPresenter}
-				options={{disabled: !props.footprint}}
-			/>
-		</div>
-	</div>;
+	</Fragment>;
 };
 
 const delayValues = [0, 50, 100, 200, 500, 1000, 3000];

@@ -2,6 +2,3 @@ svg {
     /* reset style from _reboot (bootstrap) */
     vertical-align: baseline;
 }
-label {
-    font-weight: bold;
-}

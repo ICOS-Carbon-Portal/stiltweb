@@ -51,19 +51,17 @@ class App extends Component {
 				maxWidth={400}
 			/>
 
-			<div className="row">
-				<div className="page-header mb-3">
-						<h1>
-							STILT calculation service <span className="fs-3 text-secondary">{subtitle}</span>
-							<span style={{float:'right'}}>
-								<a className="btn btn-primary text-white" href="/viewer/" target="_blank">
-									<i className="fas fa-search"/> STILT viewer
-								</a>
-								<a className="btn btn-info text-white" href="https://www.icos-cp.eu/about-stilt-calculator" target="_blank">
-									<i className="fas fa-question-circle" /> Help
-								</a>
-							</span>
-						</h1>
+			<div className="row page-header justify-content-between align-items-center mb-3">
+				<h1 className="col-auto">
+					STILT calculation service <span className="fs-3 text-secondary">{subtitle}</span>
+				</h1>
+				<div className="col-auto">
+					<a className="btn btn-primary text-white mb-1" href="/viewer/" target="_blank">
+						<i className="fas fa-search"/> STILT viewer
+					</a>
+					<a className="btn btn-info text-white" href="https://www.icos-cp.eu/about-stilt-calculator" target="_blank">
+						<i className="fas fa-question-circle" /> Help
+					</a>
 				</div>
 			</div>
 
