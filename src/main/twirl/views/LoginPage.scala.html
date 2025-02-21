@@ -2,7 +2,7 @@
 @import se.lu.nateko.cp.stiltweb.AtmoAccessConfig
 
 @(authConf: PublicAuthConfig, atmoConf: AtmoAccessConfig)
-@AtmoAccessPage("Request access to ICOS footprint services"){
+@AtmoAccessPage("STILT Services - Log in through ATMO-ACCESS"){
 	<script>
 		function atmoAccessLoginUrl(targetLastSegment){
 			const cliendId = "@{atmoConf.ssoClientId}"
