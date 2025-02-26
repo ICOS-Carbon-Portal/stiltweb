@@ -10,11 +10,14 @@ import StationAndYearSelector from './StationAndYearSelector.jsx';
 
 export default props =>
 		<div className="row">
-			<div className="col-md-6" style={{paddingRight:0}}>
+			<div className="col-md-6 pe-0">
+			
+				<h2 className="visually-hidden">Station selection map</h2>
 				<StationSelectingMap {...props} />
 			</div>
-			<div className="col-md-6" style={{paddingLeft: 0}}>
-				<ul className="list-group" style={{marginBottom:0}}>
+			<div className="col-md-6 ps-0">
+				<h2 className="visually-hidden">Configuration settings</h2>
+				<ul className="list-group rounded-0 mb-0">
 					{config.viewerScope
 						? <ViewerScopeDisplay {...config.viewerScope} />
 						: <StationAndYearSelector {...props} />
@@ -45,7 +48,7 @@ const GasSelector = ({selectGas, gas, selectedGas}) => {
 			onChange={() => selectGas(gasVar)}
 			checked={selectedGas === gasVar}
 		/>
-		<label className="form-check-label" htmlFor={gasVar + "radio"}>{gas}</label>
+		<label className="form-check-label fw-bold" htmlFor={gasVar + "radio"}>{gas}</label>
 	</div>
 }
 
@@ -76,7 +79,7 @@ const ViewerScopeDisplay = props => <li className="list-group-item">
 
 const AxisControlPrimary = props => {
 	return <div>
-		<strong>{props.title}:</strong>
+		<h3 className="h6 text-black fw-bold">{props.title}:</h3>
 		<FanOutComponents fanOuts={props.components} {...props} />
 	</div>;
 };
@@ -94,10 +97,10 @@ const FanOutComponents = props => {
 const AxisControlSecondary = props => {
 	return (
 		<div>
-			<strong>{props.title}:</strong>
+			<h3 className="h6 text-black fw-bold">{props.title}:</h3>
 			{Object.keys(props.components).map((label, i) =>
 				<div key={'group' + i}>
-					<div style={{textDecoration:'underline'}}>{label}</div>
+					<div className="text-decoration-underline">{label}</div>
 					<FanOutComponents fanOuts={props.components[label]} {...props} />
 				</div>
 			)}
@@ -124,8 +127,11 @@ const StiltComponentSelector = ({label, comment, disabled, updateVisibility, opt
 			onChange={visibilityChangeHandler}
 			style={style}
 			disabled={disabled}
+			id={label.replaceAll(".", "-")}
 		/>
-		{label}
+		<label htmlFor={label.replaceAll(".", "-")}>
+			{label}
+		</label>
 	</div>
 };
 
@@ -141,11 +147,11 @@ const MovieControl = props => {
 	const playTitle = props.playingMovie ? 'Pause playback' : 'Play';
 
 	return <div className="row">
-		<div className="col-md-2">
-			<strong>Playback</strong>
-		</div>
-		<div className="col-md-4">
-			<div className="btn-group" style={{minWidth: 120}}>
+		<div className="d-flex col my-1 justify-content-between align-items-center">
+			<div className="me-auto fw-bold pe-1">
+				Playback
+			</div>
+			<div className="ms-auto btn-group" style={{minWidth: 120}}>
 				<button title="To previous footprint" type="button" className="btn btn-outline-secondary" onClick={toPrevious} disabled={navDisabled}>
 					<i className="fas fa-chevron-left" />
 				</button>
@@ -157,10 +163,10 @@ const MovieControl = props => {
 				</button>
 			</div>
 		</div>
-		<div className="col-md-2">
-			<strong>Playback speed</strong>
-		</div>
-		<div className="col-md-4">
+		<div className="d-flex col my-1 justify-content-between align-items-center">
+			<div className="me-auto fw-bold pe-1">
+				Playback speed
+			</div>
 			<Select
 				selectValue={props.setDelay}
 				infoTxt="Select playback speed"
@@ -168,6 +174,8 @@ const MovieControl = props => {
 				value={props.movieDelay}
 				presenter={delayPresenter}
 				options={{disabled: !props.footprint}}
+				className="ms-auto w-auto"
+				style={{minWidth: "100px"}}
 			/>
 		</div>
 	</div>;

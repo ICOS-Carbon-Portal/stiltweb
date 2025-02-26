@@ -32,8 +32,8 @@ export default function(props){
 				}
 			</div>
 		</div>
-		<div className="row">
-			<div className="col-md-7">
+		<div className="row justify-content-between">
+			<div className="col-auto my-1">
 				<Dropdown
 					buttonLbl="Select station here or on the map"
 					presenter={station => station ? `${station.id} (${station.name}, ${station.alt} m)` : station}
@@ -43,7 +43,7 @@ export default function(props){
 					sort={true}
 				/>
 			</div>
-			<div className="col-md-5">
+			<div className="col-auto my-1">
 				<Select
 					selectValue={year => selectYear(yearLookup(year))}
 					infoTxt={yearsDisabled ? "Select station first" : "Select year"}

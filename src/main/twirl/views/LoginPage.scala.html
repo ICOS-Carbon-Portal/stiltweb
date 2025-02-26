@@ -2,7 +2,7 @@
 @import se.lu.nateko.cp.stiltweb.AtmoAccessConfig
 
 @(authConf: PublicAuthConfig, atmoConf: AtmoAccessConfig)
-@AtmoAccessPage("Request access to ICOS footprint services"){
+@AtmoAccessPage("STILT Services - Log in through ATMO-ACCESS"){
 	<script>
 		function atmoAccessLoginUrl(targetLastSegment){
 			const cliendId = "@{atmoConf.ssoClientId}"
@@ -35,35 +35,46 @@
 	<h1 class="text-center">STILT station footprint calculation and viewing services</h2>
 
 	<p class="text-center text-muted">
-		The services are provided by ICOS Carbon Portal in the context of ATMO-ACCESS project.
-		Therefore an ATMO-ACCESS login is required to use the services.
+		These services are provided by ICOS Carbon Portal in the context of ATMO-ACCESS project;
+		therefore, an ATMO-ACCESS login is required to use these services.
 	</p>
 
 	<div class="row g-4 py-5 row-cols-1 row-cols-lg-4 justify-content-center">
 
 		<div class="card" >
 			<div class="card-body text-secondary">
-				<h5 class="card-title"><i class="fas fa-rocket stilt-action"></i> STILT Model Run</h5>
-				<p class="card-text">Login and proceed to STILT model run</p>
+				<h2 class="h5 card-title d-flex align-items-center">
+					<i class="fas fa-calculator stilt-action me-2"></i>
+					<span>STILT Calculation Service</span>
+				</h2>
+				<p class="card-text">Log in and go to the STILT calculation service</p>
 				<div class="inner"><a id="stiltWorkerLink" href="" class="btn btn-info" role="button">Log in</a></div>
 			</div>
 		</div>
 
 		<div class="card" >
 			<div class="card-body text-secondary">
-				<h5 class="card-title"><i class="fas fa-search stilt-action"></i> STILT Products and Information</h5>
-				<p class="card-text">Login and proceed to STILT results viewer</p>
+				<h2 class="h5 card-title d-flex align-items-center">
+					<i class="fas fa-search stilt-action me-2"></i>
+					<span>STILT Results Viewer</span>
+				</h2>
+				<p class="card-text">Log in and go to the STILT results viewer</p>
 				<div class="inner"><a id="stiltViewerLink" href="" class="btn btn-info" role="button">Log in</a></div>
 			</div>
 		</div>
 
 		<div class="card">
 			<div class="card-body text-secondary">
-				<h5 class="card-title"><i class="fas fa-question-circle stilt-action"></i> Support</h5>
-				<p class="card-text">Do you have questions regarding STILT model runner or results viewer?</p>
+				<h2 class="h5 card-title d-flex align-items-center">
+					<i class="fas fa-question-circle stilt-action me-2"></i>
+					<span>Documentation and Support</span>
+				</h2>
+				<p class="card-text">Do you have questions regarding STILT calculation service or results viewer?</p>
 				<div class="inner">
-					<a href="https://www.icos-cp.eu/about-stilt-calculator" class="btn btn-info" role="button">Runner support</a>
-					<a href="https://www.icos-cp.eu/about-stilt-viewer" class="btn btn-info" role="button">Viewer support</a>
+					<a href="https://www.icos-cp.eu/about-stilt-calculator" class="btn btn-info mb-1" role="button">
+						<i class="fas fa-calculator"></i> Calculation help</a>
+					<a href="https://www.icos-cp.eu/about-stilt-viewer" class="btn btn-info mb-1" role="button">
+						<i class="fas fa-search"></i> Viewer help</a>
 				</div>
 			</div>
 		</div>

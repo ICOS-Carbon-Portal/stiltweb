@@ -56,11 +56,10 @@ export default class Dropdown extends Component{
 		const selectOptions = availableValues.map(v => toStringValue(v, props.presenter));
 		const buttonLbl = toStringValue(props.selectedValue, props.presenter) || props.buttonLbl;
 		const selectedIsICOS = props.selectedValue ? props.selectedValue.isICOS : false;
-		const rootStyle = Object.assign({display: 'inline-block'}, props.style);
 		const menuCls = dropdownOpen ? 'dropdown-menu overflow-scroll show' : 'dropdown-menu overflow-scroll';
 
 		return (
-			<span ref={div => this.node = div} className="dropdown" style={rootStyle}>{
+			<div ref={div => this.node = div} className="dropdown" style={props.style}>{
 				<Button
 					clickAction={this.onDropdownClick.bind(this)}
 					buttonLbl={buttonLbl}
@@ -81,7 +80,7 @@ export default class Dropdown extends Component{
 							</li>
 						)
 					}</ul>
-			</span>
+			</div>
 		);
 	}
 }
@@ -112,7 +111,7 @@ const StationMarker = ({isICOS, showSpace = true}) => {
 
 const Button = ({ clickAction, isICOS, buttonLbl = 'Select option' }) => {
 	return (
-		<button className="btn dropdown-toggle bg-white text-dark" style={{borderColor:'#ced4da'}} onClick={clickAction}>
+		<button className="btn dropdown-toggle bg-white text-dark overflow-hidden w-100" style={{borderColor:'#ced4da'}} onClick={clickAction}>
 			<StationMarker isICOS={isICOS} showSpace={false} /><span>{buttonLbl}</span> <span className="caret" />
 		</button>
 	);

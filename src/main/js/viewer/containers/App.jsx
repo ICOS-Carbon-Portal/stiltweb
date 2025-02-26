@@ -42,24 +42,25 @@ class App extends Component {
 			<div>
 				<AnimatedToasters toasterData={this.props.toasterData} autoCloseDelay={5000} />
 
-				<div className="page-header">
-					<h1>
+				<div className="row page-header justify-content-between align-items-center">
+					<h1 className="col-auto">
 						{title}
-						<span style={{float:'right'}}>
-							<ResultsControl {...resControlProps}/>
-							<a className="btn btn-primary text-white" href="/worker/" target="_blank">
-								<i className="fas fa-calculator"/> STILT worker
-							</a>
-							<a className="btn btn-info text-white" href="https://www.icos-cp.eu/about-stilt-viewer" target="_blank">
-								<i className="fas fa-question-circle" /> Help
-							</a>
-						</span>
 					</h1>
+					<div className="col-auto">
+						<ResultsControl {...resControlProps}/>
+						<a className="btn btn-primary text-white mb-1" href="/worker/" target="_blank">
+							<i className="fas fa-calculator"/> STILT calculation
+						</a>
+						<a className="btn btn-info text-white" href="https://www.icos-cp.eu/about-stilt-viewer" target="_blank">
+							<i className="fas fa-question-circle" /> Help
+						</a>
+					</div>
 				</div>
 				<div className="row" style={{marginTop}}>
-
+				
+					<h2 className="visually-hidden">Footprint map</h2>
 					<div className="col-md-4" style={{paddingRight:0}}>
-						<ul className="list-group">
+						<ul className="list-group rounded-0">
 							<li className="list-group-item" style={{padding: 0}}>
 								{showSpinner ? <Spinner /> : null}
 								<FootprintContainer />
@@ -71,12 +72,14 @@ class App extends Component {
 					</div>
 
 					<div className="col-md-8" style={{paddingLeft:0}}>
+					<h2 className="visually-hidden">Footprint map</h2>
 						<ControlPanelContainer />
 					</div>
 
 				</div>
 
 				<div className="row" style={{marginTop}}>
+					<h2 className="visually-hidden">Concentration time series graph</h2>
 					<div className="col-md-12">
 						<GraphsContainer />
 					</div>
