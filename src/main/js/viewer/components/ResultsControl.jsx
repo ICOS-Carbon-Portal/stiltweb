@@ -46,7 +46,7 @@ export default class ResultsControl extends Component{
 		return (<span>
 			{props.resultPacks && props.resultPacks.length > 0 &&
 				<a
-					className="btn btn-primary text-white"
+					className="btn btn-primary text-white mb-1"
 					href={`downloadresults/${props.resultPacks[0]}`}
 					title={`Download the latest-packaged result ${forBatch(resultBatch)}`}
 				>
@@ -55,7 +55,7 @@ export default class ResultsControl extends Component{
 				</a>
 			}
 			<a
-				className={`btn btn-${packExists || state.packaging ? "warning" : "secondary"} text-white`}
+				className={`btn btn-${packExists || state.packaging ? "warning" : "secondary"} text-white mb-1`}
 				onClick={this.onPackageClick.bind(this)}
 				style={state.packaging ? {cursor: 'default'} : {}}
 				title={packTitle}
