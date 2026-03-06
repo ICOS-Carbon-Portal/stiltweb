@@ -1,11 +1,10 @@
-ThisBuild / scalaVersion := "3.3.3"
+ThisBuild / scalaVersion := "3.8.2"
 
 Global / cancelable := true
 
 lazy val commonSettings = Seq(
 	organization := "se.lu.nateko.cp",
 	scalacOptions ++= Seq(
-		"-Xtarget:11",
 		"-encoding", "UTF-8",
 		"-unchecked",
 		"-feature",
@@ -15,10 +14,10 @@ lazy val commonSettings = Seq(
 	)
 )
 
-val akkaVersion = "2.6.20"
+val akkaVersion     = "2.6.21"
 val akkaHttpVersion = "10.2.10"
 
-val scalaTest = "org.scalatest" %% "scalatest" % "3.2.10" % "test"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19" % "test"
 
 lazy val stiltcluster = (project in file("stiltcluster"))
 	.settings(commonSettings: _*)
@@ -91,7 +90,7 @@ lazy val stiltweb = (project in file("."))
 		Test / unmanagedResources := {
 			val folder = (Test / unmanagedResourceDirectories).value
 			folder.flatMap{dir =>
-				import scala.collection.JavaConverters._
+				import scala.jdk.CollectionConverters.*
 				java.nio.file.Files.walk(dir.toPath).iterator.asScala.map(_.toFile)
 			}
 		},

@@ -64,7 +64,7 @@ object WorkmasterState{
 	val RequestAgeLimit = 5
 	type RequestId = Long
 
-	private[this] var reqId: RequestId = 0
+	private var reqId: RequestId = 0
 
 	def getRequestId: RequestId = {
 		reqId += 1

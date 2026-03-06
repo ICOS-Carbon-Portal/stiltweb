@@ -78,7 +78,7 @@ class State(archiver: Archiver):
 	}
 
 	def cancelJob(id: JobId): Option[Job] = jobs.remove(id).map{jstate =>
-		val toRemove = Set(jstate.slots: _*)
+		val toRemove = Set(jstate.slots*)
 		//the following will remove only one occurrence of slot per queue
 		//this is desired because same slot may be repeated due to overlapping jobs
 		slots.dequeueAll(toRemove.remove)
