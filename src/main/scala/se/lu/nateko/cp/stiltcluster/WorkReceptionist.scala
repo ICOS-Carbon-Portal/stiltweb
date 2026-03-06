@@ -1,8 +1,8 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.ActorLogging
-import akka.actor.Props
-import akka.actor.Terminated
+import org.apache.pekko.actor.ActorLogging
+import org.apache.pekko.actor.Props
+import org.apache.pekko.actor.Terminated
 import se.lu.nateko.cp.cpauth.core.UserId
 import se.lu.nateko.cp.stiltweb.AtmoAccessClient
 import se.lu.nateko.cp.stiltweb.AtmoAccessClient.AppInfo

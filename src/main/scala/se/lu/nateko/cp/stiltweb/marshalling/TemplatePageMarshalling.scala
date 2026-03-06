@@ -1,9 +1,9 @@
 package se.lu.nateko.cp.stiltweb.marshalling
 
-import akka.http.scaladsl.marshalling.Marshaller
-import akka.http.scaladsl.marshalling.Marshalling._
-import akka.http.scaladsl.marshalling.ToResponseMarshaller
-import akka.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.marshalling.Marshaller
+import org.apache.pekko.http.scaladsl.marshalling.Marshalling._
+import org.apache.pekko.http.scaladsl.marshalling.ToResponseMarshaller
+import org.apache.pekko.http.scaladsl.model._
 import scala.concurrent.Future
 import play.twirl.api.Html
 

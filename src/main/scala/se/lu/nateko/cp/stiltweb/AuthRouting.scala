@@ -1,9 +1,9 @@
 package se.lu.nateko.cp.stiltweb
 
 
-import akka.http.javadsl.server.CustomRejection
-import akka.http.scaladsl.server.Directive1
-import akka.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.javadsl.server.CustomRejection
+import org.apache.pekko.http.scaladsl.server.Directive1
+import org.apache.pekko.http.scaladsl.server.Directives.*
 import se.lu.nateko.cp.cpauth.core.AuthSource
 import se.lu.nateko.cp.cpauth.core.AuthToken
 import se.lu.nateko.cp.cpauth.core.Authenticator
@@ -13,7 +13,7 @@ import se.lu.nateko.cp.cpauth.core.UserId
 
 import scala.util.Failure
 import scala.util.Success
-import akka.http.scaladsl.model.StatusCodes
+import org.apache.pekko.http.scaladsl.model.StatusCodes
 
 class AuthRouting(authConfig: PublicAuthConfig):
 

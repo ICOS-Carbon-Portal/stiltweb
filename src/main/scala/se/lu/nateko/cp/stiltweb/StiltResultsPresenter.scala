@@ -1,8 +1,8 @@
 package se.lu.nateko.cp.stiltweb
 
-import akka.http.scaladsl.model.Uri
-import akka.http.scaladsl.server.PathMatcher1
-import akka.http.scaladsl.server.PathMatchers.RemainingPath
+import org.apache.pekko.http.scaladsl.model.Uri
+import org.apache.pekko.http.scaladsl.server.PathMatcher1
+import org.apache.pekko.http.scaladsl.server.PathMatchers.RemainingPath
 import se.lu.nateko.cp.data.formats.netcdf.Raster
 import se.lu.nateko.cp.data.formats.netcdf.ViewServiceFactory
 import se.lu.nateko.cp.stiltcluster.StiltPosition

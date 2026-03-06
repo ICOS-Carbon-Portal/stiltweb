@@ -5,8 +5,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
 import scala.util.Try
 
-import akka.actor.ActorSystem
-import akka.pattern.gracefulStop
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.pattern.gracefulStop
 
 object WorkMasterApp {
 

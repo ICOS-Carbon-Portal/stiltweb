@@ -1,7 +1,7 @@
 package se.lu.nateko.cp.stiltcluster
 
 import java.time.{Instant, LocalDate}
-import akka.actor.Address
+import org.apache.pekko.actor.Address
 
 
 /** The description of a Stilt simulation to be run. */

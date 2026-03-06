@@ -3,13 +3,12 @@ package se.lu.nateko.cp.stiltweb.marshalling
 import java.time.Instant
 import java.time.LocalDate
 
-import akka.actor.Address
-import akka.http.scaladsl.marshalling.ToResponseMarshaller
+import org.apache.pekko.actor.Address
+import org.apache.pekko.http.scaladsl.marshalling.ToResponseMarshaller
 import play.twirl.api.Html
 import spray.json.*
 import se.lu.nateko.cp.cpauth.core.JsonSupport.{given RootJsonFormat[Instant]}
 import se.lu.nateko.cp.data.formats.netcdf.Raster
-import se.lu.nateko.cp.data.formats.netcdf.RasterMarshalling
 import se.lu.nateko.cp.stiltcluster.*
 import se.lu.nateko.cp.stiltweb.StiltResultsRequest
 import se.lu.nateko.cp.stiltweb.StiltStationIds
@@ -19,7 +18,7 @@ import se.lu.nateko.cp.stiltweb.WhoamiResult
 object StiltJsonSupport {
 	import DefaultJsonProtocol.*
 
-	given ToResponseMarshaller[Raster] = RasterMarshalling.marshaller
+	given ToResponseMarshaller[Raster] = PekkoRasterMarshalling.marshaller
 	given ToResponseMarshaller[Html] = TemplatePageMarshalling.marshaller
 
 	given RootJsonFormat[WhoamiResult] = jsonFormat2(WhoamiResult.apply)
@@ -49,7 +48,7 @@ object StiltJsonSupport {
 	given JsonFormat[Address] with {
 		def write(a: Address) = JsString(a.toString)
 		def read(value: JsValue) = throw new DeserializationException(
-			"JSON-parsing of akka.actor.Address instances is not implemented and should not be needed"
+			"JSON-parsing of org.apache.pekko.actor.Address instances is not implemented and should not be needed"
 		)
 	}
 

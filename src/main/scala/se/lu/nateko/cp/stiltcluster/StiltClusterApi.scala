@@ -5,15 +5,15 @@ import java.nio.file.Paths
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.ws.Message
-import akka.pattern.ask
-import akka.stream.OverflowStrategy
-import akka.stream.scaladsl.{ Flow, Keep, Sink, Source }
-import akka.util.Timeout
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl.model.ws.Message
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.stream.OverflowStrategy
+import org.apache.pekko.stream.scaladsl.{ Flow, Keep, Sink, Source }
+import org.apache.pekko.util.Timeout
 import se.lu.nateko.cp.stiltweb.ConfigReader
 import se.lu.nateko.cp.stiltweb.state.Archiver
-import akka.stream.ThrottleMode
+import org.apache.pekko.stream.ThrottleMode
 import se.lu.nateko.cp.stiltweb.AtmoAccessClient
 
 
@@ -52,7 +52,7 @@ class StiltClusterApi {
 	val websocketsFlow: Flow[Message, Message, Any] = {
 		import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.given
 		import spray.json.enrichAny
-		import akka.http.scaladsl.model.ws.TextMessage.Strict
+		import org.apache.pekko.http.scaladsl.model.ws.TextMessage.Strict
 
 		val source: Source[Message, Any] = Source
 			.actorRef[DashboardInfo](PartialFunction.empty, PartialFunction.empty, 1, OverflowStrategy.dropHead)
@@ -66,5 +66,5 @@ class StiltClusterApi {
 
 	def terminate() = system.terminate()
 
-	val ioDispatcher = system.dispatchers.lookup("akka.actor.default-blocking-io-dispatcher")
+	val ioDispatcher = system.dispatchers.lookup("pekko.actor.default-blocking-io-dispatcher")
 }

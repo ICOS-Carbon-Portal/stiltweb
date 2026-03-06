@@ -1,12 +1,12 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.Cancellable
-import akka.actor.Props
-import akka.actor.Terminated
-import akka.util.Timeout
+import org.apache.pekko.actor.Actor
+import org.apache.pekko.actor.ActorLogging
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.Cancellable
+import org.apache.pekko.actor.Props
+import org.apache.pekko.actor.Terminated
+import org.apache.pekko.util.Timeout
 
 import java.nio.file.Files
 import java.nio.file.Path
