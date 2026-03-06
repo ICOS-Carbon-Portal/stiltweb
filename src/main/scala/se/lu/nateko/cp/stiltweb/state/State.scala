@@ -4,7 +4,7 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Set
 
-import akka.actor.ActorRef
+import org.apache.pekko.actor.ActorRef
 import se.lu.nateko.cp.stiltcluster._
 import java.time.Instant
 

@@ -1,10 +1,10 @@
 package se.lu.nateko.cp.stiltcluster
 
-import akka.actor.Actor
-import akka.actor.ActorRef
+import org.apache.pekko.actor.Actor
+import org.apache.pekko.actor.ActorRef
 
 import scala.collection.mutable.Set
-import akka.actor.Terminated
+import org.apache.pekko.actor.Terminated
 
 trait StreamPublisher[T] extends Actor {
 

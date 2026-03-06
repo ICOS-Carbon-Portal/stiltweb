@@ -1,6 +1,6 @@
 package se.lu.nateko.cp.stiltweb
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import AtmoAccessClient.AppInfo
 import java.time.Instant
 import se.lu.nateko.cp.cpauth.core.UserId

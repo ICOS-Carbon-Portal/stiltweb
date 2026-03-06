@@ -14,8 +14,8 @@ lazy val commonSettings = Seq(
 	)
 )
 
-val akkaVersion     = "2.6.21"
-val akkaHttpVersion = "10.2.10"
+val pekkoVersion     = "1.4.0"
+val pekkoHttpVersion = "1.3.0"
 
 val scalaTest = "org.scalatest" %% "scalatest" % "3.2.19" % "test"
 
@@ -26,8 +26,8 @@ lazy val stiltcluster = (project in file("stiltcluster"))
 		name := "stiltcluster",
 		version := "0.4.1",
 		libraryDependencies ++= Seq(
-			"com.typesafe.akka" %% "akka-remote"         % akkaVersion cross CrossVersion.for3Use2_13,
-			"com.typesafe.akka" %% "akka-slf4j"          % akkaVersion cross CrossVersion.for3Use2_13,
+			"org.apache.pekko" %% "pekko-remote"         % pekkoVersion,
+			"org.apache.pekko" %% "pekko-slf4j"          % pekkoVersion,
 			"ch.qos.logback"     % "logback-classic"     % "1.1.3",
 			scalaTest
 		),
@@ -63,13 +63,13 @@ lazy val stiltweb = (project in file("."))
 		version := "0.4.3",
 
 		libraryDependencies ++= Seq(
-			"com.typesafe.akka"  %% "akka-http-spray-json"               % akkaHttpVersion excludeAll("io.spray") cross CrossVersion.for3Use2_13,
-			"com.typesafe.akka"  %% "akka-stream"                        % akkaVersion cross CrossVersion.for3Use2_13,
+			"org.apache.pekko"   %% "pekko-http-spray-json"              % pekkoHttpVersion,
+			"org.apache.pekko"   %% "pekko-stream"                       % pekkoVersion,
 			"se.lu.nateko.cp"    %% "views-core"                         % "0.7.10",
 			"se.lu.nateko.cp"    %% "cpauth-core"                        % "0.10.1", //to force newer version
 			"se.lu.nateko.cp"    %% "data-netcdf"                        % "0.3.1" excludeAll("com.google.protobuf"),
 			"edu.ucar"            % "netcdf4"                            % "5.5.3" excludeAll("com.google.protobuf"),
-			"com.typesafe.akka"  %% "akka-testkit"                       % akkaVersion % "test" cross CrossVersion.for3Use2_13,
+			"org.apache.pekko"   %% "pekko-testkit"                      % pekkoVersion % "test",
 			scalaTest
 		),
 
