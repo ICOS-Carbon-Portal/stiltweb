@@ -51,7 +51,8 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 	given [T: RootJsonWriter]: ToEntityMarshaller[T] = SprayJsonSupport.sprayJsonMarshaller
 
 	val resultBatchSpec: Directive1[ResultBatch] =
-		parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]).as(ResultBatch.apply _).or:
+		parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate])
+			.as((stationId, fromDate, toDate) => ResultBatch(stationId, fromDate, toDate)).or:
 			complete(StatusCodes.BadRequest -> "Expected 'stationId', 'fromDate', and 'toDate' URL parameters")
 
 	def route: Route = pathPrefix("viewer"){
@@ -202,7 +203,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 		if resp.status.isFailure then resp else
 			val re = resp.entity.transformDataBytes(Flow[ByteString].watchTermination(){
 				case (mat, fut) =>
-					fut.onComplete{case _ => cb()}(cluster.ioDispatcher)
+					fut.onComplete{case _ => cb()}(using cluster.ioDispatcher)
 					mat
 			})
 			resp.withEntity(re)

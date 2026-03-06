@@ -29,7 +29,7 @@ object StiltJsonSupport {
 		private val simple: JsonFormat[StiltStationInfo] = jsonFormat5(StiltStationInfo.apply)
 
 		def write(si: StiltStationInfo): JsValue = {
-			val self = si.toJson(simple).asJsObject
+			val self = si.toJson(using simple).asJsObject
 			val ids = si.id.toJson.asJsObject
 			JsObject(self.fields ++ ids.fields)
 		}

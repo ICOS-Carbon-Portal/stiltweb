@@ -12,9 +12,9 @@ import java.time.Instant
 class JobState(val job: Job, nSlotsTotal: Int, initWork: Seq[StiltSlot]){
 
 	val initRemainingSlots = initWork.size
-	private[this] val slotz = Set(initWork: _*)
-	private[this] val failures = Buffer.empty[SlotFailure]
-	private[this] var doneTime: Option[Instant] = None
+	private val slotz = Set(initWork*)
+	private val failures = Buffer.empty[SlotFailure]
+	private var doneTime: Option[Instant] = None
 
 	def slots = slotz.toSeq
 	def nSlots = slotz.size

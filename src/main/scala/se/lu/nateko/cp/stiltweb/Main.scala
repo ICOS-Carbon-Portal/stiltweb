@@ -12,13 +12,13 @@ import scala.util.{ Failure, Success }
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
 import scala.concurrent.ExecutionContext
 
-object Main extends App {
+@main def main(): Unit =
 
 	val cluster = new StiltClusterApi
 
 	implicit val system: ActorSystem = ActorSystem("stiltweb")
 	system.log
-	implicit val dispatcher:ExecutionContext = system.dispatcher
+	implicit val dispatcher: ExecutionContext = system.dispatcher
 
 	val config = ConfigReader.default
 
@@ -45,13 +45,11 @@ object Main extends App {
 					val doneFuture = binding.unbind()
 						.flatMap{
 							_ => system.terminate()
-						}(ctxt)
+						}(using ctxt)
 						.flatMap{
 							_ => cluster.terminate()
-						}(ctxt)
+						}(using ctxt)
 					Await.result(doneFuture, 3.seconds)
 				}
 				println(binding)
 		}
-
-}
