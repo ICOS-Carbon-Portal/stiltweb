@@ -28,6 +28,8 @@ class AuthRouting(authConfig: PublicAuthConfig) {
 		}
 	})
 
+	def userReq(inner: UserId => Route): Route = user(inner)
+
 	private def toMessage(err: Throwable): String = {
 		val msg = err.getMessage
 		if(msg == null || msg.isEmpty) err.getClass.getName else msg

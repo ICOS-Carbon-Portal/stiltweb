@@ -11,12 +11,9 @@ import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.Unmarshaller
-import akka.stream.scaladsl.Flow
-import akka.util.ByteString
 import se.lu.nateko.cp.cpauth.core.UserId
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
-import se.lu.nateko.cp.stiltweb.AtmoAccessClient.AppInfo
 import se.lu.nateko.cp.stiltweb.marshalling.StationInfoMarshalling
 import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.given
 import se.lu.nateko.cp.stiltweb.zip.PackagingThrottler
@@ -24,7 +21,6 @@ import spray.json.DefaultJsonProtocol
 import spray.json.RootJsonWriter
 
 import java.nio.file.Files
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import scala.concurrent.Future
@@ -38,8 +34,8 @@ import StiltResultsPresenter.{ResultRelPath, StiltResRelPath}
 class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 
 	private val authRouting = new AuthRouting(config.auth)
-	import cluster.atmoClient
-	import authRouting.{user, userReq, userOpt}
+	import authRouting.{user, userReq}
+	private given eu.icoscp.envri.Envri = eu.icoscp.envri.Envri.ICOS
 
 	private val service = new StiltResultsPresenter(config)
 	private val throttler = new PackagingThrottler[ResultRelPath](using cluster.dispatcher)
@@ -69,26 +65,23 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 					val footprintsList = service.listFootprints(batch)
 					complete(footprintsList.map(_.toString).toSeq)
 			~
-			(path("joinfootprints") & userReq){ user =>
-				resultBatchSpec: batch =>
-					throttler
-						.runFor(user, batch.stationId):
-							service.packageResults(batch)(using cluster.ioDispatcher)
-						.fold(
-							msg => complete(StatusCodes.ServiceUnavailable -> msg),
-							zipPathFut =>
-								val startTime = Instant.now()
-								withRequestTimeout(5.minutes):
-									onSuccess(zipPathFut): zipPath =>
-										logResPackUse(startTime, user, "Packaging", Some(batch), zipPath)
-										complete(service.listResultPackages(batch).get)
-						)
-			} ~
-			pathPrefix("downloadresults" / StiltResRelPath): relPath =>
+			path("joinfootprints"):
 				userReq: user =>
-					val startDt = Instant.now()
-					onResponseStreamed(() => logResPackUse(startDt, user, "Downloading", None, relPath)):
-						getFromFile(service.toResultPath(relPath).toFile)
+					resultBatchSpec: batch =>
+						throttler
+							.runFor(user, batch.stationId):
+								service.packageResults(batch)(using cluster.ioDispatcher)
+							.fold(
+								msg => complete(StatusCodes.ServiceUnavailable -> msg),
+								zipPathFut =>
+									withRequestTimeout(5.minutes):
+										onSuccess(zipPathFut): _ =>
+											complete(service.listResultPackages(batch).get)
+							)
+			~
+			pathPrefix("downloadresults" / StiltResRelPath): relPath =>
+				userReq: _ =>
+					getFromFile(service.toResultPath(relPath).toFile)
 			~
 			path("listresultpackages"):
 				resultBatchSpec: batch =>
@@ -103,7 +96,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 			} ~
 			redirectToTrailingSlashIfMissing(StatusCodes.Found){
 				pathSingleSlash {
-					complete(views.html.ViewerPage(config.auth))
+					complete(views.html.ViewerPage())
 				}
 			}
 		} ~
@@ -111,10 +104,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 			entity(as[StiltResultsRequest]): req =>
 				withRequestTimeout(5.minutes):
 					path("stiltresult"):
-						val startDt = Instant.now()
-						userOpt: user =>
-							onResponseStreamed(() => logResultsFetch(startDt, user, req)):
-								complete(service.getStiltResults(req).toSeq)
+						complete(service.getStiltResults(req).toSeq)
 					~
 					path("stiltrawresult"):
 						complete(service.getStiltRawResults(req).toSeq)
@@ -127,7 +117,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 		get {
 			pathEnd{redirect("worker/", StatusCodes.Found)} ~
 			pathSingleSlash {
-				complete(views.html.WorkerPage(config.auth))
+				complete(views.html.WorkerPage())
 			} ~
 			path("worker.js"){
 				getFromResource("www/worker.js")
@@ -174,7 +164,6 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 					}
 				}
 			}
-		}
 
 	} ~
 	get{
@@ -197,52 +186,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 		}
 	}
 
-	def onResponseStreamed(cb: () => Unit): Directive0 = mapResponse: resp =>
-		if resp.status.isFailure then resp else
-			val re = resp.entity.transformDataBytes(Flow[ByteString].watchTermination(){
-				case (mat, fut) =>
-					fut.onComplete{case _ => cb()}(cluster.ioDispatcher)
-					mat
-			})
-			resp.withEntity(re)
-
-
 	def respondWithAttachment(fileName: String): Directive0 = respondWithHeader(
 		`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> fileName))
 	)
-
-	import atmoClient.baseStiltUrl
-
-	private def logResPackUse(startDt: Instant, user: UserId, action: String, batch: Option[ResultBatch], relPath: ResultRelPath) =
-		val basicInfo = AppInfo(
-			user = user,
-			startDate = startDt,
-			endDate = Some(Instant.now()),
-			resultUrl = s"$baseStiltUrl/viewer/downloadresults/$relPath",
-			infoUrl = None,
-			comment = Some(s"$action STILT results from $relPath")
-		)
-		val info = batch.fold(basicInfo): resBatch =>
-			import resBatch.{stationId, fromDate, toDate}
-			basicInfo.copy(
-				infoUrl = Some(scopedViewerUrl(resBatch)),
-				comment = Some(s"$action STILT results for station $stationId from $fromDate to $toDate")
-			)
-		atmoClient.log(info)
-
-	private def scopedViewerUrl(batch: ResultBatch): String =
-		import batch.{stationId, fromDate, toDate}
-		s"$baseStiltUrl/viewer/?stationId=${stationId}&fromDate=${fromDate}&toDate=${toDate}"
-
-	private def logResultsFetch(startDt: Instant, user: Option[UserId], req: StiltResultsRequest) =
-		import req.{stationId, fromDate, toDate}
-		val appInfo = AppInfo(
-			user = user.getOrElse(UserId("anonymous")),
-			startDate = startDt,
-			endDate = Some(Instant.now()),
-			resultUrl = s"$baseStiltUrl/viewer/stiltresult",
-			infoUrl = Some(scopedViewerUrl(req.batch)),
-			comment = Some(s"Viewing STILT result time series for station $stationId from $fromDate to $toDate")
-		)
-		atmoClient.log(appInfo)
 end MainRoute

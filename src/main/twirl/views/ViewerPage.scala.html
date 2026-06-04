@@ -1,6 +1,6 @@
-@(conf: se.lu.nateko.cp.cpauth.core.PublicAuthConfig)
+@()(implicit envri: eu.icoscp.envri.Envri)
 
-@CpCommonPage("Carbon Portal's STILT results visualization service", authHost = conf.authHost, dataHost = "data.icos-cp.eu"){
+@CpCommonPage("Carbon Portal's STILT results visualization service"){
 	<link href="https://static.icos-cp.eu/constant/leaflet/1.9.4/leaflet.css" rel="stylesheet" />
 	<link href="https://static.icos-cp.eu/constant/leaflet/markercluster/1.5.3/MarkerCluster.Default.css" rel="stylesheet" />
 	<link href="https://static.icos-cp.eu/constant/leaflet/markercluster/1.5.3/MarkerCluster.css" rel="stylesheet" />

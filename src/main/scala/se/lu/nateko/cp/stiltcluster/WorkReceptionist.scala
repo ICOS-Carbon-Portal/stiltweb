@@ -3,16 +3,11 @@ package se.lu.nateko.cp.stiltcluster
 import akka.actor.ActorLogging
 import akka.actor.Props
 import akka.actor.Terminated
-import se.lu.nateko.cp.cpauth.core.UserId
-import se.lu.nateko.cp.stiltweb.AtmoAccessClient
-import se.lu.nateko.cp.stiltweb.AtmoAccessClient.AppInfo
 import se.lu.nateko.cp.stiltweb.JobDir
 import se.lu.nateko.cp.stiltweb.state.Archiver
 import se.lu.nateko.cp.stiltweb.state.State
 
-import java.time.Instant
-
-class WorkReceptionist(archiver: Archiver, atmoClient: AtmoAccessClient) extends StreamPublisher[DashboardInfo] with ActorLogging {
+class WorkReceptionist(archiver: Archiver) extends StreamPublisher[DashboardInfo] with ActorLogging {
 
 	val state = new State(archiver)
 
@@ -84,16 +79,6 @@ class WorkReceptionist(archiver: Archiver, atmoClient: AtmoAccessClient) extends
 
 	def finishJob(job: Job): Unit =
 		log.info(s"Done: $job")
-		for startD <- job.timeStarted do atmoClient.log:
-			import atmoClient.baseStiltUrl
-			AppInfo(
-				user = UserId(job.userId),
-				startDate = startD,
-				endDate = job.timeStopped.orElse(Some(Instant.now)),
-				resultUrl = s"$baseStiltUrl/viewer/?stationId=${job.siteId}&fromDate=${job.start}&toDate=${job.stop}",
-				infoUrl = None,
-				comment = Some(s"STILT run for station ${job.siteId} (lat = ${job.lat}, lon = ${job.lon}) from ${job.start} to ${job.stop}")
-			)
 		jobDir(job).markAsDone()
 
 
@@ -112,4 +97,4 @@ class WorkReceptionist(archiver: Archiver, atmoClient: AtmoAccessClient) extends
 }
 
 object WorkReceptionist:
-	def props(archiver: Archiver, atmoClient: AtmoAccessClient) = Props.create(classOf[WorkReceptionist], archiver, atmoClient)
+	def props(archiver: Archiver) = Props.create(classOf[WorkReceptionist], archiver)
