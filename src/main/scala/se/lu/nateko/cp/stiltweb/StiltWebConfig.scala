@@ -15,10 +15,9 @@ case class NetCdfConfig(
 ) extends NetCdfViewServiceConfig
 
 case class AtmoAccessConfig(
-	openidEndpointUrl: String,
+	tokenEndpointUrl: String,
 	vaApiUrl: String,
 	clientId: String,
-	ssoClientId: String,
 	userName: String,
 	userPassword: String,
 	baseStiltUrl: String,
@@ -38,7 +37,7 @@ object ConfigReader extends DefaultJsonProtocol{
 
 	given JsonFormat[PublicAuthConfig] = jsonFormat4(PublicAuthConfig.apply)
 	given JsonFormat[NetCdfConfig] = jsonFormat4(NetCdfConfig.apply)
-	given JsonFormat[AtmoAccessConfig] = jsonFormat7(AtmoAccessConfig.apply)
+	given JsonFormat[AtmoAccessConfig] = jsonFormat5(AtmoAccessConfig.apply)
 	given JsonFormat[StiltWebConfig] = jsonFormat7(StiltWebConfig.apply)
 
 	lazy val default: StiltWebConfig = fromAppConfig(ConfigLoader.localWithDefault())

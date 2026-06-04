@@ -101,12 +101,11 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 			path("availablemonths"){
 				complete(service.availableInputMonths())
 			} ~
-			redirectToTrailingSlashIfMissing(StatusCodes.Found):
-				pathSingleSlash:
-					user{userId =>
-						complete(views.html.ViewerPage(config.auth))
-					} ~
-					complete(views.html.LoginPage(config.auth, config.atmoAccess))
+			redirectToTrailingSlashIfMissing(StatusCodes.Found){
+				pathSingleSlash {
+					complete(views.html.ViewerPage(config.auth))
+				}
+			}
 		} ~
 		post:
 			entity(as[StiltResultsRequest]): req =>
@@ -128,10 +127,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 		get {
 			pathEnd{redirect("worker/", StatusCodes.Found)} ~
 			pathSingleSlash {
-				user{userId =>
-					complete(views.html.WorkerPage(config.auth))
-				} ~
-				complete(views.html.LoginPage(config.auth, config.atmoAccess))
+				complete(views.html.WorkerPage(config.auth))
 			} ~
 			path("worker.js"){
 				getFromResource("www/worker.js")
@@ -155,6 +151,8 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 							complete((StatusCodes.Forbidden, "Wrong user id in the job definition!"))
 					} ~
 					complete((StatusCodes.BadRequest, "Wrong request payload, expected a proper Job object"))
+				} ~
+				complete((StatusCodes.Forbidden, "Please log in with Carbon Portal"))
 			} ~
 			path("deletejob" / Segment) { jobId =>
 				userReq{userId =>
@@ -177,6 +175,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 				}
 			}
 		}
+
 	} ~
 	get{
 		pathEndOrSingleSlash{

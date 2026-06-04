@@ -17,21 +17,21 @@ import akka.http.scaladsl.model.StatusCodes
 
 class AuthRouting(authConfig: PublicAuthConfig):
 
-	private val authenticator = Authenticator(authConfig).get
+	private[this] val authenticator = Authenticator(authConfig).get
 
-	val user: Directive1[UserId] = cookie(authConfig.authCookieName).flatMap{cookie =>
+	val authToken: Directive1[AuthToken] = cookie(authConfig.authCookieName).flatMap{cookie =>
 		CookieToToken.recoverToken(cookie.value).flatMap(authenticator.unwrapToken) match
-			case Success(token) if token.source == AuthSource.AtmoAccess =>
-				provide(token.userId)
 			case Success(token) =>
-				reject(CpauthAuthFailedRejection("User did not log in through ATMO ACCESS"))
+				provide(token)
 			case Failure(err) =>
 				reject(CpauthAuthFailedRejection("Authentication cookie invalid or absent: " + toMessage(err)))
 	}
 
-	val userReq: Directive1[UserId] = user | complete(StatusCodes.Unauthorized -> "Please log in with ATMO ACCESS")
-
-	val userOpt: Directive1[Option[UserId]] = user.map(Some(_)) | provide(None)
+	val user: Directive1[UserId] = authToken.flatMap{token =>
+		if token.source != AuthSource.AtmoAccess then
+			reject(CpauthAuthFailedRejection("User did not log in through ATMO ACCESS"))
+		else provide(token.userId)
+	}
 
 	private def toMessage(err: Throwable): String =
 		val msg = err.getMessage
