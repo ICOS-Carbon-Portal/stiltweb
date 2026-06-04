@@ -1,5 +1,6 @@
 @(conf: se.lu.nateko.cp.cpauth.core.PublicAuthConfig)
-@AtmoAccessPage("Carbon Portal's STILT results visualization service"){
+
+@CpCommonPage("Carbon Portal's STILT results visualization service", authHost = conf.authHost, dataHost = "data.icos-cp.eu"){
 	<link href="https://static.icos-cp.eu/constant/leaflet/1.9.4/leaflet.css" rel="stylesheet" />
 	<link href="https://static.icos-cp.eu/constant/leaflet/markercluster/1.5.3/MarkerCluster.Default.css" rel="stylesheet" />
 	<link href="https://static.icos-cp.eu/constant/leaflet/markercluster/1.5.3/MarkerCluster.css" rel="stylesheet" />
