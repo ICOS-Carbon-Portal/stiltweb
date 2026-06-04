@@ -2,3 +2,12 @@ svg {
     /* reset style from _reboot (bootstrap) */
     vertical-align: baseline;
 }
+
+/* Override views-core z-index to clear Leaflet control containers (~1000) */
+#cp_theme_d10_menu .menu-backdrop {
+    z-index: 2000;
+}
+
+#cp_theme_d10_menu .dropdown-menu {
+    z-index: 2001;
+}
