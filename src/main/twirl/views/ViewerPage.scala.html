@@ -1,26 +1,9 @@
 @()(implicit envri: eu.icoscp.envri.Envri)
 
-@CpCommonPage("Carbon Portal's STILT results visualization service"){
+@StiltPage {
 	<link href="https://static.icos-cp.eu/constant/leaflet/1.9.4/leaflet.css" rel="stylesheet" />
 	<link href="https://static.icos-cp.eu/constant/leaflet/markercluster/1.5.3/MarkerCluster.Default.css" rel="stylesheet" />
 	<link href="https://static.icos-cp.eu/constant/leaflet/markercluster/1.5.3/MarkerCluster.css" rel="stylesheet" />
-
-	<style type="text/css">
-
-		.leaflet-container, .leaflet-clickable, .leaflet-interactive {
-			cursor: crosshair !important;
-		}
-		.cp-pointer:hover {
-			cursor: pointer;
-		}
-
-		a.btn {
-			margin-left: 5px;
-		}
-
-	</style>
-}{
-	<div id="main"></div>
+} {
 	<script src="viewer.js"></script>
 }
-
