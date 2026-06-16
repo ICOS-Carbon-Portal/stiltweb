@@ -32,7 +32,6 @@ class StiltClusterApi {
 	}
 
 	val archiver = new Archiver(stateDir, stiltConf.slotStepInMinutes)
-
 	val matomoClient = new MatomoClient(stiltConf.matomo)(using system)
 
 	private val receptionist = system.actorOf(WorkReceptionist.props(archiver, matomoClient), name = "receptionist")

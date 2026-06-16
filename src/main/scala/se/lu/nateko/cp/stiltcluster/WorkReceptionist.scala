@@ -80,7 +80,6 @@ class WorkReceptionist(archiver: Archiver, matomoClient: MatomoClient) extends S
 
 	def finishJob(job: Job): Unit =
 		log.info(s"Done: $job")
-		jobDir(job).markAsDone()
 		for startD <- job.timeStarted do
 			matomoClient.trackEvent(
 				category = "STILT",
@@ -90,6 +89,7 @@ class WorkReceptionist(archiver: Archiver, matomoClient: MatomoClient) extends S
 				userId = job.userId,
 				eventTime = startD
 			)
+		jobDir(job).markAsDone()
 
 
 	def startJob(job: Job): Unit =
