@@ -21,6 +21,7 @@ import spray.json.DefaultJsonProtocol
 import spray.json.RootJsonWriter
 
 import java.nio.file.Files
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import scala.concurrent.Future
@@ -31,7 +32,7 @@ import SprayJsonSupport.sprayJsonUnmarshaller
 import DefaultJsonProtocol.{StringJsonFormat, JsValueFormat, immSeqFormat}
 import StiltResultsPresenter.{ResultRelPath, StiltResRelPath}
 
-class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
+class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi, matomoClient: MatomoClient):
 
 	private val authRouting = new AuthRouting(config.auth)
 	import authRouting.{user, userReq}
@@ -49,6 +50,9 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 	val resultBatchSpec: Directive1[ResultBatch] =
 		parameters("stationId", "fromDate".as[LocalDate], "toDate".as[LocalDate]).as(ResultBatch.apply _).or:
 			complete(StatusCodes.BadRequest -> "Expected 'stationId', 'fromDate', and 'toDate' URL parameters")
+
+	private def optionalUserEmail(inner: String => Route): Route =
+		user(uid => inner(uid.email)) ~ inner("anonymous")
 
 	def route: Route = pathPrefix("viewer"){
 		get{
@@ -76,11 +80,27 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 								zipPathFut =>
 									withRequestTimeout(5.minutes):
 										onSuccess(zipPathFut): _ =>
+											matomoClient.trackEvent(
+												category = "STILT",
+												action = "ResultsPackaged",
+												name = s"Packaging STILT results for station ${batch.stationId} from ${batch.fromDate} to ${batch.toDate}",
+												eventUrl = s"${matomoClient.baseStiltUrl}/viewer/?stationId=${batch.stationId}&fromDate=${batch.fromDate}&toDate=${batch.toDate}",
+												userId = user.email,
+												eventTime = Instant.now()
+											)
 											complete(service.listResultPackages(batch).get)
 							)
 			~
 			pathPrefix("downloadresults" / StiltResRelPath): relPath =>
-				userReq: _ =>
+				userReq: user =>
+					matomoClient.trackEvent(
+						category = "STILT",
+						action = "ResultsDownloaded",
+						name = s"Downloading STILT results from $relPath",
+						eventUrl = s"${matomoClient.baseStiltUrl}/viewer/downloadresults/$relPath",
+						userId = user.email,
+						eventTime = Instant.now()
+					)
 					getFromFile(service.toResultPath(relPath).toFile)
 			~
 			path("listresultpackages"):
@@ -104,7 +124,16 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 			entity(as[StiltResultsRequest]): req =>
 				withRequestTimeout(5.minutes):
 					path("stiltresult"):
-						complete(service.getStiltResults(req).toSeq)
+						optionalUserEmail: userEmail =>
+							matomoClient.trackEvent(
+								category = "STILT",
+								action = "TimeSeriesViewed",
+								name = s"Viewing STILT result time series for station ${req.stationId} from ${req.fromDate} to ${req.toDate}",
+								eventUrl = s"${matomoClient.baseStiltUrl}/viewer/?stationId=${req.stationId}&fromDate=${req.fromDate}&toDate=${req.toDate}",
+								userId = userEmail,
+								eventTime = Instant.now()
+							)
+							complete(service.getStiltResults(req).toSeq)
 					~
 					path("stiltrawresult"):
 						complete(service.getStiltRawResults(req).toSeq)

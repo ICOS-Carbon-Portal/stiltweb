@@ -12,6 +12,7 @@ import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{ Flow, Keep, Sink, Source }
 import akka.util.Timeout
 import se.lu.nateko.cp.stiltweb.ConfigReader
+import se.lu.nateko.cp.stiltweb.MatomoClient
 import se.lu.nateko.cp.stiltweb.state.Archiver
 import akka.stream.ThrottleMode
 
@@ -32,7 +33,9 @@ class StiltClusterApi {
 
 	val archiver = new Archiver(stateDir, stiltConf.slotStepInMinutes)
 
-	private val receptionist = system.actorOf(WorkReceptionist.props(archiver), name = "receptionist")
+	val matomoClient = new MatomoClient(stiltConf.matomo)(using system)
+
+	private val receptionist = system.actorOf(WorkReceptionist.props(archiver, matomoClient), name = "receptionist")
 	system.scheduler.scheduleAtFixedRate(5.seconds, 5.seconds, receptionist, DistributeWork)
 
 	def enqueueJob(job: Job): Unit = receptionist ! job
