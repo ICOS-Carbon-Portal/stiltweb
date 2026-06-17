@@ -20,7 +20,8 @@ class MatomoClient(config: MatomoConfig)(using system: ActorSystem):
 		name: String,
 		eventUrl: String,
 		userId: String,
-		eventTime: Instant
+		eventTime: Instant,
+		clientIp: Option[String] = None
 	): Unit =
 		val enc = URLEncoder.encode(_: String, StandardCharsets.UTF_8)
 		val params = Seq(
@@ -33,6 +34,7 @@ class MatomoClient(config: MatomoConfig)(using system: ActorSystem):
 			"uid"     -> userId,
 			"cdt"     -> eventTime.getEpochSecond.toString
 		) ++ (if config.authToken.nonEmpty then Seq("token_auth" -> config.authToken) else Nil)
+		  ++ clientIp.map("cip" -> _).toSeq
 
 		val queryString = params.map((k, v) => s"${enc(k)}=${enc(v)}").mkString("&")
 

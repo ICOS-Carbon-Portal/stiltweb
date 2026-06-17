@@ -66,7 +66,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi, matomoClient: 
 					val footprintsList = service.listFootprints(batch)
 					complete(footprintsList.map(_.toString).toSeq)
 			~
-			(path("joinfootprints") & userReq){ user =>
+			(path("joinfootprints") & userReq & extractClientIP){ (user, remoteAddr) =>
 				resultBatchSpec: batch =>
 					throttler
 						.runFor(user, batch.stationId):
@@ -82,20 +82,22 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi, matomoClient: 
 											name = s"Packaging STILT results for station ${batch.stationId} from ${batch.fromDate} to ${batch.toDate}",
 											eventUrl = s"${matomoClient.baseStiltUrl}/viewer/?stationId=${batch.stationId}&fromDate=${batch.fromDate}&toDate=${batch.toDate}",
 											userId = user.email,
-											eventTime = Instant.now()
+											eventTime = Instant.now(),
+											clientIp = remoteAddr.toOption.map(_.getHostAddress)
 										)
 										complete(service.listResultPackages(batch).get)
 						)
 			} ~
 			pathPrefix("downloadresults" / StiltResRelPath): relPath =>
-				userReq: user =>
+				(userReq & extractClientIP): (user, remoteAddr) =>
 					matomoClient.trackEvent(
 						category = "STILT",
 						action = "ResultsDownloaded",
 						name = s"Downloading STILT results from $relPath",
 						eventUrl = s"${matomoClient.baseStiltUrl}/viewer/downloadresults/$relPath",
 						userId = user.email,
-						eventTime = Instant.now()
+						eventTime = Instant.now(),
+						clientIp = remoteAddr.toOption.map(_.getHostAddress)
 					)
 					getFromFile(service.toResultPath(relPath).toFile)
 			~
@@ -120,14 +122,15 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi, matomoClient: 
 			entity(as[StiltResultsRequest]): req =>
 				withRequestTimeout(5.minutes):
 					path("stiltresult"):
-						userOpt: maybeUser =>
+						(userOpt & extractClientIP): (maybeUser, remoteAddr) =>
 							matomoClient.trackEvent(
 								category = "STILT",
 								action = "TimeSeriesViewed",
 								name = s"Viewing STILT result time series for station ${req.stationId} from ${req.fromDate} to ${req.toDate}",
 								eventUrl = s"${matomoClient.baseStiltUrl}/viewer/?stationId=${req.stationId}&fromDate=${req.fromDate}&toDate=${req.toDate}",
 								userId = maybeUser.map(_.email).getOrElse("anonymous"),
-								eventTime = Instant.now()
+								eventTime = Instant.now(),
+								clientIp = remoteAddr.toOption.map(_.getHostAddress)
 							)
 							complete(service.getStiltResults(req).toSeq)
 					~
