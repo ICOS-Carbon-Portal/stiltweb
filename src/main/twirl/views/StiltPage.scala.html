@@ -19,7 +19,7 @@
 		}
 
 		.inline-footer {
-			max-width: 750px;
+			max-width: 1100px;
 		}
 
 		.logo {
@@ -40,33 +40,29 @@
 	<div id="main"></div>
 	@extraBody
 	<footer class="inline-footer w-100 mx-auto d-flex flex-column align-items-center gap-4 p-5">
-		<div class="footer-logo d-flex justify-content-between w-100">
-			<a href="https://www.actris.eu/">
+		<div class="footer-logo d-flex justify-content-around gap-4 flex-wrap w-100">
+			<a href="https://www.actris.eu/" target="_blank" class="hide-external">
 				<img src="https://static.icos-cp.eu/images/logo-ac_2.png" alt="ACTRIS Logo">
 			</a>
-			<a href="https://www.iagos.org/">
+			<a href="https://www.iagos.org/" target="_blank" class="hide-external">
 				<img src="https://static.icos-cp.eu/images/IAGOS-logo.png" alt="IAGOS Logo">
 			</a>
-			<a href="https://www.icos-cp.eu/">
-				<img src="https://static.icos-cp.eu/images/Icos_Logo_CMYK_Regular.svg" alt="ICOS Logo">
+			<a href="https://www.icos-cp.eu/" target="_blank" class="hide-external">
+				<img src="https://static.icos-cp.eu/images/ICOS_RI_logo_rgb.png" alt="ICOS Logo">
 			</a>
-			<a href="https://ec.europa.eu/info/index_en">
+			<a href="https://ec.europa.eu/info/index_en" target="_blank" class="hide-external">
 				<img src="https://static.icos-cp.eu/images/Flag_of_Europe.png" alt="EU Logo">
+			</a>
+			<a href="https://www.iriscc.eu/" target="_blank" class="hide-external">
+				<img src="https://static.icos-cp.eu/images/iriscc-logo-fullcolor.png" alt="IRISCC Logo">
+			</a>
+			<a href="https://www.atmo-access.eu/" target="_blank" class="hide-external">
+				<img src="https://static.icos-cp.eu/images/ATMO-ACCESS-Logo.png" alt="ATMO ACCESS Logo">
 			</a>
 		</div>
 		<div class="w-100">
-			<div class="my-5 d-flex">
-				<a href="https://www.iriscc.eu/" target="_blank" class="d-flex justify-content-end project-link flex-shrink-0 hide-external">
-					<img class="logo" src="https://static.icos-cp.eu/images/iriscc-logo-fullcolor.png" alt="ATMO ACCESS Logo">
-				</a>
-				<div class="ps-3">This project has received funding from the European Union&apos;s Horizon Research and Innovation Actions programme through the IRISCC project under grant agreement No 101131261.</div>
-			</div>
-			<div class="my-5 d-flex">
-				<a href="https://www.atmo-access.eu/" target="_blank" class="d-flex justify-content-end project-link flex-shrink-0 hide-external">
-					<img class="logo" src="https://static.icos-cp.eu/images/ATMO-ACCESS-Logo.png" alt="ATMO ACCESS Logo">
-				</a>
-				<div class="ps-3">This project has received funding from the European Union&apos;s Horizon 2020 research and innovation programme through the ATMO-ACCESS Integrating Activity under grant agreement No 101008004.</div>
-			</div>
+			<div class="my-3 fs-sm">This project has received funding from the European Union&apos;s Horizon Research and Innovation Actions programme through the IRISCC project under grant agreement No 101131261.</div>
+			<div class="my-3 fs-sm">This project has received funding from the European Union&apos;s Horizon 2020 research and innovation programme through the ATMO-ACCESS Integrating Activity under grant agreement No 101008004.</div>
 		</div>
 	</footer>
 }
