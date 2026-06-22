@@ -31,7 +31,7 @@ object Main extends App {
 	}
 
 	val route = {
-		val inner = new MainRoute(config, cluster).route
+		val inner = new MainRoute(config, cluster, cluster.matomoClient).route
 		handleExceptions(exceptionHandler){inner}
 	}
 

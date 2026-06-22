@@ -11,12 +11,9 @@ import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.unmarshalling.Unmarshaller
-import akka.stream.scaladsl.Flow
-import akka.util.ByteString
 import se.lu.nateko.cp.cpauth.core.UserId
 import se.lu.nateko.cp.stiltcluster.Job
 import se.lu.nateko.cp.stiltcluster.StiltClusterApi
-import se.lu.nateko.cp.stiltweb.AtmoAccessClient.AppInfo
 import se.lu.nateko.cp.stiltweb.marshalling.StationInfoMarshalling
 import se.lu.nateko.cp.stiltweb.marshalling.StiltJsonSupport.given
 import se.lu.nateko.cp.stiltweb.zip.PackagingThrottler
@@ -35,11 +32,11 @@ import SprayJsonSupport.sprayJsonUnmarshaller
 import DefaultJsonProtocol.{StringJsonFormat, JsValueFormat, immSeqFormat}
 import StiltResultsPresenter.{ResultRelPath, StiltResRelPath}
 
-class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
+class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi, matomoClient: MatomoClient):
 
 	private val authRouting = new AuthRouting(config.auth)
-	import cluster.atmoClient
 	import authRouting.{user, userReq, userOpt}
+	private given eu.icoscp.envri.Envri = eu.icoscp.envri.Envri.ICOS
 
 	private val service = new StiltResultsPresenter(config)
 	private val throttler = new PackagingThrottler[ResultRelPath](using cluster.dispatcher)
@@ -69,7 +66,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 					val footprintsList = service.listFootprints(batch)
 					complete(footprintsList.map(_.toString).toSeq)
 			~
-			(path("joinfootprints") & userReq){ user =>
+			(path("joinfootprints") & userReq & extractClientIP){ (user, remoteAddr) =>
 				resultBatchSpec: batch =>
 					throttler
 						.runFor(user, batch.stationId):
@@ -77,18 +74,32 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 						.fold(
 							msg => complete(StatusCodes.ServiceUnavailable -> msg),
 							zipPathFut =>
-								val startTime = Instant.now()
 								withRequestTimeout(5.minutes):
-									onSuccess(zipPathFut): zipPath =>
-										logResPackUse(startTime, user, "Packaging", Some(batch), zipPath)
+									onSuccess(zipPathFut): _ =>
+										matomoClient.trackEvent(
+											category = "STILT",
+											action = "ResultsPackaged",
+											name = s"Packaging STILT results for station ${batch.stationId} from ${batch.fromDate} to ${batch.toDate}",
+											eventUrl = s"${matomoClient.baseStiltUrl}/viewer/?stationId=${batch.stationId}&fromDate=${batch.fromDate}&toDate=${batch.toDate}",
+											userId = user.email,
+											eventTime = Instant.now(),
+											clientIp = remoteAddr.toOption.map(_.getHostAddress)
+										)
 										complete(service.listResultPackages(batch).get)
 						)
 			} ~
 			pathPrefix("downloadresults" / StiltResRelPath): relPath =>
-				userReq: user =>
-					val startDt = Instant.now()
-					onResponseStreamed(() => logResPackUse(startDt, user, "Downloading", None, relPath)):
-						getFromFile(service.toResultPath(relPath).toFile)
+				(userReq & extractClientIP): (user, remoteAddr) =>
+					matomoClient.trackEvent(
+						category = "STILT",
+						action = "ResultsDownloaded",
+						name = s"Downloading STILT results from $relPath",
+						eventUrl = s"${matomoClient.baseStiltUrl}/viewer/downloadresults/$relPath",
+						userId = user.email,
+						eventTime = Instant.now(),
+						clientIp = remoteAddr.toOption.map(_.getHostAddress)
+					)
+					getFromFile(service.toResultPath(relPath).toFile)
 			~
 			path("listresultpackages"):
 				resultBatchSpec: batch =>
@@ -101,21 +112,27 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 			path("availablemonths"){
 				complete(service.availableInputMonths())
 			} ~
-			redirectToTrailingSlashIfMissing(StatusCodes.Found):
-				pathSingleSlash:
-					user{userId =>
-						complete(views.html.ViewerPage(config.auth))
-					} ~
-					complete(views.html.LoginPage(config.auth, config.atmoAccess))
+			redirectToTrailingSlashIfMissing(StatusCodes.Found){
+				pathSingleSlash {
+					complete(views.html.ViewerPage())
+				}
+			}
 		} ~
 		post:
 			entity(as[StiltResultsRequest]): req =>
 				withRequestTimeout(5.minutes):
 					path("stiltresult"):
-						val startDt = Instant.now()
-						userOpt: user =>
-							onResponseStreamed(() => logResultsFetch(startDt, user, req)):
-								complete(service.getStiltResults(req).toSeq)
+						(userOpt & extractClientIP): (maybeUser, remoteAddr) =>
+							matomoClient.trackEvent(
+								category = "STILT",
+								action = "TimeSeriesViewed",
+								name = s"Viewing STILT result time series for station ${req.stationId} from ${req.fromDate} to ${req.toDate}",
+								eventUrl = s"${matomoClient.baseStiltUrl}/viewer/?stationId=${req.stationId}&fromDate=${req.fromDate}&toDate=${req.toDate}",
+								userId = maybeUser.map(_.email).getOrElse("anonymous"),
+								eventTime = Instant.now(),
+								clientIp = remoteAddr.toOption.map(_.getHostAddress)
+							)
+							complete(service.getStiltResults(req).toSeq)
 					~
 					path("stiltrawresult"):
 						complete(service.getStiltRawResults(req).toSeq)
@@ -128,10 +145,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 		get {
 			pathEnd{redirect("worker/", StatusCodes.Found)} ~
 			pathSingleSlash {
-				user{userId =>
-					complete(views.html.WorkerPage(config.auth))
-				} ~
-				complete(views.html.LoginPage(config.auth, config.atmoAccess))
+				complete(views.html.WorkerPage())
 			} ~
 			path("worker.js"){
 				getFromResource("www/worker.js")
@@ -155,6 +169,8 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 							complete((StatusCodes.Forbidden, "Wrong user id in the job definition!"))
 					} ~
 					complete((StatusCodes.BadRequest, "Wrong request payload, expected a proper Job object"))
+				} ~
+				complete((StatusCodes.Forbidden, "Please log in with Carbon Portal"))
 			} ~
 			path("deletejob" / Segment) { jobId =>
 				userReq{userId =>
@@ -176,7 +192,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 					}
 				}
 			}
-		}
+
 	} ~
 	get{
 		pathEndOrSingleSlash{
@@ -198,52 +214,7 @@ class MainRoute(config: StiltWebConfig, cluster: StiltClusterApi):
 		}
 	}
 
-	def onResponseStreamed(cb: () => Unit): Directive0 = mapResponse: resp =>
-		if resp.status.isFailure then resp else
-			val re = resp.entity.transformDataBytes(Flow[ByteString].watchTermination(){
-				case (mat, fut) =>
-					fut.onComplete{case _ => cb()}(cluster.ioDispatcher)
-					mat
-			})
-			resp.withEntity(re)
-
-
 	def respondWithAttachment(fileName: String): Directive0 = respondWithHeader(
 		`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> fileName))
 	)
-
-	import atmoClient.baseStiltUrl
-
-	private def logResPackUse(startDt: Instant, user: UserId, action: String, batch: Option[ResultBatch], relPath: ResultRelPath) =
-		val basicInfo = AppInfo(
-			user = user,
-			startDate = startDt,
-			endDate = Some(Instant.now()),
-			resultUrl = s"$baseStiltUrl/viewer/downloadresults/$relPath",
-			infoUrl = None,
-			comment = Some(s"$action STILT results from $relPath")
-		)
-		val info = batch.fold(basicInfo): resBatch =>
-			import resBatch.{stationId, fromDate, toDate}
-			basicInfo.copy(
-				infoUrl = Some(scopedViewerUrl(resBatch)),
-				comment = Some(s"$action STILT results for station $stationId from $fromDate to $toDate")
-			)
-		atmoClient.log(info)
-
-	private def scopedViewerUrl(batch: ResultBatch): String =
-		import batch.{stationId, fromDate, toDate}
-		s"$baseStiltUrl/viewer/?stationId=${stationId}&fromDate=${fromDate}&toDate=${toDate}"
-
-	private def logResultsFetch(startDt: Instant, user: Option[UserId], req: StiltResultsRequest) =
-		import req.{stationId, fromDate, toDate}
-		val appInfo = AppInfo(
-			user = user.getOrElse(UserId("anonymous")),
-			startDate = startDt,
-			endDate = Some(Instant.now()),
-			resultUrl = s"$baseStiltUrl/viewer/stiltresult",
-			infoUrl = Some(scopedViewerUrl(req.batch)),
-			comment = Some(s"Viewing STILT result time series for station $stationId from $fromDate to $toDate")
-		)
-		atmoClient.log(appInfo)
 end MainRoute

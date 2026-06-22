@@ -39,7 +39,7 @@ function tasks(project){
 	function compileJs() {
 		var browser = browserify({entries: [paths.main], debug: false})
 			.transform(bcss, {global: true})
-			.transform(babelify, {presets: ["env", "react"]})
+			.transform(babelify, {presets: ["@babel/env", "@babel/react"]})
 			.bundle()
 			.pipe(source(paths.bundleFile))
 			.on('error', function(err){

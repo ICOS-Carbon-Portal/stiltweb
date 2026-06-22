@@ -1,35 +1,28 @@
 package se.lu.nateko.cp.stiltweb
 
-
 import akka.http.javadsl.server.CustomRejection
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directive1
 import akka.http.scaladsl.server.Directives.*
-import se.lu.nateko.cp.cpauth.core.AuthSource
-import se.lu.nateko.cp.cpauth.core.AuthToken
 import se.lu.nateko.cp.cpauth.core.Authenticator
 import se.lu.nateko.cp.cpauth.core.CookieToToken
 import se.lu.nateko.cp.cpauth.core.PublicAuthConfig
 import se.lu.nateko.cp.cpauth.core.UserId
-
 import scala.util.Failure
 import scala.util.Success
-import akka.http.scaladsl.model.StatusCodes
 
 class AuthRouting(authConfig: PublicAuthConfig):
 
 	private val authenticator = Authenticator(authConfig).get
 
-	val user: Directive1[UserId] = cookie(authConfig.authCookieName).flatMap{cookie =>
+	val user: Directive1[UserId] = cookie(authConfig.authCookieName).flatMap: cookie =>
 		CookieToToken.recoverToken(cookie.value).flatMap(authenticator.unwrapToken) match
-			case Success(token) if token.source == AuthSource.AtmoAccess =>
-				provide(token.userId)
 			case Success(token) =>
-				reject(CpauthAuthFailedRejection("User did not log in through ATMO ACCESS"))
+				provide(token.userId)
 			case Failure(err) =>
-				reject(CpauthAuthFailedRejection("Authentication cookie invalid or absent: " + toMessage(err)))
-	}
+				reject(new CpauthAuthenticationFailedRejection(toMessage(err)))
 
-	val userReq: Directive1[UserId] = user | complete(StatusCodes.Unauthorized -> "Please log in with ATMO ACCESS")
+	val userReq: Directive1[UserId] = user | complete(StatusCodes.Unauthorized -> "Please log in with Carbon Portal")
 
 	val userOpt: Directive1[Option[UserId]] = user.map(Some(_)) | provide(None)
 
@@ -39,4 +32,4 @@ class AuthRouting(authConfig: PublicAuthConfig):
 
 end AuthRouting
 
-class CpauthAuthFailedRejection(val msg: String) extends CustomRejection
+class CpauthAuthenticationFailedRejection(val msg: String) extends CustomRejection

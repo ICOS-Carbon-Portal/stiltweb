@@ -14,15 +14,7 @@ case class NetCdfConfig(
 	elevationVars: Seq[String]
 ) extends NetCdfViewServiceConfig
 
-case class AtmoAccessConfig(
-	openidEndpointUrl: String,
-	vaApiUrl: String,
-	clientId: String,
-	ssoClientId: String,
-	userName: String,
-	userPassword: String,
-	baseStiltUrl: String,
-)
+case class MatomoConfig(url: String, siteId: Int, authToken: String, baseStiltUrl: String)
 
 case class StiltWebConfig(
 	admins: Seq[String],
@@ -30,16 +22,16 @@ case class StiltWebConfig(
 	metDataDirectory: String,
 	stateDirectory: String,
 	netcdf: NetCdfConfig,
-	atmoAccess: AtmoAccessConfig,
-	slotStepInMinutes: Int
+	slotStepInMinutes: Int,
+	matomo: MatomoConfig
 )
 
 object ConfigReader extends DefaultJsonProtocol{
 
-	given JsonFormat[PublicAuthConfig] = jsonFormat4(PublicAuthConfig.apply)
-	given JsonFormat[NetCdfConfig] = jsonFormat4(NetCdfConfig.apply)
-	given JsonFormat[AtmoAccessConfig] = jsonFormat7(AtmoAccessConfig.apply)
-	given JsonFormat[StiltWebConfig] = jsonFormat7(StiltWebConfig.apply)
+	implicit val pubAuthConfigFormat: JsonFormat[PublicAuthConfig] = jsonFormat4(PublicAuthConfig.apply)
+	implicit val netcdfConfigFormat: JsonFormat[NetCdfConfig] = jsonFormat4(NetCdfConfig.apply)
+	implicit val matomoConfigFormat: JsonFormat[MatomoConfig] = jsonFormat4(MatomoConfig.apply)
+	implicit val cpdataConfigFormat: JsonFormat[StiltWebConfig] = jsonFormat7(StiltWebConfig.apply)
 
 	lazy val default: StiltWebConfig = fromAppConfig(ConfigLoader.localWithDefault())
 

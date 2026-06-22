@@ -1,6 +1,6 @@
-@(conf: se.lu.nateko.cp.cpauth.core.PublicAuthConfig)
-@AtmoAccessPage("Carbon Portal's STILT results visualization service"){
+@()(implicit envri: eu.icoscp.envri.Envri)
 
+@StiltPage {
 	<script src="https://static.icos-cp.eu/constant/leaflet/1.0.1/leaflet.js"></script>
 	<!--<script src="https://unpkg.com/leaflet@@1.0.3/dist/leaflet.js"
 		integrity="sha512-A7vV8IFfih/D732iSSKi20u/ooOfj/AGehOKq0f4vLT1Zr2Y+RX7C+w8A1gaSasGtRUZpF/NZgzSAu4/Gc41Lg=="
@@ -27,29 +27,13 @@
 	<link rel="stylesheet" href="//static.icos-cp.eu/constant/rc-datepicker/5.0.10/style.min.css">
 
 	<style type="text/css">
-
-	.leaflet-container, .leaflet-clickable, .leaflet-interactive {
-		cursor: crosshair !important;
-	}
-	.cp-pointer {
-		cursor: pointer;
-	}
-	span.cp-help{
-		cursor: help;
-	}
-	.cp-dpi-error div.react-datepicker-input {
-		background: #ebccd1 !important;
-	}
-	.cp-dpi-error i.icon-rc-datepicker_calendar {
-		color: black !important;
-	}
-
-		a.btn {
-			margin-left: 5px;
+		.cp-dpi-error div.react-datepicker-input {
+			background: #ebccd1 !important;
+		}
+		.cp-dpi-error i.icon-rc-datepicker_calendar {
+			color: black !important;
 		}
 	</style>
-}{
-	<div id="main"></div>
+} {
 	<script src="worker.js"></script>
 }
-
