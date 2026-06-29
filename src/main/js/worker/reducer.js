@@ -3,7 +3,7 @@ import {MAP_VIEW, DASHBOARD_VIEW, FETCHED_MONTHS} from './actions';
 
 import AvailableMonths from './models/AvailableMonths';
 import {copyprops} from 'icos-cp-utils';
-import {TOAST_ERROR, TOAST_INFO, ToasterData} from 'icos-cp-toaster';
+import {TOAST_ERROR, ToasterData} from 'icos-cp-toaster';
 import { initJob } from './store';
 import config from './config'
 
@@ -145,7 +145,6 @@ export function withFeedbackToUser(state){
 	if(state.currUser && !state.currUser.email){
 		const msg = 'You must log in (USE SEPARATE BROWSER TAB) to submit a STILT job';
 		jobSubmissionObstacles.push(msg)
-		toasterData = new ToasterData(TOAST_INFO, msg)
 	}
 	return Object.assign({}, state, {
 		jobSubmissionObstacles,
