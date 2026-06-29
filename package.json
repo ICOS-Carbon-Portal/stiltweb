@@ -50,7 +50,7 @@
     "icos-cp-legend": "1.1.1",
     "icos-cp-netcdfmap": "2.1.1",
     "icos-cp-spatial": "0.4.0",
-    "icos-cp-toaster": "^0.8.0",
+    "icos-cp-toaster": "^0.8.1",
     "icos-cp-utils": "0.2.0",
     "leaflet": "1.9.4",
     "leaflet.markercluster": "1.5.3",
